@@ -1,0 +1,3 @@
+pcb/*/*-backups
+pcb/*/*.lck
+pcb/*/fp-info-cache
