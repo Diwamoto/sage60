@@ -1,4 +1,4 @@
-pcb/*/*-backups
-pcb/*/*.lck
-pcb/*/fp-info-cache
-pcb/*/production
+pcb/**/*/*-backups
+pcb/**/*/*.lck
+pcb/**/*/fp-info-cache
+pcb/**/*/production
