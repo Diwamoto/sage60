@@ -629,6 +629,30 @@
     )
   )
 
+  (symbol (lib_id "Mechanical:MountingHole") (at 205.74 153.67 0) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
+    (uuid 0d510c55-4ae8-41d7-8b60-7c538095db5a)
+    (property "Reference" "H8" (at 208.28 152.4579 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Value" "MountingHole" (at 208.28 154.8821 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Footprint" "0_kbd:M2_HOLE_v3" (at 205.74 153.67 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "~" (at 205.74 153.67 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (instances
+      (project "plate"
+        (path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
+          (reference "H8") (unit 1)
+        )
+      )
+    )
+  )
+
   (symbol (lib_id "0_kbd:SW_PUSH") (at 45.72 116.84 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 11509a2f-1be9-49bc-8544-314af9b732d0)
@@ -1100,6 +1124,30 @@
       (project "plate"
         (path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
           (reference "H1") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol (lib_id "Mechanical:MountingHole") (at 205.74 148.59 0) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
+    (uuid 5e6464f6-953a-4b43-b2a6-14c836384990)
+    (property "Reference" "H7" (at 208.28 147.3779 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Value" "MountingHole" (at 208.28 149.8021 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Footprint" "0_kbd:M2_HOLE_v3" (at 205.74 148.59 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "~" (at 205.74 148.59 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (instances
+      (project "plate"
+        (path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
+          (reference "H7") (unit 1)
         )
       )
     )
@@ -2075,6 +2123,30 @@
     )
   )
 
+  (symbol (lib_id "Mechanical:MountingHole") (at 205.74 138.43 0) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
+    (uuid d7106e30-2a3a-446e-ade4-38a8ca8e3a05)
+    (property "Reference" "H5" (at 208.28 137.2179 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Value" "MountingHole" (at 208.28 139.6421 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Footprint" "0_kbd:M2_HOLE_v3" (at 205.74 138.43 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "~" (at 205.74 138.43 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (instances
+      (project "plate"
+        (path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
+          (reference "H5") (unit 1)
+        )
+      )
+    )
+  )
+
   (symbol (lib_id "Device:D") (at 148.59 135.89 90) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid d76d8c0f-d4bd-495a-80bb-4f0bacdf655f)
@@ -2390,6 +2462,30 @@
       (project "plate"
         (path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
           (reference "D23") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol (lib_id "Mechanical:MountingHole") (at 205.74 143.51 0) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
+    (uuid f018b578-e14c-422a-a09b-3cf30c124610)
+    (property "Reference" "H6" (at 208.28 142.2979 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Value" "MountingHole" (at 208.28 144.7221 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Footprint" "0_kbd:M2_HOLE_v3" (at 205.74 143.51 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "~" (at 205.74 143.51 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (instances
+      (project "plate"
+        (path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
+          (reference "H6") (unit 1)
         )
       )
     )
