@@ -52,7 +52,7 @@
       (dielectric_constraints no)
     )
     (pad_to_mask_clearance 0)
-    (grid_origin 103.87 87.63)
+    (grid_origin 161.02 92.3925)
     (pcbplotparams
       (layerselection 0x00010fc_ffffffff)
       (plot_on_all_layers_selection 0x0000000_00000000)
@@ -610,7 +610,7 @@
 
   (footprint "0_kbd:M2_Hole_TH_Outside" (layer "F.Cu")
     (tstamp 185294a2-4e1f-4c67-8b07-f86ecfc84ea1)
-    (at 179.1175 96.782573)
+    (at 166.735 103.8225)
     (property "Sheetfile" "mx.kicad_sch")
     (property "Sheetname" "")
     (property "ki_description" "Mounting Hole without connection")
