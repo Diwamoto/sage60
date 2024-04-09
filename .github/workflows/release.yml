@@ -13,13 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Generate GitHub Apps token
-        id: generate_token
-        uses: tibdex/github-app-token@v1
-        with:
-          app_id: ${{ secrets.APP_ID }}
-          private_key: ${{ secrets.PRIVATE_KEY }}
       - uses: google-github-actions/release-please-action@v3
         with:
-          token: ${{ steps.generate_token.outputs.token }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           release-type: simple
