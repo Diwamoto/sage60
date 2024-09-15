@@ -2,3 +2,5 @@ pcb/**/*/*-backups
 pcb/**/*/*.lck
 pcb/**/*/fp-info-cache
 pcb/**/*/production
+
+.DS_Store
