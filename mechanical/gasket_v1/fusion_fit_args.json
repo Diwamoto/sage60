@@ -1,0 +1,1 @@
+{"featureType":"script","object":{"script":"import adsk.core, json\ndef run(_context):\n    app=adsk.core.Application.get()\n    print(json.dumps({'fit':bool(app.activeViewport.fit())}))"}}

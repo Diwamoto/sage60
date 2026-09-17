@@ -1,0 +1,6 @@
+{
+  "featureType": "script",
+  "object": {
+    "script": "import adsk.core, adsk.fusion, json\ndef run(_context):\n    app = adsk.core.Application.get()\n    des = adsk.fusion.Design.cast(app.activeProduct)\n    root = des.rootComponent\n    im = app.importManager\n    path='/Users/daiki/Projects/sage60/pcb/mx_plate_right_tb/gasket_v1/mx_plate_right_tb_gasket.dxf'\n    opts = im.createDXF2DImportOptions(path, root.xYConstructionPlane)\n    ok = im.importToTarget(opts, root)\n    print(json.dumps({'success': bool(ok), 'sketches': [s.name for s in root.sketches], 'count': root.sketches.count}))"
+  }
+}

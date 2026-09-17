@@ -1,0 +1,362 @@
+{
+  "units": "mm",
+  "pcb_coordinates": "X right, Y down; CAD X right, Y up, convert (x,-y)",
+  "plate_thickness": 1.5,
+  "pad_contact_mm": [
+    14,
+    3
+  ],
+  "gasket_uncompressed_each": 1.5,
+  "gasket_preload_fraction": 0.2,
+  "gasket_compressed_each": 1.2,
+  "case_contact_face_separation": 3.9,
+  "side_clearance_each_initial": 0.5,
+  "minimum_free_travel_each_initial": 0.5,
+  "supports": {
+    "left": [
+      {
+        "id": "L1",
+        "root_center_mm": [
+          75,
+          28.575
+        ],
+        "pad_center_pcb_mm": [
+          75.0,
+          26.075
+        ],
+        "pad_center_cad_mm": [
+          75.0,
+          -26.075
+        ],
+        "tangent_pcb": [
+          1,
+          0
+        ],
+        "outward_normal_pcb": [
+          0,
+          -1
+        ],
+        "pad_size_mm": [
+          14,
+          3
+        ],
+        "tab_width_mm": 16,
+        "tab_extension_mm": 5,
+        "pad_thickness_uncompressed_mm": 1.5,
+        "pad_count": 2
+      },
+      {
+        "id": "L2",
+        "root_center_mm": [
+          141.97,
+          21.9075
+        ],
+        "pad_center_pcb_mm": [
+          141.97,
+          19.4075
+        ],
+        "pad_center_cad_mm": [
+          141.97,
+          -19.4075
+        ],
+        "tangent_pcb": [
+          1,
+          0
+        ],
+        "outward_normal_pcb": [
+          0,
+          -1
+        ],
+        "pad_size_mm": [
+          14,
+          3
+        ],
+        "tab_width_mm": 16,
+        "tab_extension_mm": 5,
+        "pad_thickness_uncompressed_mm": 1.5,
+        "pad_count": 2
+      },
+      {
+        "id": "L3",
+        "root_center_mm": [
+          56.245,
+          74
+        ],
+        "pad_center_pcb_mm": [
+          53.745,
+          74.0
+        ],
+        "pad_center_cad_mm": [
+          53.745,
+          -74.0
+        ],
+        "tangent_pcb": [
+          0,
+          1
+        ],
+        "outward_normal_pcb": [
+          -1,
+          0
+        ],
+        "pad_size_mm": [
+          14,
+          3
+        ],
+        "tab_width_mm": 16,
+        "tab_extension_mm": 5,
+        "pad_thickness_uncompressed_mm": 1.5,
+        "pad_count": 2
+      },
+      {
+        "id": "L4",
+        "root_center_mm": [
+          191.083,
+          80
+        ],
+        "pad_center_pcb_mm": [
+          193.583,
+          80.0
+        ],
+        "pad_center_cad_mm": [
+          193.583,
+          -80.0
+        ],
+        "tangent_pcb": [
+          0,
+          1
+        ],
+        "outward_normal_pcb": [
+          1,
+          0
+        ],
+        "pad_size_mm": [
+          14,
+          3
+        ],
+        "tab_width_mm": 16,
+        "tab_extension_mm": 5,
+        "pad_thickness_uncompressed_mm": 1.5,
+        "pad_count": 2
+      },
+      {
+        "id": "L5",
+        "root_center_mm": [
+          75,
+          104.775
+        ],
+        "pad_center_pcb_mm": [
+          75.0,
+          107.275
+        ],
+        "pad_center_cad_mm": [
+          75.0,
+          -107.275
+        ],
+        "tangent_pcb": [
+          1,
+          0
+        ],
+        "outward_normal_pcb": [
+          0,
+          1
+        ],
+        "pad_size_mm": [
+          14,
+          3
+        ],
+        "tab_width_mm": 16,
+        "tab_extension_mm": 5,
+        "pad_thickness_uncompressed_mm": 1.5,
+        "pad_count": 2
+      },
+      {
+        "id": "L6",
+        "root_center_mm": [
+          167.3886875,
+          127.071089
+        ],
+        "pad_center_pcb_mm": [
+          166.43346828315876,
+          129.38140418364426
+        ],
+        "pad_center_cad_mm": [
+          166.43346828315876,
+          -129.38140418364426
+        ],
+        "tangent_pcb": [
+          0.9241260734577019,
+          0.38208768673650056
+        ],
+        "outward_normal_pcb": [
+          -0.38208768673650056,
+          0.9241260734577019
+        ],
+        "pad_size_mm": [
+          14,
+          3
+        ],
+        "tab_width_mm": 16,
+        "tab_extension_mm": 5,
+        "pad_thickness_uncompressed_mm": 1.5,
+        "pad_count": 2
+      }
+    ],
+    "right": [
+      {
+        "id": "R1",
+        "root_center_mm": [
+          171,
+          28.575
+        ],
+        "pad_center_pcb_mm": [
+          171.0,
+          26.075
+        ],
+        "pad_center_cad_mm": [
+          171.0,
+          -26.075
+        ],
+        "tangent_pcb": [
+          1,
+          0
+        ],
+        "outward_normal_pcb": [
+          0,
+          -1
+        ],
+        "pad_size_mm": [
+          14,
+          3
+        ],
+        "tab_width_mm": 16,
+        "tab_extension_mm": 5,
+        "pad_thickness_uncompressed_mm": 1.5,
+        "pad_count": 2
+      },
+      {
+        "id": "R2",
+        "root_center_mm": [
+          103.87,
+          21.9075
+        ],
+        "pad_center_pcb_mm": [
+          103.87,
+          19.4075
+        ],
+        "pad_center_cad_mm": [
+          103.87,
+          -19.4075
+        ],
+        "tangent_pcb": [
+          1,
+          0
+        ],
+        "outward_normal_pcb": [
+          0,
+          -1
+        ],
+        "pad_size_mm": [
+          14,
+          3
+        ],
+        "tab_width_mm": 16,
+        "tab_extension_mm": 5,
+        "pad_thickness_uncompressed_mm": 1.5,
+        "pad_count": 2
+      },
+      {
+        "id": "R3",
+        "root_center_mm": [
+          189.595,
+          74
+        ],
+        "pad_center_pcb_mm": [
+          192.095,
+          74.0
+        ],
+        "pad_center_cad_mm": [
+          192.095,
+          -74.0
+        ],
+        "tangent_pcb": [
+          0,
+          1
+        ],
+        "outward_normal_pcb": [
+          1,
+          0
+        ],
+        "pad_size_mm": [
+          14,
+          3
+        ],
+        "tab_width_mm": 16,
+        "tab_extension_mm": 5,
+        "pad_thickness_uncompressed_mm": 1.5,
+        "pad_count": 2
+      },
+      {
+        "id": "R4",
+        "root_center_mm": [
+          54.758,
+          80
+        ],
+        "pad_center_pcb_mm": [
+          52.258,
+          80.0
+        ],
+        "pad_center_cad_mm": [
+          52.258,
+          -80.0
+        ],
+        "tangent_pcb": [
+          0,
+          1
+        ],
+        "outward_normal_pcb": [
+          -1,
+          0
+        ],
+        "pad_size_mm": [
+          14,
+          3
+        ],
+        "tab_width_mm": 16,
+        "tab_extension_mm": 5,
+        "pad_thickness_uncompressed_mm": 1.5,
+        "pad_count": 2
+      },
+      {
+        "id": "R6",
+        "root_center_mm": [
+          78.4513125,
+          127.071089
+        ],
+        "pad_center_pcb_mm": [
+          79.40653171684126,
+          129.38140418364426
+        ],
+        "pad_center_cad_mm": [
+          79.40653171684126,
+          -129.38140418364426
+        ],
+        "tangent_pcb": [
+          0.9241260734577019,
+          -0.38208768673650056
+        ],
+        "outward_normal_pcb": [
+          0.38208768673650056,
+          0.9241260734577019
+        ],
+        "pad_size_mm": [
+          14,
+          3
+        ],
+        "tab_width_mm": 16,
+        "tab_extension_mm": 5,
+        "pad_thickness_uncompressed_mm": 1.5,
+        "pad_count": 2
+      }
+    ]
+  }
+}

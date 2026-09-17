@@ -1,0 +1,6 @@
+{
+  "featureType": "script",
+  "object": {
+    "script": "import adsk.core, adsk.fusion, json\n\ndef run(_context):\n    app = adsk.core.Application.get()\n    targets = {'mx_plate_gasket v1', 'mx_plate_right_tb_gasket v1'}\n    docs = [app.documents.item(i) for i in range(app.documents.count) if app.documents.item(i).name in targets]\n    out = []\n    for doc in docs:\n        name = doc.name\n        closed = bool(doc.close(False))\n        out.append({'document': name, 'closed_without_saving': closed})\n    print(json.dumps(out, ensure_ascii=False))"
+  }
+}

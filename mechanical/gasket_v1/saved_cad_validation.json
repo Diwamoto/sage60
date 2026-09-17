@@ -1,0 +1,56 @@
+{
+  "left": {
+    "kicad_readback": true,
+    "switch_count": 30,
+    "max_center_error_mm": 1.1374233532693354e-13,
+    "rotation_and_14mm_holes_match": true,
+    "dxf_closed_contours_mm_units": true,
+    "stl_watertight": true,
+    "stl_format": "ascii",
+    "stl_triangles": 9184,
+    "stl_bounds_xyz_mm": [
+      [
+        51.245,
+        196.083
+      ],
+      [
+        -134.4405,
+        -16.9075
+      ],
+      [
+        0.0,
+        1.43
+      ]
+    ],
+    "stl_preview_thickness_mm": 1.43,
+    "pcb_authoritative_thickness_mm": 1.5,
+    "copper_objects": 0
+  },
+  "right": {
+    "kicad_readback": true,
+    "switch_count": 28,
+    "max_center_error_mm": 9.532931148469529e-14,
+    "rotation_and_14mm_holes_match": true,
+    "dxf_closed_contours_mm_units": true,
+    "stl_watertight": true,
+    "stl_format": "ascii",
+    "stl_triangles": 8772,
+    "stl_bounds_xyz_mm": [
+      [
+        49.758,
+        194.595
+      ],
+      [
+        -134.4405,
+        -16.9075
+      ],
+      [
+        0.0,
+        1.43
+      ]
+    ],
+    "stl_preview_thickness_mm": 1.43,
+    "pcb_authoritative_thickness_mm": 1.5,
+    "copper_objects": 0
+  }
+}

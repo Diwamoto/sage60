@@ -1,0 +1,6 @@
+{
+  "featureType": "script",
+  "object": {
+    "script": "exec(open('/Users/daiki/Projects/sage60/mechanical/gasket_v1/fusion_plate_surface_simplify.py').read(), globals())\n\ndef run(_context):\n    app = adsk.core.Application.get()\n    doc = app.documents.add(adsk.core.DocumentTypes.FusionDesignDocumentType)\n    doc.name = 'sage60_filleted_geometry_test'\n    design = adsk.fusion.Design.cast(doc.products.itemByProductType('DesignProductType'))\n    sketch, outer_count = make_sketch(design.rootComponent, LEFT_GEOMETRY, 'TEST_LEFT_PLATE_SURFACE')\n    record = {'document': doc.name, 'outer_segments': outer_count, 'lines': sketch.sketchCurves.sketchLines.count, 'arcs': sketch.sketchCurves.sketchArcs.count, 'profiles': sketch.profiles.count}\n    doc.close(False)\n    print(json.dumps(record, ensure_ascii=False))"
+  }
+}

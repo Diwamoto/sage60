@@ -1,0 +1,54 @@
+{
+  "left": {
+    "source": "pcb/mx_main/mx.kicad_pcb",
+    "source_sha256": "1bcb687a0d5a2b193a583b459b6f115083db2e9de619e4b279c3b00bcf064351",
+    "switch_count": 30,
+    "closed_holes": 30,
+    "single_connected_plate": true,
+    "neck_check_mm": 1.5,
+    "min_switch_to_edge_mm": 2.483249999999998,
+    "min_switch_to_switch_mm": 5.049993000000001,
+    "bounds_pcb_mm": [
+      51.245,
+      16.9075,
+      196.083,
+      134.44051088132775
+    ],
+    "width_mm": 144.838,
+    "height_mm": 117.53301088132775,
+    "area_mm2": 6067.080796821193,
+    "source_endpoint_gaps_bridged_mm": [
+      0.002251839470303464,
+      5.3460265626266256e-05
+    ],
+    "all_gaskets_outside_pcb": true,
+    "output": "pcb/mx_plate/gasket_v1/mx_plate_gasket"
+  },
+  "right": {
+    "source": "pcb/mx_right_tb/mx_right.kicad_pcb",
+    "source_sha256": "9ddd664248f4ee59e4519e128e3f38ef9e1a958a8b712c3d7443de67a6c77be3",
+    "switch_count": 28,
+    "closed_holes": 28,
+    "single_connected_plate": true,
+    "neck_check_mm": 1.5,
+    "min_switch_to_edge_mm": 2.4988576711724995,
+    "min_switch_to_switch_mm": 5.049999999999983,
+    "bounds_pcb_mm": [
+      49.758,
+      16.9075,
+      194.595,
+      134.44051088132775
+    ],
+    "width_mm": 144.837,
+    "height_mm": 117.53301088132775,
+    "area_mm2": 5622.486741907094,
+    "source_endpoint_gaps_bridged_mm": [
+      0.002251839471470099,
+      0.0059776145743830975,
+      1.9999998102093767e-06,
+      0.008949000000001206
+    ],
+    "all_gaskets_outside_pcb": true,
+    "output": "pcb/mx_plate_right_tb/gasket_v1/mx_plate_right_tb_gasket"
+  }
+}

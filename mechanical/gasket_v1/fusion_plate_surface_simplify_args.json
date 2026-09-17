@@ -1,0 +1,6 @@
+{
+  "featureType": "script",
+  "object": {
+    "script": "exec(open('/Users/daiki/Projects/sage60/mechanical/gasket_v1/fusion_plate_surface_simplify.py').read(), globals())"
+  }
+}

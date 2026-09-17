@@ -1,0 +1,98 @@
+
+(rules PCB ec.dsn
+  (snap_angle 
+    fortyfive_degree
+  )
+  (autoroute_settings
+    (fanout off)
+    (autoroute on)
+    (postroute off)
+    (vias on)
+    (via_costs 50)
+    (plane_via_costs 5)
+    (start_ripup_costs 100)
+    (start_pass_no 1)
+    (layer_rule F.Cu
+      (active on)
+      (preferred_direction horizontal)
+      (preferred_direction_trace_costs 1.0)
+      (against_preferred_direction_trace_costs 3.8)
+    )
+    (layer_rule B.Cu
+      (active on)
+      (preferred_direction vertical)
+      (preferred_direction_trace_costs 1.0)
+      (against_preferred_direction_trace_costs 3.3)
+    )
+  )
+  (rule
+    (width 250.0)
+    (clearance 100.0)
+    (clearance -0.1 (type smd_to_turn_gap))
+    (clearance 25.0 (type smd))
+    (clearance 100.0 (type "kicad_default"))
+    (clearance 200.0 (type Power))
+  )
+  (padstack "Via[0-1]_800:400_um"
+    (shape
+      (circle F.Cu 800.0 0.0 0.0)
+    )
+    (shape
+      (circle B.Cu 800.0 0.0 0.0)
+    )
+    (attach off)
+  )
+  (via 
+    "Via[0-1]_800:400_um" "Via[0-1]_800:400_um" default
+  )
+  (via 
+    "Via[0-1]_800:400_um-kicad_default" "Via[0-1]_800:400_um" "kicad_default"
+  )
+  (via 
+    "Via[0-1]_800:400_um-Power" "Via[0-1]_800:400_um" Power
+  )
+  (via_rule
+    default "Via[0-1]_800:400_um"
+  )
+  (via_rule
+    "kicad_default" "Via[0-1]_800:400_um-kicad_default"
+  )
+  (via_rule
+    Power "Via[0-1]_800:400_um-Power"
+  )
+  (class default
+    (clearance_class default)
+    (via_rule default)
+    (rule
+      (width 250.0)
+    )
+    (circuit 
+      (use_layer F.Cu B.Cu)
+    )
+  )
+  (class "kicad_default"
+    COL0 COL1 COL2 COL3 COL4 ROW0 ROW1 COL5
+    ROW2 ROW3 ROW4 DISCHARGE VBAT "unconnected-(J3-Pin_6-Pad6)" COL6 EN
+    SEL0 SEL2 SEL1 RESET "unconnected-(U3-P0.19_I2S_SCK-Pad16)" "unconnected-(U3-P0.15_I2S_SD-Pad15)" "unconnected-(U3-P1.11_TX_D6-Pad7)" "unconnected-(U3-P0.29_AIN5_LOW_A3_D3-Pad4)"
+    "unconnected-(U3-P0.28_AIN4_LOW_A2_D2-Pad3)" "unconnected-(U3-P1.01_I2S_WS-Pad17)" RX TX "unconnected-(U3-P1.15_MOSI_D10-Pad11)" "unconnected-(U3-P1.07_MOSI1-Pad23)"
+    (clearance_class "kicad_default")
+    (via_rule "kicad_default")
+    (rule
+      (width 250.0)
+    )
+    (circuit 
+      (use_layer F.Cu B.Cu)
+    )
+  )
+  (class Power
+    GND POWER ADC RAW +3.3V
+    (clearance_class Power)
+    (via_rule Power)
+    (rule
+      (width 500.0)
+    )
+    (circuit 
+      (use_layer F.Cu B.Cu)
+    )
+  )
+)

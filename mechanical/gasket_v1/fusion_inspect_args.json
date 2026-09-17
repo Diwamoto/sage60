@@ -1,0 +1,6 @@
+{
+  "featureType": "script",
+  "object": {
+    "script": "import adsk.core, adsk.fusion, json\ndef run(_context):\n    app = adsk.core.Application.get()\n    doc = app.activeDocument\n    prod = app.activeProduct\n    des = adsk.fusion.Design.cast(prod)\n    out = {'document': doc.name if doc else None, 'product': prod.productType if prod else None}\n    if des:\n        root = des.rootComponent\n        out['root'] = root.name\n        out['rootBodies'] = [b.name for b in root.bRepBodies]\n        out['sketches'] = [{'name':s.name, 'profiles':s.profiles.count, 'bbox':[[s.boundingBox.minPoint.x,s.boundingBox.minPoint.y],[s.boundingBox.maxPoint.x,s.boundingBox.maxPoint.y]]} for s in root.sketches]\n        out['occurrences'] = [o.name for o in root.allOccurrences]\n        out['occurrenceBodies'] = {o.name:[b.name for b in o.bRepBodies] for o in root.allOccurrences}\n    print(json.dumps(out))"
+  }
+}
