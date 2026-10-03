@@ -43,9 +43,19 @@ def build_right():
     front_y = case_m.bounds[1]
     hull = unary_union([case_m, fp_all.convex_hull]).convex_hull
     enc = unary_union([pocket.buffer(THIN_BOT + 0.2, quad_segs=16), tbhole.buffer(max(THIN_TOP - CLR - WALL, 0) + 0.2, quad_segs=16)])
-    ext = box(enc.bounds[0], enc.bounds[1], enc.bounds[2], front_y + 1)
-    ext = unary_union([ext, case_m.intersection(box(enc.bounds[0], -250, 250, front_y + 25))]).convex_hull     # straight front, the right side runs into the diagonal edge
-    case = round_poly(unary_union([case_m, hull.intersection(box(40, front_y, 200, -96)), ext, pcb.buffer(3.0, join_style=2)]).buffer(0), OUTER_R)   # PCB at least 3 inside: bottom wall >= THIN_BOT outside the cavity (LP: the tongue corner was 0.35 out)
+    # one straight front edge from under the thumb cluster to the pinky side (2026-10-04: pushing out only the trackball part looked odd):
+    # the thumb-side edge is extended along its own direction down to the new front, the right side runs into the diagonal edge
+    new_front = min(front_y, enc.bounds[1])
+    def left_x(y):
+        seg = case_m.intersection(LineString([(0, y), (250, y)]))
+        return seg.bounds[0]
+    y1, y2 = front_y + 3.0, front_y + 18.0
+    x1, x2 = left_x(y1), left_x(y2)
+    corner = (x1 + (x1 - x2) * (y1 - new_front) / (y2 - y1), new_front)
+    base = unary_union([case_m, hull.intersection(box(40, front_y, 200, -96))])
+    lower = base.intersection(box(0, -250, 250, front_y + 25))
+    ext = unary_union([lower, Point(corner).buffer(0.01), box(corner[0], new_front, enc.bounds[2], new_front + 0.01), enc.intersection(box(0, -250, 250, front_y))]).convex_hull
+    case = round_poly(unary_union([base, ext, pcb.buffer(3.0, join_style=2)]).buffer(0), OUTER_R)   # PCB at least 3 inside: bottom wall >= THIN_BOT outside the cavity (LP: the tongue corner was 0.35 out)
     protrude = case.bounds[1] - fp_all.bounds[1]
     # top ring opening: keys + trackball hole, merged in front
     keys = inner = inner_outline(cav, body.buffer(OPEN_CLR, quad_segs=16), pcb)   # cavity = top ring inner except at the trackball hole
