@@ -1,4 +1,4 @@
-"""plates (KiCad Edge.Cuts, board thickness 1.5) -> case/sage60_{left,right}_plate.3mf for test prints.
+"""plates (KiCad Edge.Cuts, board thickness 1.5) -> case/sage60_shared_plate.3mf for test prints.
 Needs kicad-cli (KiCad 10). Checks the mesh is closed and its volume matches the KiCad outline x thickness."""
 import subprocess, tempfile, zipfile, os
 import numpy as np
@@ -6,7 +6,7 @@ from geo import outline, B
 from shapely.ops import unary_union
 
 OUT = '/Users/daiki/Projects/sage60/case/'
-PLATES = {'left': 'mx_plate/mx_plate.kicad_pcb', 'right': 'mx_right_tb_plate/mx_right_tb_plate.kicad_pcb'}
+PLATES = {'shared': 'mx_plate/mx_plate.kicad_pcb'}   # left/right shared plate (right half: snip the trackball part and the front tab)
 T = 1.5
 
 def read_ascii_stl(p):
