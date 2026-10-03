@@ -1,0 +1,9 @@
+trackballcase.stl
+tb_placed.stl
+*.pkl
+*.png
+checkpts.json
+__pycache__/
+models/*_pcb.step
+venv/
+tb_placed_lp.stl
