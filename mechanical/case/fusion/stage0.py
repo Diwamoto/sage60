@@ -3,7 +3,7 @@ exec(open('/Users/daiki/Projects/sage60/mechanical/case/fusion/fx.py').read())
 
 PARAMS = [
     ('tilt', '5 deg', 'deg', '傾斜角（底面だけをこの角度で切る）'),
-    ('plate_t', '1.5 mm', 'mm', 'プレート厚'),
+    ('plate_t', '1.2 mm', 'mm', 'プレート厚（MX もロープロと同じ 1.2mm の共通プレートを使う。2026-10-04）'),
     ('gasket_t', '1.5 mm', 'mm', 'ガスケット厚（タブの上下とも）'),
     ('clr', '0.3 mm', 'mm', '上下ケースの嵌め合いクリアランス'),
     ('tab_depth', '2.5 mm', 'mm', 'プレートのタブの長さ（形は駆動しない）'),
@@ -17,7 +17,7 @@ PARAMS = [
     ('mag_h', '2 * mag_t - mag_h_top + 0.2 mm', 'mm', '磁石穴の深さ（下ケース）。上の磁石が mag_h_top より厚い分だけ下に突き出るので、その分深くする'),
     ('outer_r', '2 mm', 'mm', '外形の角R（Pythonで計算・形は駆動しない）'),
     ('shelf_w', '3.7 mm', 'mm', '棚幅（形は駆動しない）'),
-    ('pcb_gap', '3.5 mm', 'mm', 'プレート下面〜PCB上面'),
+    ('pcb_gap', '3.8 mm', 'mm', 'プレート下面〜PCB上面（MX: プレート上面〜PCB上面 5.0）'),
     ('xiao_t', '1.4 mm', 'mm', 'PCB上面〜XIAO上面（基板1.2＋はんだで浮く0.17。SeeedのSTEPで確認）'),
     ('usb_h_c', '3.26 mm', 'mm', 'USB-Cレセプタクルの高さ'),
     ('usb_w', '15 mm', 'mm', 'USB開口の幅（形は駆動しない）'),

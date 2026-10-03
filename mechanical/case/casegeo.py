@@ -14,7 +14,7 @@ CASE_OFF = 3.5 if LP else 4.0   # case outline = PCB/plate body + this (bezel ~ 
 OUTER_R = 2.0       # plan-view corner radius of the case outline (top wall gets OUTER_R + clr + wall)
 CLR, WALL, OPEN_CLR = (0.2, 1.5, 0.5) if LP else (0.3, 2.0, 1.0)
 # z stack (plate top = 0); must match the Fusion parameters plate_t / pcb_gap / xiao_t
-PLATE_T, PCB_GAP = (1.2, 1.0) if LP else (1.5, 3.5)
+PLATE_T, PCB_GAP = (1.2, 1.0) if LP else (1.2, 3.8)   # MX also uses the 1.2 mm shared plate (2026-10-04); PCB top stays at -5.0
 XIAO_T = 1.4         # XIAO board 1.2 + 0.17 lifted by solder (Seeed STEP on the PCB, 2026-10-03; 1.0 put the receptacle 0.05 into the wall)
 PCB_TOP = -(PLATE_T + PCB_GAP)
 MAG_D, MAG_WALL, N_MAG = 6.1, 0.6, 4     # Daiso phi6 magnets (2026-10-03; was phi2 x 10)

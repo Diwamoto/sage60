@@ -1,6 +1,7 @@
 """right case geometry = left mirrored (x' = 245.84 - x) + trackball changes -> right_spec.json, tb_placed.stl, right_geo.png"""
 import json, pickle, struct
 from casegeo import *
+from shapely.geometry import MultiPolygon
 from make_left import build_left
 from tb import tb_tris, footprint, TBX, TBY
 
@@ -30,37 +31,40 @@ def build_right():
     fp_all = footprint(t)
     fp_lo = footprint(t, zmax=SHELF_REL)
     fp_hi = footprint(t, zmin=SHELF_REL)
-    # outline: mirrored left + the trackball case's hull, cut by one straight front edge at the thumb-tip level
-    # (the trackball case may stick out of that edge by FRONT_Y - its lowest y, ~2.8 mm)
-    case_m = mirror_poly(L['case'])
-    front_y = case_m.bounds[1]
-    hull = unary_union([case_m, fp_all.convex_hull]).convex_hull
-    case = round_poly(unary_union([case_m, hull.intersection(box(40, front_y, 200, -96)), pcb.buffer(2.0, join_style=2)]).buffer(0), OUTER_R)   # PCB at least 2 inside (LP: the tongue corner was 0.35 out)
-    protrude = front_y - fp_all.bounds[1]
-    # top ring opening: keys + trackball hole, merged in front
-    keys = inner = inner_outline(cav, body.buffer(OPEN_CLR, quad_segs=16), pcb)   # cavity = top ring inner except at the trackball hole
-    assert inner.contains(pcb.buffer(0.1)) and inner.contains(body.buffer(OPEN_CLR / 2))
+    # top case hole (above the shelf) and bottom pocket (shelf -> seat) for the trackball case, R1.5 on the solid's inner corners
     h = unary_union([fp_hi, Point(TBX, TBY).buffer(BALL_R, quad_segs=32)])
     h = Polygon(max(getattr(h, 'geoms', [h]), key=lambda g: g.area).exterior)
     tbhole = opening_rounded(h.buffer(TB_CLR, quad_segs=16).buffer(2, quad_segs=16).buffer(-2, quad_segs=16), 1.5)
+    pocket = opening_rounded(fp_lo.buffer(TB_CLR, quad_segs=16).buffer(1.5, quad_segs=16).buffer(-1.5, quad_segs=16), 1.5)
+    # outline: mirrored left + the trackball case's hull, cut by one straight front edge at the thumb-tip level,
+    # pushed forward around the trackball so the case encloses it: bottom wall >= THIN_BOT round the pocket, top case (ring + skirt)
+    # >= THIN_TOP round the hole (it stuck out ~2.8 mm before 2026-10-04)
+    case_m = mirror_poly(L['case'])
+    front_y = case_m.bounds[1]
+    hull = unary_union([case_m, fp_all.convex_hull]).convex_hull
+    enc = unary_union([pocket.buffer(THIN_BOT + 0.2, quad_segs=16), tbhole.buffer(max(THIN_TOP - CLR - WALL, 0) + 0.2, quad_segs=16)])
+    ext = box(enc.bounds[0], enc.bounds[1], enc.bounds[2], front_y + 1)
+    ext = unary_union([ext, case_m.intersection(box(enc.bounds[0], -250, 250, front_y + 25))]).convex_hull     # straight front, the right side runs into the diagonal edge
+    case = round_poly(unary_union([case_m, hull.intersection(box(40, front_y, 200, -96)), ext, pcb.buffer(3.0, join_style=2)]).buffer(0), OUTER_R)   # PCB at least 3 inside: bottom wall >= THIN_BOT outside the cavity (LP: the tongue corner was 0.35 out)
+    protrude = case.bounds[1] - fp_all.bounds[1]
+    # top ring opening: keys + trackball hole, merged in front
+    keys = inner = inner_outline(cav, body.buffer(OPEN_CLR, quad_segs=16), pcb)   # cavity = top ring inner except at the trackball hole
+    assert inner.contains(pcb.buffer(0.1)) and inner.contains(body.buffer(OPEN_CLR / 2))
     # top ring opening: plate body + open_clr, keycaps + KEY_CLR, trackball hole -> the top case covers the bare PCB around the trackball
     caps = unary_union(keycaps(B + 'mx_right_tb/mx_right_tb.kicad_pcb')).buffer(2.5, join_style=2).buffer(-2.5, join_style=2)
     keyhole = opening_rounded(unary_union([body.buffer(OPEN_CLR, quad_segs=16), caps.buffer(KEY_CLR - GUARD_R, join_style=2).buffer(GUARD_R, quad_segs=16)]), 1.5)
     opening = unary_union([keyhole, tbhole]).buffer(0)          # each rounded on its own: rounding the union pinched off the sensor housing
-    opening = Polygon(max(getattr(opening, 'geoms', [opening]), key=lambda g: g.area).exterior)
-    opening = opening.intersection(case.buffer(-1.0))      # the trackball sticks out in front; that strip lies inside TB_ACCESS anyway
-    opening = Polygon(max(getattr(opening, 'geoms', [opening]), key=lambda g: g.area).exterior)
-    # pocket for the trackball case (shelf -> seat), R1.5 on the solid's inner corners
-    pocket = opening_rounded(fp_lo.buffer(TB_CLR, quad_segs=16).buffer(1.5, quad_segs=16).buffer(-1.5, quad_segs=16), 1.5)
+    opening = MultiPolygon([Polygon(g.exterior) for g in getattr(opening, 'geoms', [opening])]) if opening.geom_type == 'MultiPolygon' else Polygon(opening.exterior)   # two loops once the top case runs between them (2026-10-04)
     # thumb access region (no top case, lowered deck)
     a, b = np.array((104.957, -117.72)), np.array((100.95, -102.81))      # thumb cluster right edge (PCB)
     d = (b - a) / np.linalg.norm(b - a); n = np.array((-d[1], d[0]))
     if n[0] < 0: n = -n
     c = a + n * RIM; top = c + d * ((-95 - c[1]) / d[1])
     access = opening_rounded(Polygon([tuple(top), tuple(c), (c[0], -220), (X_R, -220), (X_R, -95)]), 2.0)
-    # top case cut / lowered deck: the whole thumb access.  (2026-10-03 the top case covered the PCB in it; between the trackball
-    # and row 4 that left 2-4 mm strips, hard to print -> dropped 2026-10-04, the PCB edge shows there)
-    access_cut = access
+    # top case cut / lowered deck: the thumb access behind the ball centre.  (2026-10-03 the top case covered the PCB in it; between
+    # the trackball and row 4 that left 2-4 mm strips, hard to print -> dropped 2026-10-04, the PCB edge shows there.)
+    # In front of the ball centre the case encloses the trackball case (2026-10-04).
+    access_cut = opening_rounded(access.intersection(box(0, TBY, 250, 0)), 2.0)
     # cut away what is left thinner than THIN near the trackball: top case (ring + skirt) and the bottom above the deck share TB_ACCESS,
     # the bottom below the deck goes into TB_POCKET.  Removing by morphological opening leaves R w/2 on the new inner corners.
     near = access.buffer(8.0)
@@ -75,14 +79,14 @@ def build_right():
         pocket = unary_union([pocket, sp]).buffer(0)
     else:
         raise AssertionError('slivers did not converge')
-    assert pocket.geom_type == 'Polygon', pocket.geom_type          # access_cut may get a small detached piece (the rim's tip at the key opening)
+    assert pocket.geom_type == 'Polygon', [(round(g.centroid.x, 1), round(g.centroid.y, 1), round(g.area, 2)) for g in getattr(pocket, 'geoms', [pocket])]          # access_cut may get a small detached piece (the rim's tip at the key opening)
     pockets = gasket_pockets(info)
     # MCU / USB / switch: mirrored from the left
     usb = mirror_poly(L['usb']); sw = mirror_poly(L['sw']); mcu = mirror_poly(box(*MCU_RING))
     screws = [(C2 - x, y) for x, y in L['screws']]
-    keep = unary_union([p.buffer(1.0) for p in pockets] + [mcu, usb, sw, access.buffer(1.0), tbhole.buffer(1.0)])
+    keep = unary_union([p.buffer(1.0) for p in pockets] + [mcu, usb, sw, access_cut.buffer(1.0), tbhole.buffer(1.0), pocket.buffer(1.0)])
     mags, band = magnet_spots(case, opening, cav, keep)
-    guard = guard_region(opening, keycaps(B + 'mx_right_tb/mx_right_tb.kicad_pcb'), mirror_poly(box(*GUARD_BOX)).difference(unary_union([tbhole, access]).buffer(3.0)))
+    guard = guard_region(keyhole, keycaps(B + 'mx_right_tb/mx_right_tb.kicad_pcb'), mirror_poly(box(*GUARD_BOX)).difference(unary_union([tbhole, access]).buffer(3.0)))
     cb = unary_union([Point(p).buffer(TB_CB_D / 2 + 1.5) for p in TB_SCREWS])
     feet = feet_spots(case, keepout=cb.buffer(FOOT_D / 2))
     return locals()
@@ -92,13 +96,14 @@ if __name__ == '__main__':
     print('magnets', [tuple(round(v, 2) for v in m) for m in G['mags']])
     print('feet', [tuple(round(v, 2) for v in f) for f in G['feet']])
     print('pocket clr to TB', round(G['pocket'].exterior.distance(G['fp_lo']), 3), ' tbhole clr', round(G['tbhole'].exterior.distance(G['h']), 3))
-    print('front edge y %.2f, trackball case sticks out %.2f mm' % (G['front_y'], G['protrude']))
-    print('top-ring strip left outside TB_ACCESS (mm2):', round(G['case'].buffer(CLR).difference(G['opening']).intersection(box(108.82, -200, 168, -120)).difference(G['access']).area, 3))
+    print('front edge y %.2f -> %.2f around the trackball, case in front of the trackball case %.2f mm' % (G['front_y'], G['case'].bounds[1], -G['protrude']))
+    front = box(0, -250, 250, TBY)
+    print('in front of the ball centre: bottom wall %.2f, top case (ring + skirt) %.2f' % (G['case'].exterior.distance(G['pocket'].intersection(front)), G['case'].exterior.distance(G['tbhole'].intersection(front)) + CLR + WALL))
     spec = {}
     spec['PLATE_SURFACE'] = check('PLATE_SURFACE', G['plate'], curves_of(G['plate'].simplify(0.01), short=0.0))
     spec['CASE_OUTER'] = check('CASE_OUTER', G['case'], curves_of(G['case']))
     spec['CAVITY'] = check('CAVITY', G['inner'], curves_of(G['inner'].simplify(0.005), short=0.6))
-    spec['TOP_RING_INNER'] = check('TOP_RING_INNER', G['opening'], curves_of(G['opening'].simplify(0.005), short=0.6))
+    spec['TOP_RING_INNER'] = sum([check('TOP_RING_INNER', g, curves_of(g.simplify(0.005), short=0.6)) for g in getattr(G['opening'], 'geoms', [G['opening']])], [])
     spec['TB_POCKET'] = check('TB_POCKET', G['pocket'], curves_of(G['pocket'].simplify(0.01)), 0.15)
     spec['TOP_GUARD'] = sum([check('TOP_GUARD', g, curves_of(g.simplify(0.005), short=0.6)) for g in getattr(G['guard'], 'geoms', [G['guard']])], [])
     spec['TB_ACCESS'] = sum([check('TB_ACCESS', g, curves_of(g.simplify(0.005), short=0.6)) for g in getattr(G['access_cut'], 'geoms', [G['access_cut']])], [])
