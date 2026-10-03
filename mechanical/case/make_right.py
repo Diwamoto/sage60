@@ -7,8 +7,8 @@ from tb import tb_tris, footprint, TBX, TBY
 TB_ZREL0 = 2.0 + PLATE_T + PCB_GAP + 0.3 + 3.7   # Fusion z = STL z_rel - this (case bottom z_rel 2 -> TB_SEAT = -(plate_t+pcb_gap+tb_gap+tb_leg_h))
 TB_CLR, BALL_R = 0.5, 17.0
 SHELF_REL = TB_ZREL0 - PLATE_T          # z_rel of the shelf top (-shelf_d)
-X_R, RIM = 168.0, 4.0               # thumb access: right limit, rim kept along the thumb cluster
-TB_WALL = 2.0                       # top case / bottom wall kept around the PCB inside the thumb access (no bare PCB in view, 2026-10-03)
+X_R, RIM = 168.0, 5.5               # thumb access: right limit, rim kept along the thumb cluster (4 -> 5.5: the top case rim was < 3 mm beside the keycaps)
+THIN_TOP, THIN_BOT = 3.0, 2.0       # around the trackball, top / bottom case parts narrower than this are cut away (slivers where the cuts meet the outline)
 TB_SCREWS = [(TBX + 9.59, TBY - 7.72), (TBX + 9.59, TBY + 8.48)]   # hex bosses of the trackball case
 TB_CB_D = 3.6
 
@@ -58,7 +58,24 @@ def build_right():
     if n[0] < 0: n = -n
     c = a + n * RIM; top = c + d * ((-95 - c[1]) / d[1])
     access = opening_rounded(Polygon([tuple(top), tuple(c), (c[0], -220), (X_R, -220), (X_R, -95)]), 2.0)
-    access_cut = opening_rounded(unary_union([access.difference(pcb.buffer(TB_WALL, quad_segs=16)), access.intersection(tbhole.buffer(1.0))]), 2.0)    # top case cut / lowered deck: off the PCB, and around the trackball case
+    # top case cut / lowered deck: the whole thumb access.  (2026-10-03 the top case covered the PCB in it; between the trackball
+    # and row 4 that left 2-4 mm strips, hard to print -> dropped 2026-10-04, the PCB edge shows there)
+    access_cut = access
+    # cut away what is left thinner than THIN near the trackball: top case (ring + skirt) and the bottom above the deck share TB_ACCESS,
+    # the bottom below the deck goes into TB_POCKET.  Removing by morphological opening leaves R w/2 on the new inner corners.
+    near = access.buffer(8.0)
+    def slivers(solid, w):
+        t = solid.difference(solid.buffer(-w / 2, quad_segs=16).buffer(w / 2, quad_segs=16)).intersection(near)
+        return unary_union([q.buffer(0.05) for q in getattr(t, 'geoms', [t]) if q.area > 0.5])
+    for it in range(8):
+        sl = unary_union([slivers(case.buffer(CLR + WALL).difference(opening).difference(access_cut), THIN_TOP), slivers(case.difference(inner).difference(pocket).difference(access_cut), THIN_BOT)])
+        sp = slivers(case.difference(inner).difference(pocket), THIN_BOT)
+        if sl.is_empty and sp.is_empty: break
+        access_cut = unary_union([access_cut, sl]).buffer(0)
+        pocket = unary_union([pocket, sp]).buffer(0)
+    else:
+        raise AssertionError('slivers did not converge')
+    assert pocket.geom_type == 'Polygon', pocket.geom_type          # access_cut may get a small detached piece (the rim's tip at the key opening)
     pockets = gasket_pockets(info)
     # MCU / USB / switch: mirrored from the left
     usb = mirror_poly(L['usb']); sw = mirror_poly(L['sw']); mcu = mirror_poly(box(*MCU_RING))
@@ -84,7 +101,7 @@ if __name__ == '__main__':
     spec['TOP_RING_INNER'] = check('TOP_RING_INNER', G['opening'], curves_of(G['opening'].simplify(0.005), short=0.6))
     spec['TB_POCKET'] = check('TB_POCKET', G['pocket'], curves_of(G['pocket'].simplify(0.01)), 0.15)
     spec['TOP_GUARD'] = sum([check('TOP_GUARD', g, curves_of(g.simplify(0.005), short=0.6)) for g in getattr(G['guard'], 'geoms', [G['guard']])], [])
-    spec['TB_ACCESS'] = check('TB_ACCESS', G['access_cut'], curves_of(G['access_cut'].simplify(0.005), short=0.6))
+    spec['TB_ACCESS'] = sum([check('TB_ACCESS', g, curves_of(g.simplify(0.005), short=0.6)) for g in getattr(G['access_cut'], 'geoms', [G['access_cut']])], [])
     spec['TB_SCREWS'] = [('circle', p, 1.0) for p in TB_SCREWS]
     spec['GASKET_POCKET'] = sum([curves_of(p, 0.05) for p in G['pockets']], [])
     spec['MAGNETS'] = [('circle', m, MAG_D / 2) for m in G['mags']]

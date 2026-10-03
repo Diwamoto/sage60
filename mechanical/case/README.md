@@ -61,10 +61,11 @@ KiCad のフットプリントは他人の環境のモデルパス（`D:/…`、
 - スイッチ（`models/cherry_mx.step`、`models/kailh_choc.step`。どちらも foostan/kbd、原点はPCB上面）とキーキャップ（`models/keycap_{mx,lp}.step`、`fusion/keycap.py` で作る簡易形状）を各スイッチのフットプリントに足す。キーキャップの下端はプレート上面＋6.0（MX）／＋3.3（ロープロ）。
 - 干渉チェックは `fusion/check_parts.py`（globals に `SIDE` / `LP`。キーキャップは押し込んだ状態も見る）。
 
-## mag_notch.py / breakaway.py
-一回限りのスクリプト（2026-10-03 に適用済み。再実行すると二重に入る）。
+## mag_notch.py / breakaway.py / tongue_edge.py
+一回限りのスクリプト（2026-10-03〜04 に適用済み。再実行すると二重に入る／tongue_edge は assert で止まる）。
 - `mag_notch.py`：左 PCB・左プレート・右プレート（鏡像）の右下の縁に、φ6 磁石の柱用の半円の切り欠きを入れる（中心は `casegeo.MAG_NOTCH`）。左 PCB の ROW4 は先に手で引き直してある。
 - `breakaway.py`：左プレートを左右共通にするため、右で使わない部分（トラックボールまわり・手前のタブ）にスロット＋ブリッジ／ミシン目を入れる。発注するプレートは `mx_plate` だけ。
+- `tongue_edge.py`：右 PCB の J1 の舌の左の辺を x 158.0→158.9 にして、トラックボールケースの脚の腕を避ける（0.49mm 重なり→0.36mm の隙間）。舌に沿う SDIO / MOTION の配線も0.32右へ。
 
 ## shorten_tabs.py
 プレートのタブを5→2.5mmにした一回限りのスクリプト（2026-10-02に適用済み。再実行するとさらに短くなる）。

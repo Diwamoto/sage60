@@ -9,13 +9,13 @@ def run(_c):
     sk = new_sketch(r, 'TB_ACCESS', r.xYConstructionPlane, spec['TB_ACCESS']); sk.isVisible = False
     ex = r.features.extrudeFeatures
     bot = r.bRepBodies.itemByName('right_bottom')
-    inp = ex.createInput(sk.profiles.item(0), FO.CutFeatureOperation)
+    inp = ex.createInput(oc(profiles(sk)), FO.CutFeatureOperation)
     inp.startExtent = adsk.fusion.FromEntityStartDefinition.create(deck, VI.createByString('0 mm'))
     inp.setOneSideExtent(adsk.fusion.DistanceExtentDefinition.create(VI.createByString('20 mm')), adsk.fusion.ExtentDirections.PositiveExtentDirection)
     inp.participantBodies = [bot]
     f = ex.add(inp); f.name = 'TB_DECK_CUT'
     mocks = [r.bRepBodies.itemByName('MOCK_A')]
-    inp = ex.createInput(sk.profiles.item(0), FO.CutFeatureOperation)
+    inp = ex.createInput(oc(profiles(sk)), FO.CutFeatureOperation)
     inp.startExtent = adsk.fusion.OffsetStartDefinition.create(VI.createByString('-30 mm'))
     inp.setOneSideExtent(adsk.fusion.DistanceExtentDefinition.create(VI.createByString('60 mm')), adsk.fusion.ExtentDirections.PositiveExtentDirection)
     inp.participantBodies = mocks
