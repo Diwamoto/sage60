@@ -1,4 +1,4 @@
-"""plates (KiCad Edge.Cuts, board thickness 1.5) -> case/sage60_shared_plate.3mf for test prints.
+"""plates (KiCad Edge.Cuts, board thickness 1.5) -> case/sage60_shared{,_lp}_plate.3mf for test prints.
 Needs kicad-cli (KiCad 10). Checks the mesh is closed and its volume matches the KiCad outline x thickness."""
 import subprocess, tempfile, zipfile, os
 import numpy as np
@@ -6,8 +6,8 @@ from geo import outline, B
 from shapely.ops import unary_union
 
 OUT = '/Users/daiki/Projects/sage60/case/'
-PLATES = {'shared': 'mx_plate/mx_plate.kicad_pcb'}   # left/right shared plate (right half: snip the trackball part and the front tab)
-T = 1.5
+PLATES = {'shared': 'mx_plate/mx_plate.kicad_pcb', 'shared_lp': 'mx_plate/mx_plate.kicad_pcb'}   # left/right shared plate (right half: snip the trackball part and the front tab)
+T = {'shared': 1.5, 'shared_lp': 1.2}       # MX 1.5 / Choc v2 1.2 (same 14.0 cutouts)
 
 def read_ascii_stl(p):
     v = [list(map(float, l.split()[1:4])) for l in open(p) if l.strip().startswith('vertex')]
@@ -37,15 +37,16 @@ def write_3mf(tris, path):
     return vol, verts.min(0), verts.max(0)
 
 for side, f in PLATES.items():
+    t = T[side]
     with tempfile.TemporaryDirectory() as d:
         stl = os.path.join(d, 'p.stl')
         subprocess.run(['kicad-cli', 'pcb', 'export', 'stl', '--board-only', '--cut-vias-in-body', '-f', '-o', stl, B + f], check=True, capture_output=True)
         tris = read_ascii_stl(stl)
     z0, z1 = tris[..., 2].min(), tris[..., 2].max()      # KiCad's board body is the dielectric only (1.43): stretch to the plate thickness
-    tris[..., 2] = (tris[..., 2] - z0) * T / (z1 - z0)
+    tris[..., 2] = (tris[..., 2] - z0) * t / (z1 - z0)
     vol, lo, hi = write_3mf(tris, OUT + 'sage60_%s_plate.3mf' % side)
     _, polys = outline(B + f)
     outer = polys[0]; holes = unary_union([p for p in polys[1:] if outer.contains(p.representative_point())])
-    want = (outer.area - holes.area) * T     # ponytail: assumes cutouts are Edge.Cuts loops only (no NPTH pads)
+    want = (outer.area - holes.area) * t     # ponytail: assumes cutouts are Edge.Cuts loops only (no NPTH pads)
     print('%-5s size %.1f x %.1f x %.2f mm  volume %.1f mm3 (KiCad outline %.1f, %+.2f%%)' % (side, *(hi - lo), vol, want, 100 * (vol / want - 1)))
-    assert abs(hi[2] - lo[2] - T) < 0.01 and abs(vol / want - 1) < 0.01
+    assert abs(hi[2] - lo[2] - t) < 0.01 and abs(vol / want - 1) < 0.01
