@@ -9,6 +9,7 @@ TB_ZREL0 = 2.0 + PLATE_T + PCB_GAP + 0.3 + 3.7   # Fusion z = STL z_rel - this (
 TB_CLR, BALL_R = 0.5, 17.0
 SHELF_REL = TB_ZREL0 - PLATE_T          # z_rel of the shelf top (-shelf_d)
 X_R, RIM = 168.0, 5.5               # thumb access: right limit, rim kept along the thumb cluster (4 -> 5.5: the top case rim was < 3 mm beside the keycaps)
+FRONT_R = 4.0                       # fillet where the trackball envelope meets the front edge / the right diagonal
 THIN_TOP, THIN_BOT = 3.0, 2.0       # around the trackball, top / bottom case parts narrower than this are cut away (slivers where the cuts meet the outline)
 TB_SCREWS = [(TBX + 9.59, TBY - 7.72), (TBX + 9.59, TBY + 8.48)]   # hex bosses of the trackball case
 TB_CB_D = 3.6
@@ -43,13 +44,13 @@ def build_right():
     front_y = case_m.bounds[1]
     hull = unary_union([case_m, fp_all.convex_hull]).convex_hull
     enc = unary_union([pocket.buffer(THIN_BOT + 0.2, quad_segs=16), tbhole.buffer(max(THIN_TOP - CLR - WALL, 0) + 0.2, quad_segs=16)])
-    # trimmed to the thumb cluster and the trackball case (2026-10-04): the convex hull of the case's front part and the trackball
-    # envelope -> from the thumb cluster's front corner a straight edge runs down to the trackball, follows it round and joins the
-    # diagonal on the right (a step only around the trackball looked odd, a full-width straight edge left too much material)
+    # trimmed to the thumb cluster and the trackball case (2026-10-04, as little margin as possible): the case's front part plus the
+    # trackball envelope, the concave corners between them filled with R FRONT_R (the convex hull left a triangle under the thumb cluster)
     base = unary_union([case_m, hull.intersection(box(40, front_y, 200, -96))])
-    lower = base.intersection(box(0, -250, 250, front_y + 25))
-    ext = unary_union([lower, enc.intersection(box(0, -250, 250, TBY))]).convex_hull
-    case = round_poly(unary_union([base, ext, pcb.buffer(3.0, join_style=2)]).buffer(0), OUTER_R)   # PCB at least 3 inside: bottom wall >= THIN_BOT outside the cavity (LP: the tongue corner was 0.35 out)
+    ext = unary_union([base, enc.intersection(box(0, -250, 250, TBY)).convex_hull, pcb.buffer(3.0, join_style=2)])   # PCB at least 3 inside: bottom wall >= THIN_BOT outside the cavity
+    ext = ext.buffer(FRONT_R, quad_segs=16).buffer(-FRONT_R, quad_segs=16)
+    ext = unary_union([ext, ext.intersection(box(158, -250, 250, -100)).convex_hull])     # one straight diagonal on the right (the tongue's margin made a step)
+    case = round_poly(ext, OUTER_R)
     protrude = case.bounds[1] - fp_all.bounds[1]
     # top ring opening: keys + trackball hole, merged in front
     keys = inner = inner_outline(cav, body.buffer(OPEN_CLR, quad_segs=16), pcb)   # cavity = top ring inner except at the trackball hole
