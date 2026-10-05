@@ -42,11 +42,7 @@ def run(_c):
     es = [e for e in vertical_edges(body) if (lambda i: not i['tangent'] and not near_any(i['xy'], mags, 2.0) and not on_ring(i['xy'], R['cav'], 0.05))(edge_info(e, body))]
     log.append(('F_inner at', [tuple(round(v, 1) for v in edge_info(e, body)['xy']) for e in es]))
     ok, bad = fillet(r, es, 'inner_r', 'FILLET_INNER'); log.append(('F_inner', len(es), bad))
-    sw_cuts(r, spec, [get()], '')
-    # USB: recess for the plug overmold from the port face outwards, then the receptacle opening through the flush wall
-    _, sg = usb_plane(r, spec['_usb_face_y'])
-    extrude('USB_TUNNEL_CUT', sk('USB_TUNNEL').profiles.item(0), FO.CutFeatureOperation, dist='%d mm' % (20 * sg), bodies=[get()])
-    extrude('USB_RCPT_CUT', sk('USB_RCPT').profiles.item(0), FO.CutFeatureOperation, start=offS('%.1f mm' % (0.3 * sg)), dist='%.1f mm' % (-2.5 * sg), bodies=[get()])
+    slot_cuts(r, spec, [get()], '')
     extrude('GASKET_POCKET_CUT', allp('GASKET_POCKET'), FO.CutFeatureOperation, start=offS('-( plate_t + gasket_t + gasket_pocket )'), dist='gasket_pocket + plate_t + gasket_t - shelf_d')
     v0 = get().volume
     up_into_body = pl('DESK_PLANE').geometry.normal.z > 0
@@ -55,7 +51,7 @@ def run(_c):
     if SIDE == 'right':
         extrude('TB_POCKET_CUT', sk('TB_POCKET').profiles.item(0), FO.CutFeatureOperation, start=fromE('SHELF_TOP'), to=pl('TB_SEAT'))
         extrude('TB_SCREW_CUT', allp('TB_SCREWS'), FO.CutFeatureOperation, dist='-30 mm')
-        extrude('TB_SCREW_CB_CUT', allp('TB_SCREW_CB'), FO.CutFeatureOperation, start=offS('-tb_cb_t'), dist='-30 mm')
+        extrude('TB_SCREW_CB_CUT', allp('TB_SCREW_CB'), FO.CutFeatureOperation, to=pl('TB_CB_FLOOR'))
         bf = r.features.baseFeatures.add(); bf.name = 'TB_CASE_REF'
         bf.startEdit()
         r.meshBodies.add(SCR + 'tb_placed%s.stl' % SFX, adsk.fusion.MeshUnits.MillimeterMeshUnit, bf)

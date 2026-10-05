@@ -159,51 +159,12 @@ def on_ring(xy, ring_pts, tol=0.05):
     return best < tol
 
 
-def usb_plane(r, y_mm):
-    """construction plane parallel to XZ through y = y_mm; returns (plane, sign) where sign * distance moves toward +y"""
-    xz = r.constructionPlanes.itemByName('USB_FACE')
-    n = r.xZConstructionPlane.geometry.normal.y
-    if xz is None:
-        i = r.constructionPlanes.createInput(); i.setByOffset(r.xZConstructionPlane, adsk.core.ValueInput.createByString('%.4f mm' % (y_mm * n)))
-        xz = r.constructionPlanes.add(i); xz.name = 'USB_FACE'; xz.isLightBulbOn = False
-    return xz, (1 if n > 0 else -1)
-
-def draw_xz(sk, curves, y_mm):
-    """curves given as (x, z) in mm on the plane y = y_mm"""
-    def m(p):
-        q = sk.modelToSketchSpace(adsk.core.Point3D.create(p[0] / 10, y_mm / 10, p[1] / 10)); return (q.x * 10, q.y * 10)
-    out = []
-    for c in curves:
-        if c[0] == 'line': out.append(('line', m(c[1]), m(c[2])))
-        elif c[0] == 'arc': out.append(('arc', m(c[1]), m(c[2]), m(c[3])))
-    return draw(sk, out)
-
-def sw_plane(r, x_mm):
-    """construction plane parallel to YZ through x = x_mm; returns (plane, sign) where sign * distance moves toward +x"""
-    p = r.constructionPlanes.itemByName('SW_FLOOR')
-    n = r.yZConstructionPlane.geometry.normal.x
-    if p is None:
-        i = r.constructionPlanes.createInput(); i.setByOffset(r.yZConstructionPlane, adsk.core.ValueInput.createByString('%.4f mm' % (x_mm * n)))
-        p = r.constructionPlanes.add(i); p.name = 'SW_FLOOR'; p.isLightBulbOn = False
-    return p, (1 if n > 0 else -1)
-
-def draw_yz(sk, curves, x_mm):
-    """curves given as (y, z) in mm on the plane x = x_mm"""
-    def m(p):
-        q = sk.modelToSketchSpace(adsk.core.Point3D.create(x_mm / 10, p[0] / 10, p[1] / 10)); return (q.x * 10, q.y * 10)
-    out = []
-    for c in curves:
-        if c[0] == 'line': out.append(('line', m(c[1]), m(c[2])))
-        elif c[0] == 'arc': out.append(('arc', m(c[1]), m(c[2]), m(c[3])))
-    return draw(sk, out)
-
-def sw_cuts(r, spec, bodies, tag, names=('SW_SCOOP', 'SW_OPEN')):
-    """slide switch: scoop from the floor plane outwards, opening from inside the cavity outwards; same sketches for every body"""
-    ex = r.features.extrudeFeatures; sw = spec['_sw']
-    _, sg = sw_plane(r, sw['x']); o = sw['out'] * sg
-    for n, start, dist in (('SW_SCOOP', 0.0, 12.0), ('SW_OPEN', -sw['in'], sw['in'] + 12.0)):
-        if n not in names: continue
+def slot_cuts(r, spec, bodies, tag, names=None):
+    """USB / slide switch: plan slots cut from their bottom z straight up (open at the top: no side machining, 2026-10-05)"""
+    ex = r.features.extrudeFeatures
+    for n, z0 in spec['_slot_z'].items():
+        if names and n not in names: continue
         i = ex.createInput(r.sketches.itemByName(n).profiles.item(0), FO.CutFeatureOperation)
-        i.startExtent = adsk.fusion.OffsetStartDefinition.create(VI.createByString('%.2f mm' % (start * o)))
-        i.setOneSideExtent(adsk.fusion.DistanceExtentDefinition.create(VI.createByString('%.2f mm' % (dist * o))), adsk.fusion.ExtentDirections.PositiveExtentDirection)
+        i.startExtent = adsk.fusion.OffsetStartDefinition.create(VI.createByString(z0))
+        i.setOneSideExtent(adsk.fusion.DistanceExtentDefinition.create(VI.createByString('40 mm')), adsk.fusion.ExtentDirections.PositiveExtentDirection)
         i.participantBodies = bodies; ex.add(i).name = n + '_CUT' + tag

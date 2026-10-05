@@ -26,26 +26,26 @@ def run(_c):
     MCUT = off_plane('MCU_RING_TOP', XY, 'mcu_cover_z')
     dims(new_sketch(r, 'MCU_SCREWS', MCUT, spec['MCU_SCREWS']), 'ins_d')
     off_plane('FLOOR_TOP', DESK, 'floor_t')
-    xf = spec['_sw']['x']; SWF, _ = sw_plane(r, xf)
-    for n in ('SW_SCOOP', 'SW_OPEN'):
-        s = r.sketches.add(SWF); s.name = n; draw_yz(s, spec[n], xf)
-    yf = spec['_usb_face_y']; UF, _ = usb_plane(r, yf)
-    for n in ('USB_TUNNEL', 'USB_RCPT'):
-        s = r.sketches.add(UF); s.name = n; draw_xz(s, spec[n], yf)
-    new_sketch(r, 'GASKET_POCKET', XY, spec['GASKET_POCKET'])
-    # rubber feet on the (tilted) desk face
-    sk = r.sketches.add(DESK); sk.name = 'FEET'
-    pg = DESK.geometry; o, n = pg.origin, pg.normal
-    for c in spec['FEET']:
-        x, y = c[1][0] / 10, c[1][1] / 10
-        z = o.z - (n.x * (x - o.x) + n.y * (y - o.y)) / n.z
-        sk.sketchCurves.sketchCircles.addByCenterRadius(sk.modelToSketchSpace(adsk.core.Point3D.create(x, y, z)), c[2] / 10)
-    dims(sk, 'foot_d')
+    for n in ('USB_RECESS', 'USB_RCPT', 'SW_SCOOP', 'SW_OPEN'):      # plan slots, cut upward from their bottom z (CNC, 2026-10-05)
+        new_sketch(r, n, XY, spec[n])
+    new_sketch(r, 'GASKET_POCKET', XY, spec['GASKET_POCKET'])          # bottom (runs out past the wall)
+    new_sketch(r, 'TOP_GASKET_SLOT', XY, spec['TOP_GASKET_SLOT'])      # top ring (ends inside it)
+    # rubber feet on the (tilted) desk face; machined from below along the desk normal (setup 2)
+    def desk_circles(name, circles, expr):
+        sk = r.sketches.add(DESK); sk.name = name
+        pg = DESK.geometry; o, n = pg.origin, pg.normal
+        for c in circles:
+            x, y = c[1][0] / 10, c[1][1] / 10
+            z = o.z - (n.x * (x - o.x) + n.y * (y - o.y)) / n.z
+            sk.sketchCurves.sketchCircles.addByCenterRadius(sk.modelToSketchSpace(adsk.core.Point3D.create(x, y, z)), c[2] / 10)
+        dims(sk, expr)
+    desk_circles('FEET', spec['FEET'], 'foot_d')
     if SIDE == 'right':
         SEAT = off_plane('TB_SEAT', XY, '-( plate_t + pcb_gap + tb_gap + tb_leg_h )')
         new_sketch(r, 'TB_POCKET', XY, spec['TB_POCKET'])
         dims(new_sketch(r, 'TB_SCREWS', SEAT, spec['TB_SCREWS']), 'tb_scr_d')
-        dims(new_sketch(r, 'TB_SCREW_CB', SEAT, spec['TB_SCREWS']), 'tb_cb_d')
+        desk_circles('TB_SCREW_CB', spec['TB_SCREWS'], 'tb_cb_d')       # counterbores along the desk normal (setup 2); the holes stay plate-normal (from the top)
+        off_plane('TB_CB_FLOOR', XY, '-( plate_t + pcb_gap + tb_gap + tb_leg_h + tb_cb_t )')
     for p in cp: p.isLightBulbOn = False
     for s in r.sketches:
         print(s.name, 'curves', s.sketchCurves.count, 'profiles', s.profiles.count)

@@ -21,8 +21,9 @@ def run(c):
         g['run'](c)
 ```
 - stage0: ドキュメントのタイムラインとユーザーパラメータを全部消して作り直す（保存済みの版は履歴に残る）
-- stage1: 平面とスケッチ / stage2: 下ケース（右はトラックボールのポケット・ネジ・参照メッシュも）/ stage3: 上ケース MOCK_A（A案） / stage4: 右だけ、トラックボール手前の床と上ケースの切り欠き / stage5: PCB_REF（PCB＋部品のSTEP。PCB上面を −(plate_t+pcb_gap) に置く。モックの画像は必ずこれを入れて撮る）
+- stage1: 平面とスケッチ / stage2: 下ケース（右はトラックボールのポケット・ネジ・参照メッシュも）/ stage3: 上ケース MOCK_A（A案） / stage4: 右だけ、トラックボール奥の床と上ケースの切り欠き、手前の枠の天面を `tb_front_drop` 下げる / stage5: PCB_REF（PCB＋部品のSTEP。PCB上面を −(plate_t+pcb_gap) に置く。モックの画像は必ずこれを入れて撮る）
 - 最後に `fusion/check.py` で干渉チェック（PCB・プレート・トラックボールケース・USBプラグの通り道・上下の重なり。全部0になること）
+- CNC の加工性は `fusion/machinability.py`（globals に `SIDE`、ロープロは `LP`）。アンダーカット・鋭い内角・R と深さ（R ≥ H/10+0.5）・穴の深さ・肉厚 0.8 を B-Rep で調べ、`cnc_<side><sfx>.json` に書く。全部0になること（2026-10-05〜）
 
 ## ロープロファイル版（Choc、2026-10-03〜）
 同じPCB（フットプリントが MX/Choc 両対応）に Choc を載せる薄型ケース。Fusion のドキュメントは `sage60_lp_left` / `sage60_lp_right`（stage0 が無ければ Admin Project に作る）。

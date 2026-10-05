@@ -25,8 +25,14 @@ def run(_c):
             res[b.name] = (n_pcb, n_pl)
         tbm = adsk.fusion.TemporaryBRepManager.get(); ov = {}
         for m in bodies[1:]:
-            a = tbm.copy(m); bb = tbm.copy(bodies[0]); tbm.booleanOperation(a, bb, adsk.fusion.BooleanTypes.IntersectionBooleanType)
-            ov[m.name] = round(a.volume * 1000, 4) if a.faces.count else 0
+            try:
+                a = tbm.copy(m); bb = tbm.copy(bodies[0]); tbm.booleanOperation(a, bb, adsk.fusion.BooleanTypes.IntersectionBooleanType)
+                ov[m.name] = round(a.volume * 1000, 4) if a.faces.count else 0
+            except RuntimeError:            # near-coincident faces (the bodies touch): Fusion's interference analysis instead
+                des = r.parentDesign
+                ii = des.createInterferenceInput(adsk.core.ObjectCollection.createWithArray([m, bodies[0]])); ii.areCoincidentFacesIncluded = False
+                res_i = des.analyzeInterference(ii)
+                ov[m.name] = round(sum(res_i.item(i).interferenceBody.volume for i in range(res_i.count)) * 1000, 4) if res_i else 0
         print(side, 'PCB/plate points inside (pcb, plate):', res, ' mock∩bottom mm3:', ov)
         # USB plug overmold corridor (12.5 x 7, from the port face outwards). The 15 x 9 recess has R1.5 in its back corners.
         x0 = 174.75 if side == 'left' else 245.84 - 187.25
@@ -58,11 +64,9 @@ def run_openings(_c):
         import math   # receptacle body: stadium 8.94 x 3.26 centred (181.0, -2.37)
         rcpt = [(x, y, z) for x in rng(176.6, 185.4, 12) for y in rng(-34.3, -27.1, 10) for z in rng(zc - 1.58, zc + 1.57, 6)
                 if math.hypot(max(abs(x - 181.0) - (4.47 - 1.63), 0), z - zc) <= 1.6]
-        wall = [(x, y, z) for x in rng(174.0, 175.8, 4) + rng(186.2, 188.0, 4) for y in rng(-28.1, -27.2, 3) for z in rng(zc - 4.1, zc + 0.8, 6)]   # flush wall beside it
+        wall = [(x, y, z) for x in rng(174.0, 175.8, 4) + rng(186.2, 186.8, 4) for y in rng(-27.8, -27.2, 3) for z in rng(zc - 4.1, zc + 0.8, 6)]   # flush wall beside it (clear of the cavity relief at the MCU corner, 2026-10-05)
         knob = [(x, y, z) for x in rng(191.5, 197.0, 10) for y in rng(-52.3 - 1.6, -52.3 + 1.6, 6) for z in rng(top, top + 1.4, 4)]       # knob travel
-        fill = [(194.0, y, -4.3 + dz) for y in (-61.0, -43.6)] + [(192.0, y, -4.3 + dz) for y in (-59.0, -45.6)] + [(192.0, -52.3, z + dz) for z in (-8.3, -0.3)]   # around scoop / opening
+        fill = [(194.0, y, -4.3 + dz) for y in (-61.0, -43.6)] + [(192.0, y, -4.3 + dz) for y in (-59.0, -45.6)] + [(192.0, -52.3, -8.3 + dz)]   # around scoop / opening (open at the top since 2026-10-05)
         reach = [(x, y, z) for x in (193.5, 196.0, 198.0) for y in (-58.3, -46.3) for z in (-8.5 + dz, -0.1 + dz)]                                           # scoop is empty (top + bottom)
-        roof = [(x, y, z) for x in (178.0, 181.0, 184.0) for y in (-27.9, -27.4) for z in rng(zc + 2.15, mcz - 0.2, 3)] if mcz - 0.2 > zc + 2.15 else []   # closed above the receptacle opening
-        roof += [(x, y, mcz - 0.2) for x in (176.0, 181.0, 186.0) for y in (-25.5, -23.5)] if mcz - 0.2 > zc + uh / 2 else []        # closed above the plug recess (LP: open notch)                                                 # closed above the plug recess
         print(side, 'receptacle hits', inside(rcpt, bodies), '| flush wall solid %d/%d' % (inside(wall, bodies[:1]), len(wall)),
-              '| knob path hits', inside(knob, bodies), '| filled around switch %d/%d' % (inside(fill, bodies[:1]), len(fill)), '| scoop hits', inside(reach, bodies), '| closed above USB %d/%d' % (inside(roof, bodies[:1]), len(roof)))
+              '| knob path hits', inside(knob, bodies), '| filled around switch %d/%d' % (inside(fill, bodies[:1]), len(fill)), '| scoop hits', inside(reach, bodies))

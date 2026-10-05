@@ -49,15 +49,18 @@ def run(_c):
         m = f.bodies.item(0); m.name = 'MOCK_' + X; mocks.append(m)
         extrude('TOP_GUARD_' + X, allp('TOP_GUARD'), FO.JoinFeatureOperation, 'guard_z', 'top_h - guard_z', bodies=[m])
         extrude('TOP_MCU_OPEN_' + X, sk('TOP_MCU_OPEN').profiles.item(0), FO.CutFeatureOperation, '-shelf_d', 'shelf_d + top_h', bodies=[m])
-        extrude('TOP_GASKET_SLOT_' + X, allp('GASKET_POCKET'), FO.CutFeatureOperation, '-shelf_d', 'shelf_d + gasket_t + gasket_pocket', bodies=[m])
+        extrude('TOP_GASKET_SLOT_' + X, allp('TOP_GASKET_SLOT'), FO.CutFeatureOperation, '-shelf_d', 'shelf_d + gasket_t + gasket_pocket', bodies=[m])
         extrude('TOP_MAG_' + X, allp('TOP_MAG'), FO.CutFeatureOperation, '-shelf_d', 'mag_h_top', bodies=[m])
         extrude('TOP_WALL_A', widest(sk('TOP_WALL')), FO.JoinFeatureOperation, 'top_h', to=pl('DESK_PLANE'), bodies=[m])
         m = r.bRepBodies.itemByName('MOCK_' + X)
-        _, sg = usb_plane(r, spec['_usb_face_y'])
-        i = ex.createInput(sk('USB_TUNNEL').profiles.item(0), FO.CutFeatureOperation)
-        i.setOneSideExtent(adsk.fusion.DistanceExtentDefinition.create(VI.createByString('%d mm' % (30 * sg))), adsk.fusion.ExtentDirections.PositiveExtentDirection)
-        i.participantBodies = [m]; ex.add(i).name = 'TOP_USB_' + X
-        sw_cuts(r, spec, [m], '_' + X, ('SW_SCOOP',))    # the opening lies inside the scoop in the top wall
+        # CNC: the ring ends at the MCU opening meet the skirt in concave corners -> R inner_r (the bottom MCU block is rounded to match)
+        bx = [p for c in spec['TOP_MCU_OPEN'] if c[0] == 'line' for p in c[1:3]]
+        xs, y0 = {round(min(p[0] for p in bx), 3), round(max(p[0] for p in bx), 3)}, min(p[1] for p in bx)
+        es = [e for e in vertical_edges(m) if (lambda i: i['concave'] and not i['tangent'] and (any(abs(i['xy'][0] - x) < 0.05 for x in xs) or abs(i['xy'][1] - y0) < 0.05))(edge_info(e, m))]
+        ok, bad = fillet(r, es, 'inner_r', 'TOP_MCU_FILLET_' + X)
+        print('TOP_MCU_FILLET', len(es), bad)
+        m = r.bRepBodies.itemByName('MOCK_' + X)
+        slot_cuts(r, spec, [m], '_' + X, ('USB_RECESS', 'SW_SCOOP'))      # USB / switch: notches open at the top through the skirt
     for s in r.sketches:
         s.isVisible = False
     for b in r.bRepBodies:
