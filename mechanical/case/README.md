@@ -37,7 +37,8 @@ Fusion では exec の globals に `'LP': True` を足す（`{'SIDE': 'left', 'L
 
 ## プレートの3MF（試作プリント用）
 ```sh
-./venv/bin/python plate_3mf.py      # case/sage60_shared{,_lp}_plate.3mf（左右共通プレート。MX 1.5mm / Choc v2 1.2mm、kicad-cli で Edge.Cuts を1.5mm厚に）
+./venv/bin/python plate_3mf.py      # case/sage60_shared_plate.3mf（左右共通プレート 1.2mm、MX / Choc v2 共通。Edge.Cuts を Python で押し出す）
+# ケース: Fusion で fusion/export_3mf.py を exec（globals SIDE / LP）→ case/sage60_<side>{,_lp}_{bottom,top,cover}.3mf（モデルの向きのまま。上ケースはスライサーで裏返す）
 ```
 
 ## 形を決めている数値
