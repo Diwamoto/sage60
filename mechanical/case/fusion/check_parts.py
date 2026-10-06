@@ -11,7 +11,7 @@ def bodies(o):
 
 def run(_c):
     r = design(DOC).rootComponent; tbm = adsk.fusion.TemporaryBRepManager.get()
-    case = [b for b in r.bRepBodies if b.name in ('%s_bottom' % SIDE, 'MOCK_A') or b.name.startswith('MOCK_B')]
+    case = [b for b in r.bRepBodies if b.name in ('%s_bottom' % SIDE, 'MOCK_A', 'MCU_COVER') or b.name.startswith('MOCK_B')]
     top = [o for o in r.occurrences if o.component.name.startswith('PCB_REF')][0].childOccurrences.item(0)
     down = adsk.core.Matrix3D.create(); down.translation = adsk.core.Vector3D.create(0, 0, -TRAVEL)
     hits = collections.Counter(); n = collections.Counter()

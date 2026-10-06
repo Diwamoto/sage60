@@ -7,10 +7,12 @@ def run(_c):
     vp = app.activeViewport; VO = adsk.core.ViewOrientations
     bot = r.bRepBodies.itemByName('%s_bottom' % SIDE)
     A, Bm = r.bRepBodies.itemByName('MOCK_A'), [b for b in r.bRepBodies if b.name.startswith('MOCK_B')]
+    cov = r.bRepBodies.itemByName('MCU_COVER')
     for s in r.sketches: s.isVisible = False
     for p in r.constructionPlanes: p.isLightBulbOn = False
     def show(a=False, b=False):
         A.isLightBulbOn = a
+        if cov: cov.isLightBulbOn = a
         for m in Bm: m.isLightBulbOn = b
     bb = bot.boundingBox
     cx, cy = (bb.minPoint.x + bb.maxPoint.x) / 2, (bb.minPoint.y + bb.maxPoint.y) / 2
@@ -34,6 +36,12 @@ def run(_c):
     ortho('front', 0, -1)
     ortho('back', 0, 1)
     ortho('side', 1 if SIDE == 'left' else -1, 0)
+    refs = [o for o in r.occurrences if o.component.name.startswith('PCB_REF')]
+    for o in refs: o.isLightBulbOn = False
+    show()
+    cam = vp.camera; cam.cameraType = adsk.core.CameraTypes.PerspectiveCameraType; cam.viewOrientation = iso; cam.isFitView = True; vp.camera = cam
+    fit('floor', iso)                   # bottom case alone: flat floor, battery pocket
+    for o in refs: o.isLightBulbOn = True
     show(a=True)
     cam = vp.camera; cam.cameraType = adsk.core.CameraTypes.PerspectiveCameraType; cam.viewOrientation = iso; cam.isFitView = True; vp.camera = cam
     print(tag, 'ok')

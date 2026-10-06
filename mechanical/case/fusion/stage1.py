@@ -25,7 +25,7 @@ def run(_c):
     dims(new_sketch(r, 'MAGNETS', SHELF, spec['MAGNETS']), 'mag_d')
     MCUT = off_plane('MCU_RING_TOP', XY, 'mcu_cover_z')
     dims(new_sketch(r, 'MCU_SCREWS', MCUT, spec['MCU_SCREWS']), 'ins_d')
-    off_plane('FLOOR_TOP', DESK, 'floor_t')
+    if 'BAT_POCKET' in spec: new_sketch(r, 'BAT_POCKET', XY, spec['BAT_POCKET'])     # MX (flat floor, 2026-10-06)
     for n in ('USB_RECESS', 'USB_RCPT', 'SW_SCOOP', 'SW_OPEN'):      # plan slots, cut upward from their bottom z (CNC, 2026-10-05)
         new_sketch(r, n, XY, spec[n])
     new_sketch(r, 'GASKET_POCKET', XY, spec['GASKET_POCKET'])          # bottom (runs out past the wall)

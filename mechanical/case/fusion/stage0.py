@@ -9,8 +9,10 @@ PARAMS = [
     ('tab_depth', '2.5 mm', 'mm', 'プレートのタブの長さ（形は駆動しない）'),
     ('wall', '2 mm', 'mm', '上ケース外壁の厚さ'),
     ('inner_r', '1.5 mm', 'mm', '内角R（CNCの工具半径以上）'),
-    ('cav_z', '11 mm', 'mm', '空洞の深さ（プレート上面から）'),
-    ('floor_t', '2 mm', 'mm', '床の厚さ（傾斜に沿う）'),
+    ('cav_z', '11 mm', 'mm', '空洞の深さ（プレート上面から）。床は水平（2026-10-06）：ソケットの下に薄い吸音フォームの隙間 2.6mm'),
+    ('floor_t', '2 mm', 'mm', '床の最小の厚さ（手前の端）'),
+    ('bat_z', 'plate_t + pcb_gap + pcb_t + sock_h + bat_t + bat_clr', 'mm', 'バッテリー＋JSTのポケットの底（プレート上面から）＝ソケットの下にバッテリー'),
+    ('cover_t', '3 mm', 'mm', 'MCUカバー（ウォルナット）の厚さ。下面 mcu_cover_z、上面は天面より0.1低い'),
     ('mag_d', '6.1 mm', 'mm', '磁石穴径（ダイソーのφ6磁石、2026-10-03。前はφ2×2）'),
     ('mag_t', '3 mm', 'mm', '磁石の厚さ（ダイソー φ6×3、2026-10-03 確認）'),
     ('mag_h_top', 'mag_t + 0.1 mm', 'mm', '磁石穴の深さ（上ケース）'),
@@ -59,14 +61,15 @@ LP_PARAMS = {
     'cav_z': ('plate_t + pcb_gap + pcb_t + sock_h + bat_t + bat_clr', '空洞の深さ（プレート上面から）＝ソケットの下にバッテリー（JSTの4.85より深い）'),
     'floor_t': ('1.5 mm', None),
     'top_h': ('gasket_t + gasket_pocket + 1.2 mm', '上ケース天面の高さ（プレート上面から）＝ガスケット溝の上に1.2mm'),
-    'mcu_cover_z': ('top_h - plate_t', 'MCU部の壁の上面。プレートと同じ厚さのMCUカバーが上ケース天面と面一になる高さ（USBの凹みとレセプタクルの穴は上が開いた切り欠きになる）'),
+    'mcu_cover_z': ('4.8 mm', 'MCU部の壁の上面＝カバーの下面。MCU部を天面より一段高い台にして、USBケーブルの成形部の上端 +4.3 より上にカバーを載せる（カバーにUSBの切り欠きを作らない。2026-10-06）'),
     'usb_h': ('8 mm', None),
     'guard_z': ('0.5 mm', None),
     'mag_h_top': ('2.1 mm', '磁石穴の深さ（上ケース）。リングが3.2mmしかないので上に1.1mm残し、磁石は下に0.9mm突き出す（下ケースの穴 mag_h が4.1になり、位置決めピンを兼ねる）'),
     'foot_t': ('0.5 mm', None),
+    'cover_t': ('2.5 mm', 'MCUカバー（合板）の厚さ。上面 +7.3（キーキャップの上面 +6.8 とほぼ同じ）'),
     'tb_front_drop': ('1 mm', None),
 }
-LP_EXTRA = [
+LP_EXTRA = [            # (both since 2026-10-06: MX's battery pocket)
     ('pcb_t', '1.6 mm', 'mm', 'PCB厚'),
     ('sock_h', '1.8 mm', 'mm', 'ホットスワップソケットの高さ（PCB下面から）'),
     ('bat_t', '5.5 mm', 'mm', 'バッテリー厚（EEMB 552036 360mAh: 5.5×20×36）'),
@@ -92,7 +95,7 @@ def run(_c):
             if not p.dependentParameters.count: p.deleteMe()
     assert up.count == 0
     ps = []
-    for n, e, u, cm in (LP_EXTRA if LP else []) + PARAMS + (TB_PARAMS if SIDE == 'right' else []):
+    for n, e, u, cm in LP_EXTRA + PARAMS + (TB_PARAMS if SIDE == 'right' else []):
         if LP and n in LP_PARAMS:
             e, c2 = LP_PARAMS[n]; cm = c2 or cm
         ps.append((up.add(n, VI.createByString('1 ' + u), u, cm), e))

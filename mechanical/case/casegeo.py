@@ -11,7 +11,7 @@ from emit import ring_curves, _circ
 LP = os.environ.get('SAGE60_LP') == '1'      # low-profile variant (Choc on the same PCB): thinner stack, less margin
 SFX = '_lp' if LP else ''                     # output file suffix (left_lp_spec.json ...)
 CASE_OFF = 3.5 if LP else 4.0   # case outline = PCB/plate body + this (bezel ~ CASE_OFF - open_clr + clr + wall)
-OUTER_R = 2.0 if LP else 3.3   # plan-view corner radius of the case outline (top wall gets OUTER_R + clr + wall); MX 3.3: the skirt's inner corners (OUTER_R + clr) run the full ~30 mm where the ring is open over the MCU -> JLCCNC R >= H/10 + 0.5
+OUTER_R = 2.1 if LP else 3.3   # LP 2.1: the raised MCU block (2026-10-06); plan-view corner radius of the case outline (top wall gets OUTER_R + clr + wall); MX 3.3: the skirt's inner corners (OUTER_R + clr) run the full ~30 mm where the ring is open over the MCU -> JLCCNC R >= H/10 + 0.5
 CLR, WALL, OPEN_CLR = (0.2, 1.5, 0.5) if LP else (0.3, 2.0, 1.0)
 # z stack (plate top = 0); must match the Fusion parameters plate_t / pcb_gap / xiao_t
 PLATE_T, PCB_GAP = (1.2, 1.0) if LP else (1.2, 3.8)   # MX also uses the 1.2 mm shared plate (2026-10-04); PCB top stays at -5.0
@@ -188,9 +188,11 @@ def magnet_spots(case, opening, cav, keepout, n=N_MAG):
             cands += list(r.segmentize(0.5).coords)
     return fps(cands, n), band
 
-def screw_spots(region, n):
+def screw_spots(region, n, within=None):
     ok = region.buffer(-(INS_D / 2 + INS_WALL))
-    return fps(grid_points(ok, 0.25), n) if not ok.is_empty else []
+    if within is not None: ok = ok.intersection(within)
+    pts = fps(grid_points(ok, 0.25), n) if not ok.is_empty else []
+    return [p for i, p in enumerate(pts) if all(math.dist(p, q) > 6.0 for q in pts[:i])]    # no two in one spot (low profile: 2 fit)
 
 def feet_spots(case, keepout=None):
     """one foot near each corner of the bounding box"""
@@ -277,7 +279,7 @@ def cnc_r(h):
 # z model (must match the Fusion parameters): desk plane, cavity floor, tops of the bottom case
 TILT_DEG = 0.0 if LP else 5.0
 CAV_Z, FLOOR_T = (11.6, 1.5) if LP else (11.0, 2.0)
-TOP_H, MCU_COVER_Z = (2.0, 0.8) if LP else (7.0, 3.9)
+TOP_H, MCU_COVER_Z = (2.0, 4.8) if LP else (7.0, 3.9)   # LP (2026-10-06): the MCU part is a raised block, the cover over the USB plug (no notch)
 def desk_z(y):
     return -(CAV_Z + FLOOR_T) - (y - TILT_Y) * math.tan(math.radians(TILT_DEG))
 def in_mcu(p):
@@ -286,10 +288,24 @@ def cav_depth(p, side=1):
     """cavity wall height at p (left coords: side=-1 mirrors x back): from the bottom case's top there down to the floor"""
     q = Point(C2 - p.x, p.y) if side < 0 else p
     top = MCU_COVER_Z if in_mcu(q) else -PLATE_T
-    return top - max(-CAV_Z, desk_z(p.y) + FLOOR_T) if LP else top - (desk_z(p.y) + FLOOR_T)
+    return top - max(-CAV_Z, desk_z(p.y) + FLOOR_T)       # flat floor at cav_z (MX too since 2026-10-06)
+# battery (2026-10-06): MX's floor is flat at cav_z (the sockets + a thin foam sheet; the rest of the old tilted cavity is filled)
+# and only the battery (EEMB 552036, 5.5 x 20 x 36) beside the JST PH it plugs into gets a pocket down to BAT_Z.  Low profile:
+# cav_z already holds the battery anywhere under the sockets, no pocket.
+JST_BOX = (177.3, -58.05, 185.99, -51.06)       # left PCB Bluetooth1 (JST PH S2B, B.Cu) courtyard, Fusion coords; cable enters from -x
+BAT_L, BAT_W, BAT_GAP = 36.0, 20.0, 1.0         # battery length (along x) / width, gap to the JST for the leads
+BAT_Z = PLATE_T + PCB_GAP + 1.6 + 1.8 + 5.5 + 0.5   # = Fusion bat_z: PCB, socket, battery, swell
+def battery_pocket():
+    """left: plan of the battery + JST pocket (convex, R2 corners: R >= its 3.4 mm wall / 10 + 0.5)"""
+    jx0, jy0, jx1, jy1 = JST_BOX; cy = (jy0 + jy1) / 2
+    bat = box(jx0 - BAT_GAP - BAT_L, cy - BAT_W / 2, jx0 - BAT_GAP, cy + BAT_W / 2)
+    p = unary_union([bat.buffer(0.8, join_style=2), box(*JST_BOX).buffer(0.8, join_style=2)]).convex_hull     # 0.8: R2 clears the corners
+    return p.buffer(-2.0, join_style=2).buffer(2.0, quad_segs=16)
+COVER_CLR = 0.3                 # MCU cover (walnut, cut from a DXF) to the top case opening and the skirt
+COVER_HOLE_D = 2.2              # M2 clearance (countersink by hand / at the shop)
 DESK_MIN = desk_z(-12.0)             # the top case ends at y ~ -12.3 at the back
 SKIRT_H = -PLATE_T - DESK_MIN                 # top case skirt inside: ring underside -> desk (deepest at the back)
-OUTER_H = TOP_H - DESK_MIN                    # top case outside, full height
+OUTER_H = max(TOP_H, MCU_COVER_Z) - DESK_MIN                    # top case outside, full height
 CONCAVE_R = math.ceil((CLR + WALL + cnc_r(OUTER_H)) * 2) / 2   # concave corners of the case outline: the top wall's are CONCAVE_R - clr - wall
 RING_R = max(1.5, cnc_r(TOP_H + PLATE_T))     # through the top ring (opening, gasket slots, MCU opening)
 assert OUTER_R + CLR >= cnc_r(OUTER_H) - 0.02, 'OUTER_R too small for the skirt depth (full height at the MCU)'
@@ -326,10 +342,12 @@ def relieve(X, R, keep=None, forbid=None, step=0.1):
             P = P[shapely.contains(out, pts)]
             if forbid is not None and len(P):
                 P = P[shapely.distance(forbid, shapely.points(P)) > r + 0.06]
+            if not len(P) and g.buffer(-0.025).is_empty: continue     # a sliver < 0.05 thick (r rounded up past an arc a hair under it): within the machinability tolerance
             assert len(P), 'no relief centre for the corner at (%.1f, %.1f) R%.1f' % (g.centroid.x, g.centroid.y, r)
             depth = shapely.distance(out.boundary, shapely.points(P))     # deepest centre = least material removed
             c = P[int(np.argmax(depth))]
             discs.append(Point(*c).buffer(r + 0.05, quad_segs=32))     # a hair over the tool radius: the opening test must keep it
+        if not discs: return out                                   # only tolerance slivers left
         out = unary_union([out] + discs).buffer(0)
     raise AssertionError('relieve did not converge')
 
@@ -360,6 +378,24 @@ def mcu_regions(case):
     inside = b.intersection(case).buffer(-r, quad_segs=32).buffer(r, quad_segs=32)
     block = unary_union([inside, b.difference(case.buffer(-1.0))])
     return cut, Polygon(max(getattr(block, 'geoms', [block]), key=lambda g: g.area).exterior)
+
+def mcu_cover(case, mcu_open, screws, usb, caps):
+    """the MCU cover (walnut, 2026-10-06): the top case's MCU opening out to the top case's outer face (the skirt there is
+    lowered to mcu_cover_z: the cover sits on it and on the bottom case's MCU wall, its edge flush with the outer wall).
+    COVER_CLR from the ring ends, the inner corner concentric with TOP_MCU_FILLET (R RING_R).  Low profile: the MCU part is
+    raised to MCU_COVER_Z 4.8 (above the USB plug's overmold, +4.3), so no notch for the USB either.
+    Keeps KEY_CLR off the keycaps.  -> (outline, [M2 hole centres])"""
+    x0, y0, x1, y1 = mcu_open.buffer(-COVER_CLR, join_style=2).bounds
+    corner = [(x, y) for x in (x0, x1) for y in (y0, y1) if case.contains(Point(x, y))][0]     # the one inside the case
+    c = round_corner_box(x0, y0, x1, y1, corner, RING_R - COVER_CLR).intersection(case.buffer(CLR + WALL, quad_segs=32))
+    # the keycaps beside the MCU overhang its opening by up to ~3.7 mm and the cover sits at their height -> keep KEY_CLR off them
+    # (inside corners R1 for the router, 2026-10-06)
+    c = c.difference(unary_union(caps).buffer(KEY_CLR, join_style=2)).buffer(1.0, quad_segs=16).buffer(-1.0, quad_segs=16)
+    c = Polygon(max(getattr(c, 'geoms', [c]), key=lambda g: g.area).exterior)
+    print('MCU cover: M2 hole edge to the cover edge', [round(c.exterior.distance(Point(p)) - COVER_HOLE_D / 2, 2) for p in screws])
+    return c, list(screws)
+
+COVER_EDGE = 3.6                # cover screws at least this far from the ring ends (hole edge ~2.5 from the cover edge)
 
 def port_slots(case):
     """left: USB and slide switch openings as plan slots cut from their bottom z straight up through both cases (open at the

@@ -36,8 +36,9 @@ def run(_c):
     r.features.combineFeatures.add(ci).name = 'MCU_WALL_JOIN'
     extrude('MAGNET_CUT', allp('MAGNETS'), FO.CutFeatureOperation, dist='-( mag_h )')
     extrude('MCU_SCREW_CUT', allp('MCU_SCREWS'), FO.CutFeatureOperation, dist='-( ins_h )')
-    if d.userParameters.itemByName('tilt').value > 1e-6:     # flat (tilt 0): CAVITY_CUT already reaches the floor
-        extrude('CAVITY_DEEP', sk('CAVITY').profiles.item(0), FO.CutFeatureOperation, start=fromE('SHELF_TOP'), to=pl('FLOOR_TOP'))
+    # the floor is flat at cav_z (MX too since 2026-10-06, the rest is filled); MX: the battery + JST pocket below it
+    if sk('BAT_POCKET'):
+        extrude('BAT_POCKET_CUT', sk('BAT_POCKET').profiles.item(0), FO.CutFeatureOperation, start=offS('-cav_z'), dist='-( bat_z - cav_z )')
     body = get()
     es = [e for e in vertical_edges(body) if (lambda i: not i['tangent'] and not near_any(i['xy'], mags, 2.0) and not on_ring(i['xy'], R['cav'], 0.05))(edge_info(e, body))]
     log.append(('F_inner at', [tuple(round(v, 1) for v in edge_info(e, body)['xy']) for e in es]))

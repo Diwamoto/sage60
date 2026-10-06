@@ -33,7 +33,23 @@ def run(_c):
                 ii = des.createInterferenceInput(adsk.core.ObjectCollection.createWithArray([m, bodies[0]])); ii.areCoincidentFacesIncluded = False
                 res_i = des.analyzeInterference(ii)
                 ov[m.name] = round(sum(res_i.item(i).interferenceBody.volume for i in range(res_i.count)) * 1000, 4) if res_i else 0
-        print(side, 'PCB/plate points inside (pcb, plate):', res, ' mock∩bottom mm3:', ov)
+        cov = r.bRepBodies.itemByName('MCU_COVER')        # walnut cover (2026-10-06) vs both cases
+        if cov:
+            for m in bodies:
+                a = tbm.copy(cov); bb = tbm.copy(m)
+                try:
+                    tbm.booleanOperation(a, bb, adsk.fusion.BooleanTypes.IntersectionBooleanType); ov['cover∩' + m.name] = round(a.volume * 1000, 4) if a.faces.count else 0
+                except RuntimeError: ov['cover∩' + m.name] = 'touching'
+            ov['cover seat gap'] = round(cov.boundingBox.minPoint.z * 10 - zs(r)[4], 3)    # must be 0: on the MCU wall (no overlap alone passes a floating cover)
+        print(side, 'PCB/plate points inside (pcb, plate):', res, ' overlaps mm3:', ov)
+        if not LP:      # MX battery pocket (2026-10-06): a 36 x 20 x 5.5 battery under the sockets and the JST PH body below the PCB
+            X = (lambda x: x) if side == 'left' else (lambda x: 245.84 - x)
+            v = lambda n: r.parentDesign.userParameters.itemByName(n).value * 10
+            zb = -v('bat_z'); rng = lambda a, b, n: [a + (b - a) * i / (n - 1) for i in range(n)]
+            batp = [(x, y, z) for x in rng(140.3, 176.3, 19) for y in rng(-64.55, -44.55, 11) for z in rng(zb + 0.05, zb + v('bat_t'), 4)]
+            jst = [(x, y, z) for x in rng(177.3, 185.99, 8) for y in rng(-58.05, -51.06, 6) for z in rng(top - v('pcb_t') - 4.85, top - v('pcb_t') - 0.1, 4)]
+            hit = lambda pts: sum(1 for (x, y, z) in pts if bodies[0].pointContainment(adsk.core.Point3D.create(X(x) / 10, y / 10, z / 10)) == IN)
+            print(side, 'battery box hits %d / %d, JST hits %d / %d' % (hit(batp), len(batp), hit(jst), len(jst)))
         # USB plug overmold corridor (12.5 x 7, from the port face outwards). The 15 x 9 recess has R1.5 in its back corners.
         x0 = 174.75 if side == 'left' else 245.84 - 187.25
         hit = sum(1 for b in bodies for i in range(26) for k in range(15) for j in range(30)

@@ -62,10 +62,14 @@ KiCad のフットプリントは他人の環境のモデルパス（`D:/…`、
 - スイッチ（`models/cherry_mx.step`、`models/kailh_choc.step`。どちらも foostan/kbd、原点はPCB上面）とキーキャップ（`models/keycap_{mx,lp}.step`、`fusion/keycap.py` で作る簡易形状）を各スイッチのフットプリントに足す。キーキャップの下端はプレート上面＋6.0（MX）／＋3.3（ロープロ）。
 - 干渉チェックは `fusion/check_parts.py`（globals に `SIDE` / `LP`。キーキャップは押し込んだ状態も見る）。
 
-## mag_notch.py / breakaway.py / tongue_edge.py
+## mcu_cover_dxf.py
+MCU カバー（ウォルナット）の発注用 DXF を `case/sage60_{left,right}{,_lp}_mcu_cover.dxf` に書き出す（make_left.py / make_right.py の spec の `MCU_COVER` から。mm、上から見た Fusion の XY、外形＋M2 の穴）。厚さは MX 3.0 / ロープロ 1.2。
+
+## mag_notch.py / breakaway.py / tongue_edge.py / tongue_trim.py
 一回限りのスクリプト（2026-10-03〜04 に適用済み。再実行すると二重に入る／tongue_edge は assert で止まる）。
 - `mag_notch.py`：左 PCB・左プレート・右プレート（鏡像）の右下の縁に、φ6 磁石の柱用の半円の切り欠きを入れる（中心は `casegeo.MAG_NOTCH`）。左 PCB の ROW4 は先に手で引き直してある。
 - `breakaway.py`：左プレートを左右共通にするため、右で使わない部分（トラックボールまわり・手前のタブ）にスロット＋ブリッジ／ミシン目を入れる。発注するプレートは `mx_plate` だけ。
+- `tongue_trim.py`（2026-10-06）：右 PCB の J1 の舌の左の辺を 158.9→159.9（センサー基板との隙間）。SDIO / MOTION を J1 の右側へ引き直し（MOTION はビアで裏面）、GND のステッチビアを2つ。適用後に `kicad-cli pcb drc --refill-zones --save-board`。
 - `tongue_edge.py`：右 PCB の J1 の舌の左の辺を x 158.0→158.9 にして、トラックボールケースの脚の腕を避ける（0.49mm 重なり→0.36mm の隙間）。舌に沿う SDIO / MOTION の配線も0.32右へ。
 
 ## shorten_tabs.py

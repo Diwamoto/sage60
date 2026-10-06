@@ -130,6 +130,8 @@ def build_right():
     mags, band = magnet_spots(case, opening, cavity, keep, N_MAG - 2)
     mags = [MAG_A2, mag_b] + mags
     guard = guard_fill(keyhole, guard_region(keyhole, keycaps(B + 'mx_right_tb/mx_right_tb.kicad_pcb'), mirror_poly(box(*GUARD_BOX)).difference(unary_union([tbhole, access]).buffer(3.0))))
+    cover, cover_holes = mcu_cover(case, mcu_open, screws, usb, keycaps(B + 'mx_right_tb/mx_right_tb.kicad_pcb'))
+    bat = None if LP else mirror_poly(L['bat'])
     cb = unary_union([Point(p).buffer(TB_CB_D / 2 + 1.5) for p in TB_SCREWS])
     feet = feet_spots(case, keepout=cb.buffer(FOOT_D / 2))
     return locals()
@@ -158,6 +160,8 @@ if __name__ == '__main__':
     spec['TOP_MAG'] = spec['MAGNETS']
     spec['MCU_SCREWS'] = [('circle', s, INS_D / 2) for s in G['screws']]
     spec['FEET'] = [('circle', f, FOOT_D / 2) for f in G['feet']]
+    spec['MCU_COVER'] = fit('MCU_COVER', G['cover']) + [('circle', h, COVER_HOLE_D / 2) for h in G['cover_holes']]
+    if G['bat'] is not None: spec['BAT_POCKET'] = fit('BAT_POCKET', G['bat'])
     Ls = json.load(open('left%s_spec.json' % SFX))
     for k in ('USB_RECESS', 'USB_RCPT', 'SW_SCOOP', 'SW_OPEN', 'MCU_RING', 'TOP_MCU_OPEN'):
         spec[k] = mirror_curves(Ls[k])

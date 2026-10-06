@@ -52,6 +52,15 @@ def run(_c):
         extrude('TOP_GASKET_SLOT_' + X, allp('TOP_GASKET_SLOT'), FO.CutFeatureOperation, '-shelf_d', 'shelf_d + gasket_t + gasket_pocket', bodies=[m])
         extrude('TOP_MAG_' + X, allp('TOP_MAG'), FO.CutFeatureOperation, '-shelf_d', 'mag_h_top', bodies=[m])
         extrude('TOP_WALL_A', widest(sk('TOP_WALL')), FO.JoinFeatureOperation, 'top_h', to=pl('DESK_PLANE'), bodies=[m])
+        # the walnut MCU cover runs out over the skirt (2026-10-06): the skirt in the MCU opening is lowered to mcu_cover_z
+        if LP:          # low profile: the MCU part stands above top_h (raised block) -> the outer wall there goes up to mcu_cover_z
+            f = extrude('TOP_MCU_BLOCK_' + X, widest(sk('TOP_WALL')), FO.NewBodyFeatureOperation, 'top_h', 'mcu_cover_z - top_h')
+            blk = f.bodies.item(0)
+            extrude('TOP_MCU_BLOCK_CLIP_' + X, sk('TOP_MCU_OPEN').profiles.item(0), FO.IntersectFeatureOperation, 'top_h', 'mcu_cover_z - top_h', bodies=[blk])   # flush with the ring ends (MCU_RING left 0.3 slivers)
+            ci = r.features.combineFeatures.createInput(r.bRepBodies.itemByName('MOCK_' + X), oc([blk])); ci.operation = FO.JoinFeatureOperation
+            r.features.combineFeatures.add(ci).name = 'TOP_MCU_BLOCK_JOIN_' + X
+        else:
+            extrude('TOP_MCU_SKIRT_' + X, sk('TOP_MCU_OPEN').profiles.item(0), FO.CutFeatureOperation, 'mcu_cover_z', 'top_h - mcu_cover_z + 1 mm', bodies=[r.bRepBodies.itemByName('MOCK_' + X)])
         m = r.bRepBodies.itemByName('MOCK_' + X)
         # CNC: the ring ends at the MCU opening meet the skirt in concave corners -> R inner_r (the bottom MCU block is rounded to match)
         bx = [p for c in spec['TOP_MCU_OPEN'] if c[0] == 'line' for p in c[1:3]]
@@ -61,6 +70,14 @@ def run(_c):
         print('TOP_MCU_FILLET', len(es), bad)
         m = r.bRepBodies.itemByName('MOCK_' + X)
         slot_cuts(r, spec, [m], '_' + X, ('USB_RECESS', 'SW_SCOOP'))      # USB / switch: notches open at the top through the skirt
+    # MCU cover (walnut, cut from mcu_cover_dxf.py's DXF): on the MCU wall and the lowered skirt
+    cs = new_sketch(r, 'MCU_COVER', pl('MCU_RING_TOP'), spec['MCU_COVER'])
+    f = extrude('MCU_COVER', oc([max(profiles(cs), key=lambda p: p.areaProperties().area)]), FO.NewBodyFeatureOperation, '0 mm', 'cover_t')   # the sketch plane is already at mcu_cover_z
+    cov = f.bodies.item(0); cov.name = 'MCU_COVER'
+    aps = [l.appearances.item(i) for l in app.materialLibraries for i in range(l.appearances.count)]   # (iterating .appearances yields nothing)
+    wal = [a for a in aps if 'walnut' in a.name.lower() or 'クルミ' in a.name]                          # name follows the UI language
+    if wal: cov.appearance = d.appearances.itemByName(wal[0].name) or d.appearances.addByCopy(wal[0], wal[0].name)
+    print('MCU_COVER appearance', wal[0].name if wal else None)
     for s in r.sketches:
         s.isVisible = False
     for b in r.bRepBodies:
