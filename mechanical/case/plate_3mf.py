@@ -1,17 +1,32 @@
-"""plates (KiCad Edge.Cuts, board thickness 1.5) -> case/sage60_shared{,_lp}_plate.3mf for test prints.
-Needs kicad-cli (KiCad 10). Checks the mesh is closed and its volume matches the KiCad outline x thickness."""
-import subprocess, tempfile, zipfile, os
+"""plates (KiCad Edge.Cuts) -> case/sage60_shared_plate.3mf for test prints.  MX and Choc v2 share the 1.2 mm plate (2026-10-04);
+the right half is the same plate, snipped at the trackball and the front tab, flipped.  The mesh is the Edge.Cuts outline
+extruded here (no kicad-cli: it hung, 2026-10-06).  Checks the mesh is closed and its volume matches the outline x thickness."""
+import zipfile
 import numpy as np
+import shapely
+from shapely.geometry import Polygon
 from geo import outline, B
 from shapely.ops import unary_union
 
 OUT = '/Users/daiki/Projects/sage60/case/'
-PLATES = {'shared': 'mx_plate/mx_plate.kicad_pcb', 'shared_lp': 'mx_plate/mx_plate.kicad_pcb'}   # left/right shared plate (right half: snip the trackball part and the front tab)
-T = {'shared': 1.5, 'shared_lp': 1.2}       # MX 1.5 / Choc v2 1.2 (same 14.0 cutouts)
+PLATES = {'shared': 'mx_plate/mx_plate.kicad_pcb'}
+T = {'shared': 1.2}
 
-def read_ascii_stl(p):
-    v = [list(map(float, l.split()[1:4])) for l in open(p) if l.strip().startswith('vertex')]
-    return np.array(v).reshape(-1, 3, 3)
+def extrude(poly, t):
+    """closed triangle mesh (n, 3, 3) of a plan polygon with holes, z 0..t, outward normals"""
+    poly = shapely.geometry.polygon.orient(poly, 1.0)                  # exterior CCW, holes CW
+    tri = [np.array(g.exterior.coords[:3]) for g in shapely.constrained_delaunay_triangles(poly).geoms]
+    out = []
+    for a in tri:
+        u, v = a[1] - a[0], a[2] - a[0]
+        if u[0] * v[1] - u[1] * v[0] < 0: a = a[::-1]                    # CCW seen from +z
+        out.append(np.c_[a[::-1], np.zeros(3)]); out.append(np.c_[a, np.full(3, t)])
+    for ring in [poly.exterior] + list(poly.interiors):                # walls: ring direction leaves the solid on the left
+        c = np.array(ring.coords)
+        for p, q in zip(c[:-1], c[1:]):
+            P0, Q0, P1, Q1 = [*p, 0], [*q, 0], [*p, t], [*q, t]
+            out += [[P0, Q0, Q1], [P0, Q1, P1]]
+    return np.array(out, dtype=float)
 
 def write_3mf(tris, path):
     verts, idx = np.unique(np.round(tris.reshape(-1, 3), 5), axis=0, return_inverse=True)
@@ -38,15 +53,12 @@ def write_3mf(tris, path):
 
 for side, f in PLATES.items():
     t = T[side]
-    with tempfile.TemporaryDirectory() as d:
-        stl = os.path.join(d, 'p.stl')
-        subprocess.run(['kicad-cli', 'pcb', 'export', 'stl', '--board-only', '--cut-vias-in-body', '-f', '-o', stl, B + f], check=True, capture_output=True)
-        tris = read_ascii_stl(stl)
-    z0, z1 = tris[..., 2].min(), tris[..., 2].max()      # KiCad's board body is the dielectric only (1.43): stretch to the plate thickness
-    tris[..., 2] = (tris[..., 2] - z0) * t / (z1 - z0)
-    vol, lo, hi = write_3mf(tris, OUT + 'sage60_%s_plate.3mf' % side)
     _, polys = outline(B + f)
     outer = polys[0]; holes = unary_union([p for p in polys[1:] if outer.contains(p.representative_point())])
-    want = (outer.area - holes.area) * t     # ponytail: assumes cutouts are Edge.Cuts loops only (no NPTH pads)
-    print('%-5s size %.1f x %.1f x %.2f mm  volume %.1f mm3 (KiCad outline %.1f, %+.2f%%)' % (side, *(hi - lo), vol, want, 100 * (vol / want - 1)))
-    assert abs(hi[2] - lo[2] - t) < 0.01 and abs(vol / want - 1) < 0.01
+    plate = outer.difference(holes)                  # outer already carries the switch cutouts; holes = slots, perforations
+    assert plate.geom_type == 'Polygon', plate.geom_type
+    vol, lo, hi = write_3mf(extrude(plate, t), OUT + 'sage60_%s_plate.3mf' % side)
+    want = plate.area * t
+    print('%-5s size %.1f x %.1f x %.2f mm  holes %d  volume %.1f mm3 (outline %.1f, %+.3f%%)' % (side, *(hi - lo), len(plate.interiors), vol, want, 100 * (vol / want - 1)))
+    assert abs(hi[2] - lo[2] - t) < 0.01 and abs(vol / want - 1) < 0.001
+    assert len(plate.interiors) == len(polys) - 1, (len(plate.interiors), len(polys) - 1)    # every Edge.Cuts loop is a hole
