@@ -120,6 +120,7 @@ def build_right():
     ends = []
     for n in map(np.array, FRONT_N):
         p = ap[np.argmax(ap @ n)]
+        if n[0] < 0: p = a - np.array((-d[1], d[0])) * 3.0     # left side from 3 mm right of the thumb cluster's front right corner: the triangle between the thumb key and the trackball goes too, no sliver along the key opening (2026-10-07, it was in the way)
         ends.append((tuple(p - 5 * n), tuple(p + 60 * n)))
     (l0, l1), (r0, r1) = ends
     front_low = opening_rounded(Polygon([l0, l1, (l1[0], -250), (r1[0], -250), r1, r0]), FRONT_LOW_R)
