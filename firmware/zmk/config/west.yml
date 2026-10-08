@@ -1,0 +1,22 @@
+manifest:
+  remotes:
+    - name: zmkfirmware
+      url-base: https://github.com/zmkfirmware
+    - name: badjeff
+      url-base: https://github.com/badjeff
+    - name: petejohanson
+      url-base: https://github.com/petejohanson
+  projects:
+    - name: zmk
+      remote: zmkfirmware
+      revision: main
+      import: app/west.yml
+    - name: zmk-pmw3610-driver
+      remote: badjeff
+      revision: main
+    # EC (capacitive) kscan driver + gpio mux + calibrator snippet
+    - name: ec-support-zmk-module
+      remote: petejohanson
+      revision: main
+  self:
+    path: config

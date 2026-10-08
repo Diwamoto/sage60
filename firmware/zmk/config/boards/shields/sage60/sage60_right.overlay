@@ -1,0 +1,99 @@
+/*
+ * Copyright (c) 2026 Diwamoto_
+ * SPDX-License-Identifier: MIT
+ *
+ * Sage60 MX - right half with trackball (peripheral)
+ * Source: pcb/mx_right_tb/mx_right_tb.kicad_pcb  (XIAO nRF52840 Plus = U2)
+ *
+ *  COL0 -> U2/15 P0.15           ROW0 -> U2/1  P0.02 (D0)
+ *  COL1 -> U2/2  P0.03 (D1)      ROW1 -> U2/3  P0.28 (D2)
+ *  COL2 -> U2/16 P0.19           ROW2 -> U2/18 P0.09 (NFC1)
+ *  COL3 -> U2/17 P1.01           ROW3 -> U2/19 P0.10 (NFC2)
+ *  COL4 -> U2/4  P0.29 (D3)      ROW4 -> U2/6  P0.05 (D5)
+ *  COL5 -> U2/5  P0.04 (D4)
+ *
+ *  PMW3610 (J1): SCLK P1.15 (D10), SDIO P1.13 (D8), CS P1.14 (D9),
+ *                MOTION P1.12 (D7)
+ *
+ * R4C0/R4C1 are not populated on this board (trackball sits there).
+ * Columns are listed COL5..COL0 so that with col-offset = <6> the inner
+ * column lands on matrix column 6 (keymap reads left-to-right).
+ */
+
+#include "sage60.dtsi"
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+
+&default_transform {
+    col-offset = <6>;
+};
+
+/* ROW2/ROW3 are on the NFC pads. */
+&uicr {
+    nfct-pins-as-gpios;
+};
+
+&kscan0 {
+    row-gpios
+        = <&gpio0  2 GPIO_ACTIVE_HIGH>   /* ROW0 P0.02 */
+        , <&gpio0 28 GPIO_ACTIVE_HIGH>   /* ROW1 P0.28 */
+        , <&gpio0  9 GPIO_ACTIVE_HIGH>   /* ROW2 P0.09 */
+        , <&gpio0 10 GPIO_ACTIVE_HIGH>   /* ROW3 P0.10 */
+        , <&gpio0  5 GPIO_ACTIVE_HIGH>   /* ROW4 P0.05 */
+        ;
+
+    col-gpios
+        = <&gpio0  4 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* mcol0 = COL5 P0.04 */
+        , <&gpio0 29 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* mcol1 = COL4 P0.29 */
+        , <&gpio1  1 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* mcol2 = COL3 P1.01 */
+        , <&gpio0 19 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* mcol3 = COL2 P0.19 */
+        , <&gpio0  3 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* mcol4 = COL1 P0.03 */
+        , <&gpio0 15 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* mcol5 = COL0 P0.15 */
+        ;
+};
+
+/* PMW3610 is 3-wire SPI: MOSI and MISO share SDIO. */
+&pinctrl {
+    spi2_default: spi2_default {
+        group1 {
+            psels = <NRF_PSEL(SPIM_SCK, 1, 15)>,
+                <NRF_PSEL(SPIM_MOSI, 1, 13)>,
+                <NRF_PSEL(SPIM_MISO, 1, 13)>;
+        };
+    };
+
+    spi2_sleep: spi2_sleep {
+        group1 {
+            psels = <NRF_PSEL(SPIM_SCK, 1, 15)>,
+                <NRF_PSEL(SPIM_MOSI, 1, 13)>,
+                <NRF_PSEL(SPIM_MISO, 1, 13)>;
+            low-power-enable;
+        };
+    };
+};
+
+&spi2 {
+    status = "okay";
+    compatible = "nordic,nrf-spim";
+    cs-gpios = <&gpio1 14 GPIO_ACTIVE_LOW>;
+
+    trackball: trackball@0 {
+        status = "okay";
+        compatible = "pixart,pmw3610-alt";
+        reg = <0>;
+        spi-max-frequency = <2000000>;
+        irq-gpios = <&gpio1 12 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+        cpi = <800>;
+        /* Tune to the sensor's mounting orientation on the real board. */
+        // swap-xy;
+        // invert-x;
+        // invert-y;
+        evt-type = <INPUT_EV_REL>;
+        x-input-code = <INPUT_REL_X>;
+        y-input-code = <INPUT_REL_Y>;
+        force-awake;
+    };
+};
+
+&trackball_split {
+    device = <&trackball>;
+};

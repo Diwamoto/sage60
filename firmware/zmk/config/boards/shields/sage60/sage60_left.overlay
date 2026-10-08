@@ -1,0 +1,45 @@
+/*
+ * Copyright (c) 2026 Diwamoto_
+ * SPDX-License-Identifier: MIT
+ *
+ * Sage60 MX - left half (central)
+ * Source: pcb/mx_main/mx.kicad_sch  (XIAO nRF52840 = U1)
+ *
+ *  COL0 -> U1/2  P0.03 (D1)      ROW0 -> U1/1  P0.02 (D0)
+ *  COL1 -> U1/3  P0.28 (D2)      ROW1 -> U1/5  P0.04 (D4)
+ *  COL2 -> U1/4  P0.29 (D3)      ROW2 -> U1/11 P1.15 (D10)
+ *  COL3 -> U1/6  P0.05 (D5)      ROW3 -> U1/9  P1.13 (D8)
+ *  COL4 -> U1/7  P1.11 (D6)      ROW4 -> U1/8  P1.12 (D7)
+ *  COL5 -> U1/10 P1.14 (D9)
+ *
+ * diode-direction = row2col  ->  rows are driven (outputs),
+ *                                columns are sensed (inputs, pull-down).
+ */
+
+#include "sage60.dtsi"
+
+&kscan0 {
+    row-gpios
+        = <&gpio0  2 GPIO_ACTIVE_HIGH>   /* ROW0 P0.02 */
+        , <&gpio0  4 GPIO_ACTIVE_HIGH>   /* ROW1 P0.04 */
+        , <&gpio1 15 GPIO_ACTIVE_HIGH>   /* ROW2 P1.15 */
+        , <&gpio1 13 GPIO_ACTIVE_HIGH>   /* ROW3 P1.13 */
+        , <&gpio1 12 GPIO_ACTIVE_HIGH>   /* ROW4 P1.12 */
+        ;
+
+    col-gpios
+        = <&gpio0  3 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* COL0 P0.03 */
+        , <&gpio0 28 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* COL1 P0.28 */
+        , <&gpio0 29 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* COL2 P0.29 */
+        , <&gpio0  5 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* COL3 P0.05 */
+        , <&gpio1 11 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* COL4 P1.11 */
+        , <&gpio1 14 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* COL5 P1.14 */
+        ;
+};
+
+/ {
+    trackball_listener {
+        compatible = "zmk,input-listener";
+        device = <&trackball_split>;
+    };
+};

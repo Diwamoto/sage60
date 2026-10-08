@@ -1,0 +1,8 @@
+# Copyright (c) 2026 Diwamoto_
+# SPDX-License-Identifier: MIT
+
+config SHIELD_SAGE60_EC_LEFT
+	def_bool $(shields_list_contains,sage60_ec_left)
+
+config SHIELD_SAGE60_EC_RIGHT
+	def_bool $(shields_list_contains,sage60_ec_right)

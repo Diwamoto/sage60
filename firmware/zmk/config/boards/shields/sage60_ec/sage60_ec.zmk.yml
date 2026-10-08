@@ -1,0 +1,12 @@
+file_format: "1"
+id: sage60_ec
+name: Sage60 EC
+type: shield
+url: https://github.com/Diwamoto/sage60
+requires: [seeed_xiao]
+features:
+  - keys
+  - studio
+siblings:
+  - sage60_ec_left
+  - sage60_ec_right

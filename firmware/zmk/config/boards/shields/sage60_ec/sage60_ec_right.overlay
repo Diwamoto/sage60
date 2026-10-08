@@ -1,0 +1,52 @@
+/*
+ * Copyright (c) 2026 Diwamoto_
+ * SPDX-License-Identifier: MIT
+ *
+ * Sage60 EC - right half (peripheral). Source: pcb/ec_right/ec_right.kicad_pcb (U2)
+ *
+ *  ADC  P0.02 (D0)   POWER P0.28 (D2)  ROW0 P1.14 (D9)
+ *  DISCHARGE P0.03   EN    P0.29 (D3)  ROW1 P1.05 (pad22)
+ *                    SEL0  P0.04 (D4)  ROW2 P1.13 (D8)
+ *                    SEL1  P0.05 (D5)  ROW3 P1.03 (pad21)
+ *                    SEL2  P1.11 (D6)  ROW4 P1.12 (D7)
+ *
+ * Inputs are listed COL5..COL0 so that with col-offset = <6> the inner
+ * column lands on matrix column 6 (keymap reads left-to-right).
+ */
+
+#include "sage60_ec.dtsi"
+
+&default_transform {
+    col-offset = <6>;
+};
+
+&mux {
+    select-gpios
+        = <&gpio0  4 GPIO_ACTIVE_HIGH>   /* SEL0 */
+        , <&gpio0  5 GPIO_ACTIVE_HIGH>   /* SEL1 */
+        , <&gpio1 11 GPIO_ACTIVE_HIGH>   /* SEL2 */
+        ;
+    en-gpios = <&gpio0 29 GPIO_ACTIVE_LOW>;
+};
+
+&matrix {
+    strobe-gpios
+        = <&gpio1 14 GPIO_ACTIVE_HIGH>   /* ROW0 */
+        , <&gpio1  5 GPIO_ACTIVE_HIGH>   /* ROW1 */
+        , <&gpio1 13 GPIO_ACTIVE_HIGH>   /* ROW2 */
+        , <&gpio1  3 GPIO_ACTIVE_HIGH>   /* ROW3 */
+        , <&gpio1 12 GPIO_ACTIVE_HIGH>   /* ROW4 */
+        ;
+    input-gpios
+        = <&mux 0 0>   /* COL5 */
+        , <&mux 1 0>   /* COL4 */
+        , <&mux 5 0>   /* COL3 */
+        , <&mux 7 0>   /* COL2 */
+        , <&mux 6 0>   /* COL1 */
+        , <&mux 4 0>   /* COL0 */
+        ;
+    /* ROW4 has no COL0/COL1 (= inputs 5, 4 here) */
+    strobe-input-masks = <0 0 0 0 (BIT(4) | BIT(5))>;
+    drain-gpios = <&gpio0 3 GPIO_ACTIVE_HIGH>;
+    power-gpios = <&gpio0 28 GPIO_ACTIVE_HIGH>;
+};

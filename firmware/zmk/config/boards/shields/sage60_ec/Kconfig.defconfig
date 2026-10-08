@@ -1,0 +1,19 @@
+# Copyright (c) 2026 Diwamoto_
+# SPDX-License-Identifier: MIT
+
+if SHIELD_SAGE60_EC_LEFT
+
+config ZMK_KEYBOARD_NAME
+	default "Sage60 EC"
+
+config ZMK_SPLIT_ROLE_CENTRAL
+	default y
+
+endif
+
+if SHIELD_SAGE60_EC_LEFT || SHIELD_SAGE60_EC_RIGHT
+
+config ZMK_SPLIT
+	default y
+
+endif
