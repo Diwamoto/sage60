@@ -38,7 +38,7 @@ def read_stl(path):
     faces=[values[i:i+3] for i in range(0,len(values),3)]
     return faces,values,'ascii'
 
-for side,rel in [('left','pcb/mx_plate/gasket_v1/mx_plate_gasket'),('right','pcb/mx_plate_right_tb/gasket_v1/mx_plate_right_tb_gasket')]:
+for side,rel in [('left','pcb/mx_left_plate/gasket_v1/mx_plate_gasket'),('right','pcb/mx_plate_right_tb/gasket_v1/mx_plate_right_tb_gasket')]:
  stem=ROOT/rel
  expected=json.loads(stem.with_name(stem.name+'_geometry.json').read_text())
  r=subprocess.run([KPY,'-c',extract,str(stem.with_suffix('.kicad_pcb'))],check=True,capture_output=True,text=True)

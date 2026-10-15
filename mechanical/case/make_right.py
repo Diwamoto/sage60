@@ -17,6 +17,9 @@ THIN_TOP, THIN_BOT = 3.0, 2.0       # around the trackball, top / bottom case pa
 TB_SCREWS = [(TBX + 9.59, TBY - 7.72), (TBX + 9.59, TBY + 8.48)]   # hex bosses of the trackball case
 TB_CB_D = 3.6
 FRONT_LOW_R = 2.0                   # lowered frame in front of the trackball: corner R
+TB_FRONT_LIP = 4.0      # TB_FRONT_LOW under the thumb keys: this far outside their opening's front edge
+TB_FRONT_X0 = 88.0      # ... from the trackball side to this x, then out square to the wall
+THUMB_FRONT = (0.966, 0.259)   # direction of the thumb keys' front edge
 FRONT_N = ((-0.431, -0.902), (0.888, -0.459))   # outward normals of the outline's left / right edges beside the trackball
 
 def opening_rounded(p, r):
@@ -92,7 +95,7 @@ def build_right():
         return unary_union([q.buffer(0.05) for q in getattr(t, 'geoms', [t]) if q.area > 0.5])
     acc_r = lambda p: RING_R if case.buffer(-0.5).contains(p) else cnc_r(TOP_H - desk_z(p.y))    # inside the skirt only the ring (8.2) is cut
     for it in range(10):
-        sl = unary_union([slivers(case.buffer(CLR + WALL).difference(opening).difference(access_cut), THIN_TOP), slivers(case.difference(cavity).difference(pocket).difference(access_cut), THIN_BOT)])
+        sl = unary_union([slivers(top_outer(case).difference(opening).difference(access_cut), THIN_TOP), slivers(case.difference(cavity).difference(pocket).difference(access_cut), THIN_BOT)])
         sp = slivers(case.difference(cavity).difference(pocket), THIN_BOT)
         u = unary_union([cavity, pocket])
         rp = relieve(Polygon(u.exterior) if u.geom_type == 'Polygon' else u, RING_R, forbid=post).difference(u)
@@ -109,7 +112,7 @@ def build_right():
     access_cut = unary_union([g if g.area > 5.0 else g.buffer(0.15) for g in getattr(access_cut, 'geoms', [access_cut])]).buffer(0)
     ua = unary_union([access_cut, opening]).buffer(0)
     access_cut = unary_union([access_cut, relieve(ua, acc_r).difference(ua)]).buffer(0)      # the corners that join made
-    ring = case.buffer(CLR + WALL).difference(opening).difference(access_cut)
+    ring = top_outer(case).difference(opening).difference(access_cut)
     islands = [g for g in getattr(ring, 'geoms', [ring]) if g.area < 0.5 * ring.area and g.area < 20.0]
     if islands: access_cut = unary_union([access_cut] + [g.buffer(0.05) for g in islands]).buffer(0)   # loose specks of top case go too
     # in front of the ball centre the frame round the trackball case is lowered by tb_front_drop (2026-10-05, user: keep the frame,
@@ -120,10 +123,18 @@ def build_right():
     ends = []
     for n in map(np.array, FRONT_N):
         p = ap[np.argmax(ap @ n)]
-        if n[0] < 0: p = a - np.array((-d[1], d[0])) * 3.0     # left side from 3 mm right of the thumb cluster's front right corner: the triangle between the thumb key and the trackball goes too, no sliver along the key opening (2026-10-07, it was in the way)
         ends.append((tuple(p - 5 * n), tuple(p + 60 * n)))
-    (l0, l1), (r0, r1) = ends
-    front_low = opening_rounded(Polygon([l0, l1, (l1[0], -250), (r1[0], -250), r1, r0]), FRONT_LOW_R)
+    # left side (2026-10-07, user sketch): straight down from the thumb rim's front corner, then left parallel to the thumb keys'
+    # front edge (TB_FRONT_LIP outside their opening) to TB_FRONT_X0, and out square to it -> no corner left beside the trackball
+    kp = np.array(keyhole.exterior.coords)
+    T = min((q for q in ap if q[1] < a[1] + 6), key=lambda q: q[0])          # the thumb access's front left corner (rim's right edge)
+    e = np.array(THUMB_FRONT) / np.linalg.norm(THUMB_FRONT); m = np.array((e[1], -e[0]))      # along / out of the thumb keys' front edge
+    near = kp[(kp[:, 0] > a[0] - 20) & (kp[:, 0] < a[0] + 2) & (kp[:, 1] < a[1] + 2)]
+    k0 = near[np.argmax(near @ m)] + m * TB_FRONT_LIP
+    on = lambda x: k0 + e * (x - k0[0]) / e[0]
+    Q, Ql = on(T[0]), on(TB_FRONT_X0)
+    (r0, r1) = ends[1]
+    front_low = opening_rounded(Polygon([tuple(T), tuple(Q), tuple(Ql), tuple(Ql + 40 * m), (Ql[0] + 40 * m[0], -250), (r1[0], -250), r1, r0]), FRONT_LOW_R)
     # MCU / USB / switch: mirrored from the left
     usb = mirror_poly(L['usb']); sw = mirror_poly(L['sw']); mcu = mirror_poly(L['mcu']); mcu_open = mirror_poly(L['mcu_open'])
     screws = [(C2 - x, y) for x, y in L['screws']]
@@ -148,6 +159,8 @@ if __name__ == '__main__':
     spec = {}
     spec['PLATE_SURFACE'] = check('PLATE_SURFACE', G['plate'], curves_of(G['plate'].simplify(0.01), short=0.0))
     spec['CASE_OUTER'] = check('CASE_OUTER', G['case'], curves_of(G['case']))
+    to = top_outer(G['case']); spec['TOP_WALL_OUTER'] = check('TOP_WALL_OUTER', to, curves_of(to))
+    print('top wall min thickness %.2f' % to.exterior.distance(G['case'].buffer(CLR, quad_segs=32).exterior))
     spec['CAVITY'] = fit('CAVITY', G['cavity'])
     spec['TOP_RING_INNER'] = sum([fit('TOP_RING_INNER', g) for g in getattr(G['opening'], 'geoms', [G['opening']])], [])
     spec['TB_POCKET'] = fit('TB_POCKET', G['pocket'], 0.15)

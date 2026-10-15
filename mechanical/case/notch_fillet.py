@@ -16,7 +16,7 @@ PLATE_R, PLATE_F = MAG_D / 2 + MAG_WALL + 1.3, 1.0
 A2 = (C2 - MAG_NOTCH[0], MAG_NOTCH[1])       # right case, left edge = the shared plate's notch flipped
 JOBS = [('mx_main/mx.kicad_pcb', MAG_NOTCH, PCB_R, PCB_F),
         ('mx_right_tb/mx_right_tb.kicad_pcb', A2, PCB_R, PCB_F),
-        ('mx_plate/mx_plate.kicad_pcb', MAG_NOTCH, PLATE_R, PLATE_F),
+        ('mx_left_plate/mx_left_plate.kicad_pcb', MAG_NOTCH, PLATE_R, PLATE_F),
         ('mx_right_tb_plate/mx_right_tb_plate.kicad_pcb', A2, PLATE_R, PLATE_F)]
 
 ITEM = r'\n\t\((gr_line|gr_arc)\n\t\t\(start ([-\d.]+) ([-\d.]+)\)\n(?:\t\t\(mid ([-\d.]+) ([-\d.]+)\)\n)?\t\t\(end ([-\d.]+) ([-\d.]+)\)(.*?)\n\t\)'

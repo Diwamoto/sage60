@@ -6,7 +6,7 @@ import json
 import math
 
 ROOT = '/Users/daiki/Projects/sage60'
-LEFT_GEOMETRY = ROOT + '/pcb/mx_plate/gasket_v1/mx_plate_gasket_geometry.json'
+LEFT_GEOMETRY = ROOT + '/pcb/mx_left_plate/gasket_v1/mx_plate_gasket_geometry.json'
 RIGHT_GEOMETRY = ROOT + '/pcb/mx_plate_right_tb/gasket_v1/mx_plate_right_tb_gasket_geometry.json'
 
 

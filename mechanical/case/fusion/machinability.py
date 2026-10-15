@@ -34,8 +34,11 @@ def run(_c):
                 if pts.item(i).distanceTo(p) > 0.0005: return True      # CNC_CHECK holds only this body
             return False
         def outward(p, nn):
-            q = p.copy(); t = nn.copy(); t.scaleBy(0.0003); q.translateBy(t)
-            if body.pointContainment(q) == adsk.fusion.PointContainment.PointInsidePointContainment: nn = nn.copy(); nn.scaleBy(-1)
+            # flip only if +n is inside and -n is not (a single 0.003 mm probe misread thin 45 deg chamfer faces as inside, 2026-10-14)
+            def inside(k):
+                q = p.copy(); t = nn.copy(); t.scaleBy(k); q.translateBy(t)
+                return body.pointContainment(q) == adsk.fusion.PointContainment.PointInsidePointContainment
+            if inside(0.001) and not inside(-0.001): nn = nn.copy(); nn.scaleBy(-1)
             return nn
         def samples(f, n=3):
             ev = f.evaluator; rng = ev.parametricRange()

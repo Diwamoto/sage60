@@ -11,8 +11,9 @@ from emit import ring_curves, _circ
 LP = os.environ.get('SAGE60_LP') == '1'      # low-profile variant (Choc on the same PCB): thinner stack, less margin
 SFX = '_lp' if LP else ''                     # output file suffix (left_lp_spec.json ...)
 CASE_OFF = 3.5 if LP else 4.0   # case outline = PCB/plate body + this (bezel ~ CASE_OFF - open_clr + clr + wall)
-OUTER_R = 2.1 if LP else 3.3   # LP 2.1: the raised MCU block (2026-10-06); plan-view corner radius of the case outline (top wall gets OUTER_R + clr + wall); MX 3.3: the skirt's inner corners (OUTER_R + clr) run the full ~30 mm where the ring is open over the MCU -> JLCCNC R >= H/10 + 0.5
+OUTER_R = 2.1 if LP else 3.8   # LP 2.1: the raised MCU block (2026-10-06); plan-view corner radius of the case outline (top wall gets OUTER_R + clr + wall); MX 3.8 (7 deg, 2026-10-07; 3.3 at 5 deg): the skirt's inner corners (OUTER_R + clr) run the full ~35 mm where the ring is open over the MCU -> JLCCNC R >= H/10 + 0.5
 CLR, WALL, OPEN_CLR = (0.2, 1.5, 0.5) if LP else (0.3, 2.0, 1.0)
+WALL_OUT_R = 2.5   # top wall's outer convex corners, MX and LP (2026-10-14: published aluminium cases are R2.0-2.25 (Keychron Q60/Q11, Bakeneko60, JP01), Lily58 Pro R3.0; was 4.0; outside corners have no CNC limit). The top edge gets a top_chamfer (fx.top_chamfer)
 # z stack (plate top = 0); must match the Fusion parameters plate_t / pcb_gap / xiao_t
 PLATE_T, PCB_GAP = (1.2, 1.0) if LP else (1.2, 3.8)   # MX also uses the 1.2 mm shared plate (2026-10-04); PCB top stays at -5.0
 XIAO_T = 1.4         # XIAO board 1.2 + 0.17 lifted by solder (Seeed STEP on the PCB, 2026-10-03; 1.0 put the receptacle 0.05 into the wall)
@@ -36,9 +37,10 @@ USB_RCPT_W, USB_RCPT_H, USB_RCPT_R = 9.8, 4.0, 1.6   # opening around the USB-C 
 USB_ZC = PCB_TOP + XIAO_T + 3.26 / 2    # receptacle centre z = XIAO top + usb_h_c / 2
 # slide switch (knob faces +x, on the PCB top z -5.0 .. -3.6): finger scoop in the outer wall + opening through to the knob.
 # Both are cut along x through the bottom AND the top case, so their front/back faces are single planes.
-SW_Y, SW_ZC = -52.3, PCB_TOP + 0.7
+SW_Y, SW_ZC = -54.86, PCB_TOP + 0.7   # knob travel centre = SW32 middle pin (3-pin THT, 2.54 pitch; KiCad y 54.864)
 SW_OPEN = (11.0, 6.0, 1.5)      # y-width, z-height, corner R of the opening at the knob (fingernail + knob travel 2.0); 12 -> 11 (2026-10-05): its side ran into a cavity relief (0.7 mm wedge)
 SW_SCOOP = (16.0, 10.0, 4.0)    # finger scoop in the outer wall
+SW_SCOOP_Y = SW_Y + 1.0         # scoop centre 1 mm off the knob toward +y (2026-10-14): centred, its end left a 0.25 mm sliver at the MCU wall corner (y -62.7)
 SW_X_IN, SW_X_FLOOR = 190.5, 193.0   # opening starts inside the cavity (cavity wall x 191.39); scoop floor leaves 1.6 mm of wall
 MCU_RING = (166.0, -63.0, 210.0, -3.0)
 TOP_MCU_OPEN = (166.0, -63.0, 212.0, 0.0)
@@ -277,7 +279,7 @@ def cnc_r(h):
     return h / 10 + 0.5
 
 # z model (must match the Fusion parameters): desk plane, cavity floor, tops of the bottom case
-TILT_DEG = 0.0 if LP else 5.0
+TILT_DEG = 0.0 if LP else 7.0
 CAV_Z, FLOOR_T = (11.6, 1.5) if LP else (11.0, 2.0)
 TOP_H, MCU_COVER_Z = (2.0, 4.8) if LP else (7.0, 3.9)   # LP (2026-10-06): the MCU part is a raised block, the cover over the USB plug (no notch)
 def desk_z(y):
@@ -379,6 +381,14 @@ def mcu_regions(case):
     block = unary_union([inside, b.difference(case.buffer(-1.0))])
     return cut, Polygon(max(getattr(block, 'geoms', [block]), key=lambda g: g.area).exterior)
 
+def top_outer(case):
+    """outer face of the top wall: case + clr + wall, convex corners sharpened to WALL_OUT_R (the skirt inside keeps OUTER_R + clr)"""
+    o = case.buffer(CLR + WALL, quad_segs=32)
+    r0 = OUTER_R + CLR + WALL
+    if r0 <= WALL_OUT_R + 1e-6: return o
+    sharp = o.buffer(-r0, quad_segs=32).buffer(r0, join_style=2, mitre_limit=20)
+    return round_poly(unary_union([o, sharp]), WALL_OUT_R, CONCAVE_R - CLR - WALL)
+
 def mcu_cover(case, mcu_open, screws, usb, caps):
     """the MCU cover (walnut, 2026-10-06): the top case's MCU opening out to the top case's outer face (the skirt there is
     lowered to mcu_cover_z: the cover sits on it and on the bottom case's MCU wall, its edge flush with the outer wall).
@@ -387,7 +397,7 @@ def mcu_cover(case, mcu_open, screws, usb, caps):
     Keeps KEY_CLR off the keycaps.  -> (outline, [M2 hole centres])"""
     x0, y0, x1, y1 = mcu_open.buffer(-COVER_CLR, join_style=2).bounds
     corner = [(x, y) for x in (x0, x1) for y in (y0, y1) if case.contains(Point(x, y))][0]     # the one inside the case
-    c = round_corner_box(x0, y0, x1, y1, corner, RING_R - COVER_CLR).intersection(case.buffer(CLR + WALL, quad_segs=32))
+    c = round_corner_box(x0, y0, x1, y1, corner, RING_R - COVER_CLR).intersection(top_outer(case))
     # the keycaps beside the MCU overhang its opening by up to ~3.7 mm and the cover sits at their height -> keep KEY_CLR off them
     # (inside corners R1 for the router, 2026-10-06)
     c = c.difference(unary_union(caps).buffer(KEY_CLR, join_style=2)).buffer(1.0, quad_segs=16).buffer(-1.0, quad_segs=16)
@@ -409,7 +419,7 @@ def port_slots(case):
     return {
         'USB_RECESS': (plan_slot(XIAO_X - usb_w / 2, USB_FACE_Y, XIAO_X + usb_w / 2, y_out, r_usb, 'y0'), z_usb),
         'USB_RCPT': (box(XIAO_X - USB_RCPT_W / 2, USB_FACE_Y - 3.0, XIAO_X + USB_RCPT_W / 2, USB_FACE_Y + 0.5), z_rcpt),
-        'SW_SCOOP': (plan_slot(SW_X_FLOOR, SW_Y - SW_SCOOP[0] / 2, x_out, SW_Y + SW_SCOOP[0] / 2, r_sw, 'x0'), z_scoop),
+        'SW_SCOOP': (plan_slot(SW_X_FLOOR, SW_SCOOP_Y - SW_SCOOP[0] / 2, x_out, SW_SCOOP_Y + SW_SCOOP[0] / 2, r_sw, 'x0'), z_scoop),
         'SW_OPEN': (box(SW_X_IN, SW_Y - SW_OPEN[0] / 2, SW_X_FLOOR + 1.0, SW_Y + SW_OPEN[0] / 2), z_open),
     }
 

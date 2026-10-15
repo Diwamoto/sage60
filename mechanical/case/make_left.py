@@ -3,7 +3,7 @@ import json, pickle
 from casegeo import *
 
 def build_left():
-    plate, _ = outline(B + 'mx_plate/mx_plate.kicad_pcb')
+    plate, _ = outline(B + 'mx_left_plate/mx_left_plate.kicad_pcb')
     pcb, _ = outline(B + 'mx_main/mx.kicad_pcb')
     spcb = sharp_pcb(B + 'mx_main/mx.kicad_pcb')
     tabs, body, info = tabs_and_body(plate, pcb)
@@ -59,6 +59,8 @@ if __name__ == '__main__':
     spec = {}
     spec['PLATE_SURFACE'] = check('PLATE_SURFACE', G['plate'], curves_of(G['plate'].simplify(0.01), short=0.0), 0.08)
     spec['CASE_OUTER'] = check('CASE_OUTER', case, curves_of(case))
+    to = top_outer(case); spec['TOP_WALL_OUTER'] = check('TOP_WALL_OUTER', to, curves_of(to))
+    print('top wall min thickness %.2f' % to.exterior.distance(case.buffer(CLR, quad_segs=32).exterior))
     inner = G['inner']      # top ring opening; the cavity = the same + hidden CNC reliefs -> flush inner wall
     spec['TOP_RING_INNER'] = check('TOP_RING_INNER', inner, curves_of(inner.simplify(0.005), short=0.6))
     spec['CAVITY'] = check('CAVITY', G['cavity'], curves_of(G['cavity'].simplify(0.005), short=0.6))

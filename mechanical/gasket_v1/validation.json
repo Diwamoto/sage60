@@ -22,7 +22,7 @@
       5.3460265626266256e-05
     ],
     "all_gaskets_outside_pcb": true,
-    "output": "pcb/mx_plate/gasket_v1/mx_plate_gasket"
+    "output": "pcb/mx_left_plate/gasket_v1/mx_plate_gasket"
   },
   "right": {
     "source": "pcb/mx_right_tb/mx_right.kicad_pcb",

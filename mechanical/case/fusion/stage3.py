@@ -19,8 +19,8 @@ def run(_c):
             cur = s.offset(base, outside, up.itemByName('clr').value if dexpr == 'clr' else (up.itemByName('clr').value + up.itemByName('wall').value))
             res.append(cur)
         return res
-    # TOP_WALL : CASE_OUTER + clr .. + clr + wall
-    s = r.sketches.add(XY); s.name = 'TOP_WALL'; proj_offset(s, ['clr', 'clr+wall'])
+    # TOP_WALL : CASE_OUTER + clr .. TOP_WALL_OUTER (= + clr + wall, convex corners WALL_OUT_R; casegeo.top_outer)
+    s = r.sketches.add(XY); s.name = 'TOP_WALL'; proj_offset(s, ['clr']); draw(s, spec['TOP_WALL_OUTER'])
     # TOP_RING : outer = CASE_OUTER + clr, inner = keys opening U trackball hole
     s = r.sketches.add(XY); s.name = 'TOP_RING'; proj_offset(s, ['clr']); draw(s, spec['TOP_RING_INNER'])
     for n in ['TOP_MCU_OPEN', 'TOP_MAG']:
@@ -70,6 +70,7 @@ def run(_c):
         print('TOP_MCU_FILLET', len(es), bad)
         m = r.bRepBodies.itemByName('MOCK_' + X)
         slot_cuts(r, spec, [m], '_' + X, ('USB_RECESS', 'SW_SCOOP'))      # USB / switch: notches open at the top through the skirt
+        if SIDE == 'left': top_chamfer(r, spec)                          # right: after stage4's cuts
     # MCU cover (walnut, cut from mcu_cover_dxf.py's DXF): on the MCU wall and the lowered skirt
     cs = new_sketch(r, 'MCU_COVER', pl('MCU_RING_TOP'), spec['MCU_COVER'])
     f = extrude('MCU_COVER', oc([max(profiles(cs), key=lambda p: p.areaProperties().area)]), FO.NewBodyFeatureOperation, '0 mm', 'cover_t')   # the sketch plane is already at mcu_cover_z

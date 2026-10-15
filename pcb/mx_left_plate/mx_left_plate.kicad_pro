@@ -507,7 +507,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "mx_plate.kicad_pro",
+    "filename": "mx_left_plate.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -717,8 +717,8 @@
     "subpart_id_separator": 0,
     "top_level_sheets": [
       {
-        "filename": "mx_plate.kicad_sch",
-        "name": "mx_plate",
+        "filename": "mx_left_plate.kicad_sch",
+        "name": "mx_left_plate",
         "uuid": "6e471c34-fb9c-4836-aac9-8239f9e8a673"
       }
     ],
@@ -728,7 +728,7 @@
   "sheets": [
     [
       "6e471c34-fb9c-4836-aac9-8239f9e8a673",
-      "mx_plate"
+      "mx_left_plate"
     ]
   ],
   "text_variables": {},

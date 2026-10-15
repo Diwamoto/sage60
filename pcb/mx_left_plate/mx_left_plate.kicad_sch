@@ -203,7 +203,7 @@
 			(uuid "830c9afe-58e2-4371-8929-ab7c69b7ba2d")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW30")
 					(unit 1)
@@ -281,7 +281,7 @@
 			(uuid "f0a92a2a-9563-407b-87ac-d97703e4282f")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW18")
 					(unit 1)
@@ -359,7 +359,7 @@
 			(uuid "1633d758-61c6-47ee-904d-c4bab2460530")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW1")
 					(unit 1)
@@ -437,7 +437,7 @@
 			(uuid "3d134b56-3b58-4fbd-9a9a-703cf45c9031")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW29")
 					(unit 1)
@@ -515,7 +515,7 @@
 			(uuid "9c51880e-aa05-4f48-9675-8f4cc5066408")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW3")
 					(unit 1)
@@ -593,7 +593,7 @@
 			(uuid "38de957a-e3e4-42e5-8689-c98e5a5550d2")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW9")
 					(unit 1)
@@ -671,7 +671,7 @@
 			(uuid "13842a79-26dd-464f-b92b-1e377ec94602")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW22")
 					(unit 1)
@@ -749,7 +749,7 @@
 			(uuid "08d0eee5-5dae-45eb-bdcb-6483a181f7cf")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW27")
 					(unit 1)
@@ -827,7 +827,7 @@
 			(uuid "a6a96d90-cc5d-440e-8780-f83f06ee7d05")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW23")
 					(unit 1)
@@ -905,7 +905,7 @@
 			(uuid "7502db42-f411-4994-a976-f0c03b102c1d")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW8")
 					(unit 1)
@@ -983,7 +983,7 @@
 			(uuid "099b8de1-c579-4cc9-bcde-0fb269958a97")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW10")
 					(unit 1)
@@ -1061,7 +1061,7 @@
 			(uuid "b922b29b-42e6-48ca-a04a-c2ffc811ecb6")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW15")
 					(unit 1)
@@ -1139,7 +1139,7 @@
 			(uuid "9065ce76-d29e-4f6c-a55b-a6e31224d86b")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW17")
 					(unit 1)
@@ -1217,7 +1217,7 @@
 			(uuid "549f9653-3efe-406a-95ee-7204d9d9aa08")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW7")
 					(unit 1)
@@ -1295,7 +1295,7 @@
 			(uuid "9944d88a-3d08-47d2-91cb-077c008553d8")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW14")
 					(unit 1)
@@ -1373,7 +1373,7 @@
 			(uuid "968b077e-02d4-4ba7-968a-ec6df482c165")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW21")
 					(unit 1)
@@ -1451,7 +1451,7 @@
 			(uuid "402f010b-9255-4904-bbf1-8474501dae38")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW25")
 					(unit 1)
@@ -1529,7 +1529,7 @@
 			(uuid "080a41a5-a2d8-4fd5-983a-16717e82bd14")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW12")
 					(unit 1)
@@ -1607,7 +1607,7 @@
 			(uuid "e670cca9-0b48-46b3-be1e-f9ced9e63bbb")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW6")
 					(unit 1)
@@ -1685,7 +1685,7 @@
 			(uuid "34764bdc-3be7-4898-845b-d3b5e71c491b")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW5")
 					(unit 1)
@@ -1763,7 +1763,7 @@
 			(uuid "580c7d17-a702-4bcc-b1c3-7943153601de")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW19")
 					(unit 1)
@@ -1841,7 +1841,7 @@
 			(uuid "95b7c117-bc99-441b-9cad-948e719a6d3e")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW11")
 					(unit 1)
@@ -1919,7 +1919,7 @@
 			(uuid "6c332c4e-7a85-46e2-881e-0f5e5b999321")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW16")
 					(unit 1)
@@ -1997,7 +1997,7 @@
 			(uuid "4b7bcf22-4616-473c-88bd-a672728ee6bc")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW13")
 					(unit 1)
@@ -2075,7 +2075,7 @@
 			(uuid "1d6652a7-663d-4dea-82f2-41431ea65d27")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW20")
 					(unit 1)
@@ -2153,7 +2153,7 @@
 			(uuid "2b17934a-c9c9-4664-9d35-038610bbf579")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW26")
 					(unit 1)
@@ -2231,7 +2231,7 @@
 			(uuid "e3b33621-7a9b-4458-ae95-1939df453443")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW2")
 					(unit 1)
@@ -2309,7 +2309,7 @@
 			(uuid "17036844-3922-4e11-b222-949025be0741")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW4")
 					(unit 1)
@@ -2387,7 +2387,7 @@
 			(uuid "b2619e1e-45f3-443a-b9a1-905f2e9ee195")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW28")
 					(unit 1)
@@ -2465,7 +2465,7 @@
 			(uuid "6515a6b7-9efa-48af-b92b-94a8d9b181cf")
 		)
 		(instances
-			(project "mx_plate"
+			(project "mx_left_plate"
 				(path "/6e471c34-fb9c-4836-aac9-8239f9e8a673"
 					(reference "SW24")
 					(unit 1)

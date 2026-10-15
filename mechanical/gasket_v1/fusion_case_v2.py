@@ -321,7 +321,7 @@ def run(_context):
     results = []
     results.append(build_case(
         'left',
-        os.path.join(base, 'pcb/mx_plate/gasket_v1/mx_plate_gasket_geometry.json'),
+        os.path.join(base, 'pcb/mx_left_plate/gasket_v1/mx_plate_gasket_geometry.json'),
         os.path.join(base, 'mechanical/gasket_v1/case_interface.json'),
         'sage60_left_case_' + CASE_REVISION,
         [0, 3, 5, 9]))

@@ -8,7 +8,7 @@ from casegeo import MAG_NOTCH, C2, MAG_D, MAG_WALL, CLR, OPEN_CLR
 
 BOSS_R = MAG_D / 2 + MAG_WALL
 JOBS = [('mx_main/mx.kicad_pcb', MAG_NOTCH, BOSS_R + 0.3),                         # PCB clears the post by 0.3 (cavity = PCB + 0.3)
-        ('mx_plate/mx_plate.kicad_pcb', MAG_NOTCH, BOSS_R + 1.0),                  # plate clears the boss by open_clr (MX 1.0)
+        ('mx_left_plate/mx_left_plate.kicad_pcb', MAG_NOTCH, BOSS_R + 1.0),                  # plate clears the boss by open_clr (MX 1.0)
         ('mx_right_tb_plate/mx_right_tb_plate.kicad_pcb', (C2 - MAG_NOTCH[0], MAG_NOTCH[1]), BOSS_R + 1.0)]
 
 def notch(path, c, r):

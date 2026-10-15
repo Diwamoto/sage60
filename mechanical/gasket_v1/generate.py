@@ -122,7 +122,7 @@ for side,ax in zip(['left','right'],axes):
  # Eroded connectivity catches narrow necks, including controller/trackball bridges.
  assert solid.buffer(-.75).geom_type=='Polygon','Plate has a neck narrower than 1.5mm'
  name='mx_plate_gasket' if side=='left' else 'mx_plate_right_tb_gasket'
- folder=ROOT/('pcb/mx_plate/gasket_v1' if side=='left' else 'pcb/mx_plate_right_tb/gasket_v1');folder.mkdir(exist_ok=True)
+ folder=ROOT/('pcb/mx_left_plate/gasket_v1' if side=='left' else 'pcb/mx_plate_right_tb/gasket_v1');folder.mkdir(exist_ok=True)
  kicad(folder/(name+'.kicad_pcb'),solid,switches,pads,pcb)
  dxf_write(folder/(name+'.dxf'),{'CUT':[solid]})
  dxf_write(folder/(name+'_case_reference.dxf'),{'PLATE':[outer],'PCB_REFERENCE':[pcb],'GASKET_CONTACT':pads,'SWITCH_CUTOUT':cuts})

@@ -1,14 +1,15 @@
 """ONE-OFF (already applied to mx_plate and mx_right_tb_plate on 2026-10-02 -- running it again shortens the tabs again).
+2026-10-09: run again with cut -0.9 keep 1.2 to lengthen the tabs 2.5 -> 3.4 (room for the gasket; LP top wall is at 3.7).
 Shorten the gasket tabs of a plate (.kicad_pcb, Edge.Cuts) by CUT mm, in place.
 Tabs = pieces of (plate - pcb). For every Edge.Cuts point lying more than KEEP mm out from the tab base
-(the PCB edge) the point is moved CUT mm back toward the plate.  usage: shorten_tabs.py plate.kicad_pcb pcb.kicad_pcb [cut]"""
+(the PCB edge) the point is moved CUT mm back toward the plate.  usage: shorten_tabs.py plate.kicad_pcb pcb.kicad_pcb [cut] [keep]"""
 import re, sys, math
 import numpy as np
 from shapely.geometry import Point
 sys.path.insert(0, __file__.rsplit('/', 1)[0])
 from geo import outline
 CUT = float(sys.argv[3]) if len(sys.argv) > 3 else 2.5
-KEEP = 2.4            # points nearer than this to the base stay (base fillets)
+KEEP = float(sys.argv[4]) if len(sys.argv) > 4 else 2.4           # points nearer than this to the base stay (base fillets)
 plate_p, pcb_p = sys.argv[1], sys.argv[2]
 plate, _ = outline(plate_p); pcb, _ = outline(pcb_p)          # Fusion coords (y = -ky)
 tabs = [g for g in getattr(plate.difference(pcb), 'geoms', []) if g.area > 5]

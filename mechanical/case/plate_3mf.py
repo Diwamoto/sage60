@@ -1,5 +1,5 @@
-"""plates (KiCad Edge.Cuts) -> case/sage60_shared_plate.3mf for test prints.  MX and Choc v2 share the 1.2 mm plate (2026-10-04);
-the right half is the same plate, snipped at the trackball and the front tab, flipped.  The mesh is the Edge.Cuts outline
+"""plates (KiCad Edge.Cuts) -> case/sage60_{left,right}_plate.3mf for test prints.  MX and Choc v2 share the 1.2 mm plate (2026-10-04);
+left and right are separate plates (2026-10-10; the snipped shared plate was dropped).  The mesh is the Edge.Cuts outline
 extruded here (no kicad-cli: it hung, 2026-10-06).  Checks the mesh is closed and its volume matches the outline x thickness."""
 import zipfile
 import numpy as np
@@ -9,8 +9,8 @@ from geo import outline, B
 from shapely.ops import unary_union
 
 OUT = '/Users/daiki/Projects/sage60/case/'
-PLATES = {'shared': 'mx_plate/mx_plate.kicad_pcb'}
-T = {'shared': 1.2}
+PLATES = {'left': 'mx_left_plate/mx_left_plate.kicad_pcb', 'right': 'mx_right_tb_plate/mx_right_tb_plate.kicad_pcb'}
+T = {'left': 1.2, 'right': 1.2}
 
 def extrude(poly, t):
     """closed triangle mesh (n, 3, 3) of a plan polygon with holes, z 0..t, outward normals"""
@@ -55,7 +55,7 @@ for side, f in PLATES.items():
     t = T[side]
     _, polys = outline(B + f)
     outer = polys[0]; holes = unary_union([p for p in polys[1:] if outer.contains(p.representative_point())])
-    plate = outer.difference(holes)                  # outer already carries the switch cutouts; holes = slots, perforations
+    plate = outer.difference(holes)                  # outer already carries the switch cutouts; holes = inner loops, if any
     assert plate.geom_type == 'Polygon', plate.geom_type
     vol, lo, hi = write_3mf(extrude(plate, t), OUT + 'sage60_%s_plate.3mf' % side)
     want = plate.area * t

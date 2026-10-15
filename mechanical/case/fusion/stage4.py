@@ -29,6 +29,7 @@ def run(_c):
     f = ex.add(inp); f.name = 'TB_FRONT_LOW_CUT'
     for b in [b for b in r.bRepBodies if b.name.startswith('MOCK_A ') and b.volume < 1e-3]:   # zero-thickness specks the cut can leave where its edge meets the key opening's
         r.features.removeFeatures.add(b).name = 'DROP_SPECK'
+    top_chamfer(r, spec)
     for b in r.bRepBodies:
         bb = b.boundingBox
         print(b.name, [round(v * 10, 2) for v in (bb.minPoint.x, bb.minPoint.y, bb.minPoint.z, bb.maxPoint.x, bb.maxPoint.y, bb.maxPoint.z)], round(b.volume, 2), 'lumps', b.lumps.count)

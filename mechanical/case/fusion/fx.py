@@ -168,3 +168,54 @@ def slot_cuts(r, spec, bodies, tag, names=None):
         i.startExtent = adsk.fusion.OffsetStartDefinition.create(VI.createByString(z0))
         i.setOneSideExtent(adsk.fusion.DistanceExtentDefinition.create(VI.createByString('40 mm')), adsk.fusion.ExtentDirections.PositiveExtentDirection)
         i.participantBodies = bodies; ex.add(i).name = n + '_CUT' + tag
+
+def _polylines(curves, step=0.2):
+    """spec curves (mm) -> list of polylines (arcs sampled every ~step mm)"""
+    out = []
+    for c in curves:
+        if c[0] == 'line': out.append([c[1], c[2]])
+        elif c[0] == 'spline': out.append(c[1])
+        elif c[0] == 'arc':
+            (ax, ay), (mx, my), (bx, by) = c[1], c[2], c[3]
+            d = 2 * (ax * (my - by) + mx * (by - ay) + bx * (ay - my))
+            ux = ((ax**2 + ay**2) * (my - by) + (mx**2 + my**2) * (by - ay) + (bx**2 + by**2) * (ay - my)) / d
+            uy = ((ax**2 + ay**2) * (bx - mx) + (mx**2 + my**2) * (ax - bx) + (bx**2 + by**2) * (mx - ax)) / d
+            R = math.hypot(ax - ux, ay - uy)
+            a0, am, a1 = (math.atan2(p[1] - uy, p[0] - ux) for p in (c[1], c[2], c[3]))
+            sweep = (a1 - a0) % (2 * math.pi)
+            if (am - a0) % (2 * math.pi) > sweep: sweep -= 2 * math.pi       # the arc runs the other way round
+            n = max(2, int(abs(sweep) * R / step) + 1)
+            out.append([(ux + R * math.cos(a0 + sweep * i / n), uy + R * math.sin(a0 + sweep * i / n)) for i in range(n + 1)])
+    return out
+
+def _dist(xy, lines):
+    best = 1e9
+    for pl in lines:
+        for a, b in zip(pl, pl[1:]):
+            dx, dy = b[0] - a[0], b[1] - a[1]; L2 = dx * dx + dy * dy
+            u = 0 if L2 == 0 else max(0, min(1, ((xy[0] - a[0]) * dx + (xy[1] - a[1]) * dy) / L2))
+            best = min(best, math.hypot(a[0] + u * dx - xy[0], a[1] + u * dy - xy[1]))
+    return best
+
+def top_chamfer(r, spec, name='TOP_CHAMFER'):
+    """2026-10-14: top_chamfer on the top case's top outer edge (top faces x the outer wall face TOP_WALL_OUTER), not under the
+    MCU cover.  Last feature on MOCK_A (the right side runs it after stage4's cuts)"""
+    m = r.bRepBodies.itemByName('MOCK_A')
+    ring = _polylines(spec['TOP_WALL_OUTER'])
+    bx = [p for c in spec['TOP_MCU_OPEN'] if c[0] == 'line' for p in c[1:3]]
+    x0, x1 = min(p[0] for p in bx), max(p[0] for p in bx); y0, y1 = min(p[1] for p in bx), max(p[1] for p in bx)
+    es = []
+    for e in m.edges:
+        if e.faces.count != 2: continue
+        ok, t0, t1 = e.evaluator.getParameterExtents()
+        ok, q = e.evaluator.getPointAtParameter((t0 + t1) / 2)
+        ns = [f.evaluator.getNormalAtPoint(q)[1] for f in e.faces]
+        if not (any(n.z > 0.99 for n in ns) and any(abs(n.z) < 0.05 for n in ns)): continue
+        xy = (q.x * 10, q.y * 10)
+        if x0 - 0.01 <= xy[0] <= x1 + 0.01 and y0 - 0.01 <= xy[1] <= y1 + 0.01: continue    # under the walnut cover
+        if _dist(xy, ring) < 0.05: es.append(e)
+    cf = r.features.chamferFeatures
+    i = cf.createInput2(); i.chamferEdgeSets.addEqualDistanceChamferEdgeSet(oc(es), VI.createByString('top_chamfer'), False)
+    f = cf.add(i); f.name = name
+    print(name, 'edges', len(es), 'health', f.healthState)
+    return f

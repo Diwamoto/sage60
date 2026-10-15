@@ -11,9 +11,9 @@ The plate is intended as a 1.5 mm FR4 or similar laser/CNC-cut part. There is no
 
 The production-facing files are:
 
-- `../../pcb/mx_plate/gasket_v1/mx_plate_gasket.dxf`
+- `../../pcb/mx_left_plate/gasket_v1/mx_plate_gasket.dxf`
 - `../../pcb/mx_plate_right_tb/gasket_v1/mx_plate_right_tb_gasket.dxf`
-- `../../pcb/mx_plate/gasket_v1/mx_plate_gasket.step`
+- `../../pcb/mx_left_plate/gasket_v1/mx_plate_gasket.step`
 - `../../pcb/mx_plate_right_tb/gasket_v1/mx_plate_right_tb_gasket.step`
 
 The `.kicad_pcb` files are useful for opening the geometry in KiCad and checking the switch holes. The `_case_reference.dxf` files include the plate outline, current PCB outline, gasket contacts, and switch cutouts on separate layers for case design.

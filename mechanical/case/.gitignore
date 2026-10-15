@@ -7,3 +7,4 @@ __pycache__/
 models/*_pcb.step
 venv/
 tb_placed_lp.stl
+kicad_site/

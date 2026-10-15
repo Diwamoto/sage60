@@ -24,7 +24,7 @@ def outline(path):
         reps.append(p); return p
     ls=[]; closed=[]
     for d in e:
-        if d['k']=='gr_poly': closed.append(Polygon([(x,-y) for x,y in d['pts']])); continue      # inner cutouts (breakaway.py slots)
+        if d['k']=='gr_poly': closed.append(Polygon([(x,-y) for x,y in d['pts']])); continue      # inner cutouts (slots, if any)
         if d['k']=='gr_circle':
             c=d['center']; closed.append(Point(c[0],-c[1]).buffer(math.dist(c,d['end']),quad_segs=8)); continue
         s=snap(d['start']); en=snap(d['end'])
