@@ -16,4 +16,8 @@ if SHIELD_SAGE60_LEFT || SHIELD_SAGE60_TEST_LEFT || SHIELD_SAGE60_RIGHT
 config ZMK_SPLIT
 	default y
 
+# ec-support-zmk-module defaults this on with ZMK_SLEEP; MX has no ADXL362.
+config SLEEP_AWAKE_TRIGGER
+	default n
+
 endif
