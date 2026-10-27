@@ -1,0 +1,2 @@
+/* Board bring-up image: same hardware as sage60_left, test keymap. */
+#include "sage60_left.overlay"
