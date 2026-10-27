@@ -121,8 +121,8 @@ RC(4,0) RC(4,1) RC(4,2) RC(4,3) RC(4,8) RC(4,9)
             , <&key_physical_attrs 100 100  350  417    750  400  467> // 53  L SW26 RC(4,1)
             , <&key_physical_attrs 100 100  454  438   1500  504  488> // 54  L SW27 RC(4,2)
             , <&key_physical_attrs 100 100  555  472   2250  605  522> // 55  L SW28 RC(4,3)
-            , <&key_physical_attrs 100 100  895  472  -2250  945  522> // 56  R SW28 RC(4,8)
-            , <&key_physical_attrs 100 100  996  438  -1500 1046  488> // 57  R SW27 RC(4,9)
+            , <&key_physical_attrs 100 100  895  472 (-2250)  945  522> // 56  R SW28 RC(4,8)
+            , <&key_physical_attrs 100 100  996  438 (-1500) 1046  488> // 57  R SW27 RC(4,9)
             ;
     };
 };
