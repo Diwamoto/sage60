@@ -14,10 +14,6 @@ include:
   - board: xiao_ble//zmk
     shield: settings_reset
     artifact-name: sage60_settings_reset
-  # Board bring-up: every key types a unique character (see sage60_test_left.keymap).
-  - board: xiao_ble//zmk
-    shield: sage60_test_left
-    artifact-name: sage60_test_left
 
   # ---- EC (Topre-style capacitive) ----
   - board: xiao_ble//zmk
