@@ -6,9 +6,70 @@ on:
     paths: ["firmware/zmk/**", ".github/workflows/zmk.yml"]
   workflow_dispatch:
 
+# Same steps as zmkfirmware/zmk build-user-config.yml, but that workflow
+# expects config/ at the repo root: `west init -l firmware/zmk/config` puts the
+# workspace in firmware/zmk while it runs `west update` from the repo root.
+env:
+  ws: firmware/zmk
+
 jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      build_matrix: ${{ steps.m.outputs.build_matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: m
+        run: echo "build_matrix=$(yq -oj -I0 firmware/zmk/build.yaml)" >> $GITHUB_OUTPUT
+
   build:
-    uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@main
-    with:
-      config_path: firmware/zmk/config
-      build_matrix_path: firmware/zmk/build.yaml
+    runs-on: ubuntu-latest
+    container:
+      image: zmkfirmware/zmk-build-arm:stable
+    needs: matrix
+    name: Build ${{ matrix.artifact-name }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.matrix.outputs.build_matrix) }}
+    defaults:
+      run:
+        working-directory: firmware/zmk
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        continue-on-error: true
+        with:
+          path: |
+            ${{ env.ws }}/modules/
+            ${{ env.ws }}/tools/
+            ${{ env.ws }}/zephyr/
+            ${{ env.ws }}/bootloader/
+            ${{ env.ws }}/zmk/
+            ${{ env.ws }}/zmk-pmw3610-driver/
+            ${{ env.ws }}/ec-support-zmk-module/
+          key: zmk-${{ hashFiles('firmware/zmk/config/west.yml') }}
+          restore-keys: zmk-
+      - run: west init -l config
+      - run: west update --fetch-opt=--filter=tree:0
+      - run: west zephyr-export
+      - name: West Build
+        run: >
+          west build -s zmk/app -d build -b "${{ matrix.board }}"
+          ${{ matrix.snippet && format('-S "{0}"', matrix.snippet) || '' }}
+          -- -DZMK_CONFIG="$PWD/config" -DSHIELD="${{ matrix.shield }}" ${{ matrix.cmake-args }}
+      - run: mkdir out && cp build/zephyr/zmk.uf2 "out/${{ matrix.artifact-name }}.uf2"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artifact-${{ matrix.artifact-name }}
+          path: ${{ env.ws }}/out
+
+  merge:
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ !cancelled() }}
+    steps:
+      - uses: actions/upload-artifact/merge@v4
+        with:
+          name: firmware
+          pattern: artifact-*
+          delete-merged: true
