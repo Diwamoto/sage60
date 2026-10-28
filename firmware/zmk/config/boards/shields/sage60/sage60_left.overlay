@@ -12,28 +12,28 @@
  *  COL4 -> U1/7  P1.11 (D6)      ROW4 -> U1/8  P1.12 (D7)
  *  COL5 -> U1/10 P1.14 (D9)
  *
- * diode-direction = row2col  ->  rows are driven (outputs),
- *                                columns are sensed (inputs, pull-down).
+ * diode-direction = col2row  ->  columns are driven (outputs),
+ *                                rows are sensed (inputs, pull-down).
  */
 
 #include "sage60.dtsi"
 
 &kscan0 {
     row-gpios
-        = <&gpio0  2 GPIO_ACTIVE_HIGH>   /* ROW0 P0.02 */
-        , <&gpio0  4 GPIO_ACTIVE_HIGH>   /* ROW1 P0.04 */
-        , <&gpio1 15 GPIO_ACTIVE_HIGH>   /* ROW2 P1.15 */
-        , <&gpio1 13 GPIO_ACTIVE_HIGH>   /* ROW3 P1.13 */
-        , <&gpio1 12 GPIO_ACTIVE_HIGH>   /* ROW4 P1.12 */
+        = <&gpio0  2 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* ROW0 P0.02 */
+        , <&gpio0  4 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* ROW1 P0.04 */
+        , <&gpio1 15 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* ROW2 P1.15 */
+        , <&gpio1 13 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* ROW3 P1.13 */
+        , <&gpio1 12 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* ROW4 P1.12 */
         ;
 
     col-gpios
-        = <&gpio0  3 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* COL0 P0.03 */
-        , <&gpio0 28 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* COL1 P0.28 */
-        , <&gpio0 29 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* COL2 P0.29 */
-        , <&gpio0  5 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* COL3 P0.05 */
-        , <&gpio1 11 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* COL4 P1.11 */
-        , <&gpio1 14 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* COL5 P1.14 */
+        = <&gpio0  3 GPIO_ACTIVE_HIGH>   /* COL0 P0.03 */
+        , <&gpio0 28 GPIO_ACTIVE_HIGH>   /* COL1 P0.28 */
+        , <&gpio0 29 GPIO_ACTIVE_HIGH>   /* COL2 P0.29 */
+        , <&gpio0  5 GPIO_ACTIVE_HIGH>   /* COL3 P0.05 */
+        , <&gpio1 11 GPIO_ACTIVE_HIGH>   /* COL4 P1.11 */
+        , <&gpio1 14 GPIO_ACTIVE_HIGH>   /* COL5 P1.14 */
         ;
 };
 

@@ -10,7 +10,7 @@
  * and COL0..COL3 are the thumb keys (left 4; right only COL2/COL3, the
  * trackball takes COL0/COL1). Positions below are from the KiCad footprints.
  * Controller: XIAO nRF52840 (left) / XIAO nRF52840 Plus (right, with trackball).
- * Diode direction: row2col (diode anode on ROW, cathode toward the switch/COL).
+ * Diode direction: col2row (cathode on ROW, as the KiCad netlist and silk show).
  *
  * GPIO assignment is asymmetric between halves, so the actual row-gpios and
  * col-gpios are defined per-half in sage60_left.overlay / sage60_right.overlay.
@@ -41,7 +41,7 @@
         compatible = "zmk,kscan-gpio-matrix";
         wakeup-source;
 
-        diode-direction = "row2col";
+        diode-direction = "col2row";
         /* row-gpios and col-gpios are provided per-half in the overlays */
     };
 
