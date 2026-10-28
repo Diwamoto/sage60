@@ -4,3 +4,5 @@ pcb/**/*/fp-info-cache
 pcb/**/*/production
 
 .DS_Store
+# Local ZMK build output (firmware/zmk/build.sh)
+firmware/zmk/out/
