@@ -27,4 +27,11 @@ def run(_c):
                     if not a.boundingBox.intersects(cb.boundingBox): continue
                     t = tbm.copy(a); tbm.booleanOperation(t, tbm.copy(cb), adsk.fusion.BooleanTypes.IntersectionBooleanType)
                     if t.faces.count and t.volume > 1e-6: hits[(name + (' pressed' if pressed else ''), cb.name)] += round(t.volume * 1000, 3)
+    for o in [o for o in r.occurrences if o.component.name.startswith('J1_REF')]:    # right: J1 header / socket / sensor board (stage6)
+        for b in o.bRepBodies:
+            name = b.name.rstrip('_0123456789'); n[name] += 1
+            for cb in case:
+                if not b.boundingBox.intersects(cb.boundingBox): continue
+                t = tbm.copy(b); tbm.booleanOperation(t, tbm.copy(cb), adsk.fusion.BooleanTypes.IntersectionBooleanType)
+                if t.faces.count and t.volume > 1e-6: hits[(name, cb.name)] += round(t.volume * 1000, 3)
     print(SIDE, 'LP' if LP else 'MX', dict(n), 'hits mm3:', dict(hits))

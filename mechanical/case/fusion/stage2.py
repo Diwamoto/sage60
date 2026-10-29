@@ -35,7 +35,8 @@ def run(_c):
     ci = r.features.combineFeatures.createInput(get(), oc([ring])); ci.operation = FO.JoinFeatureOperation
     r.features.combineFeatures.add(ci).name = 'MCU_WALL_JOIN'
     extrude('MAGNET_CUT', allp('MAGNETS'), FO.CutFeatureOperation, dist='-( mag_h )')
-    extrude('MCU_SCREW_CUT', allp('MCU_SCREWS'), FO.CutFeatureOperation, dist='-( ins_h )')
+    # the top case's magnet boss sits on the MCU wall: lowered under it (+ clr)
+    extrude('MCU_MAG_CUT', allp('MCU_MAG_CUT'), FO.CutFeatureOperation, start=offS('mcu_cover_z'), dist='-( mcu_mag_h + mcu_mag_floor + clr )', bodies=[get()])
     # the floor is flat at cav_z (MX too since 2026-10-06, the rest is filled); MX: the battery + JST pocket below it
     if sk('BAT_POCKET'):
         extrude('BAT_POCKET_CUT', sk('BAT_POCKET').profiles.item(0), FO.CutFeatureOperation, start=offS('-cav_z'), dist='-( bat_z - cav_z )')
@@ -51,8 +52,7 @@ def run(_c):
     log.append(('feet removed cm3', round(v0 - get().volume, 4)))
     if SIDE == 'right':
         extrude('TB_POCKET_CUT', sk('TB_POCKET').profiles.item(0), FO.CutFeatureOperation, start=fromE('SHELF_TOP'), to=pl('TB_SEAT'))
-        extrude('TB_SCREW_CUT', allp('TB_SCREWS'), FO.CutFeatureOperation, dist='-30 mm')
-        extrude('TB_SCREW_CB_CUT', allp('TB_SCREW_CB'), FO.CutFeatureOperation, to=pl('TB_CB_FLOOR'))
+        extrude('TB_MAG_CUT', allp('TB_MAGS'), FO.CutFeatureOperation, dist='-tb_mag_h')
         bf = r.features.baseFeatures.add(); bf.name = 'TB_CASE_REF'
         bf.startEdit()
         r.meshBodies.add(SCR + 'tb_placed%s.stl' % SFX, adsk.fusion.MeshUnits.MillimeterMeshUnit, bf)

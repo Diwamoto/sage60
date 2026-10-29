@@ -23,7 +23,7 @@ STEP_FILL = (84.0, -125.0, 106.0, -100.0)   # left: region whose convex hull fil
 MAG_STEP = (91.4, -109.4)        # left: magnet at the thumb step (front left), the outline grows round it if needed (2026-10-05)
 MAG_NOTCH = (187.06, -105.78)    # left: PCB/plate edge notch for a magnet post between the right column and the outermost thumb key (mag_notch.py)
 FOOT_D = 10.5
-INS_D, INS_WALL = 1.6, 0.9     # M2 tapped / self-tapping hole for the MCU cover
+MCU_MAG = (190.34, -33.5)      # left: the MCU cover's phi6 magnet (2026-10-24, user): in a top case boss over the XIAO's USB end, a steel disc in the cover
 POCKET_W, POCKET_IN, POCKET_OUT = 17.0, -2.0, CASE_OFF + 0.2   # gasket pocket: width along edge, extent along the tab normal
 POCKET_R = 1.0      # its corners (the top case slot ends inside the ring: ~3.7 deep -> R >= 0.9)
 POCKET_OUT_B = CASE_OFF + 12.0  # bottom pockets run out past the outline (the back arc is up to ~10 out; their R corners stay outside)
@@ -165,10 +165,15 @@ def back_arc_outline(base_off):
     fill = Polygon(arc + [(x1, yR - 25), (x0, yL - 25)])
     return unary_union([base_off, fill]).buffer(0), dict(center=(cx, cy), r=r, sag=sag, yL=yL, yR=yR)
 
-def fps(cands, k, seed=None):
-    """farthest point sampling"""
-    cands = np.array(cands); chosen = [cands[np.argmax(cands[:, 0] + cands[:, 1]) if seed is None else seed]]
-    d = np.linalg.norm(cands - chosen[0], axis=1)
+def fps(cands, k, seed=None, fixed=()):
+    """farthest point sampling (also away from the already placed `fixed` points)"""
+    cands = np.array(cands)
+    if len(fixed):
+        chosen, d = [], np.min([np.linalg.norm(cands - np.array(f), axis=1) for f in fixed], axis=0)
+        k += 1
+    else:
+        chosen = [cands[np.argmax(cands[:, 0] + cands[:, 1]) if seed is None else seed]]
+        d = np.linalg.norm(cands - chosen[0], axis=1)
     for _ in range(k - 1):
         i = int(np.argmax(d)); chosen.append(cands[i]); d = np.minimum(d, np.linalg.norm(cands - cands[i], axis=1))
     return [tuple(map(float, c)) for c in chosen]
@@ -180,7 +185,7 @@ def grid_points(region, step=0.5):
             if region.contains(Point(x, y)): pts.append((x, y))
     return pts
 
-def magnet_spots(case, opening, cav, keepout, n=N_MAG):
+def magnet_spots(case, opening, cav, keepout, n=N_MAG, fixed=()):
     """magnets sit where the top ring (opening .. case) overlaps the bottom shelf (cav .. case)"""
     band = case.difference(unary_union([opening, cav, keepout]))
     ok = band.buffer(-(MAG_D / 2 + MAG_WALL))
@@ -188,13 +193,7 @@ def magnet_spots(case, opening, cav, keepout, n=N_MAG):
     for g in getattr(ok, 'geoms', [ok]):          # thin parts of the band: take points on the boundary too
         for r in [g.exterior] + list(g.interiors):
             cands += list(r.segmentize(0.5).coords)
-    return fps(cands, n), band
-
-def screw_spots(region, n, within=None):
-    ok = region.buffer(-(INS_D / 2 + INS_WALL))
-    if within is not None: ok = ok.intersection(within)
-    pts = fps(grid_points(ok, 0.25), n) if not ok.is_empty else []
-    return [p for i, p in enumerate(pts) if all(math.dist(p, q) > 6.0 for q in pts[:i])]    # no two in one spot (low profile: 2 fit)
+    return fps(cands, n, fixed=fixed), band
 
 def feet_spots(case, keepout=None):
     """one foot near each corner of the bounding box"""
@@ -304,7 +303,7 @@ def battery_pocket():
     p = unary_union([bat.buffer(0.8, join_style=2), box(*JST_BOX).buffer(0.8, join_style=2)]).convex_hull     # 0.8: R2 clears the corners
     return p.buffer(-2.0, join_style=2).buffer(2.0, quad_segs=16)
 COVER_CLR = 0.3                 # MCU cover (walnut, cut from a DXF) to the top case opening and the skirt
-COVER_HOLE_D = 2.2              # M2 clearance (countersink by hand / at the shop)
+DISC_D = 8.2                    # steel disc (phi8) recessed into the cover's underside, over MCU_MAG
 DESK_MIN = desk_z(-12.0)             # the top case ends at y ~ -12.3 at the back
 SKIRT_H = -PLATE_T - DESK_MIN                 # top case skirt inside: ring underside -> desk (deepest at the back)
 OUTER_H = max(TOP_H, MCU_COVER_Z) - DESK_MIN                    # top case outside, full height
@@ -389,12 +388,12 @@ def top_outer(case):
     sharp = o.buffer(-r0, quad_segs=32).buffer(r0, join_style=2, mitre_limit=20)
     return round_poly(unary_union([o, sharp]), WALL_OUT_R, CONCAVE_R - CLR - WALL)
 
-def mcu_cover(case, mcu_open, screws, usb, caps):
+def mcu_cover(case, mcu_open, mag, usb, caps):
     """the MCU cover (walnut, 2026-10-06): the top case's MCU opening out to the top case's outer face (the skirt there is
     lowered to mcu_cover_z: the cover sits on it and on the bottom case's MCU wall, its edge flush with the outer wall).
     COVER_CLR from the ring ends, the inner corner concentric with TOP_MCU_FILLET (R RING_R).  Low profile: the MCU part is
     raised to MCU_COVER_Z 4.8 (above the USB plug's overmold, +4.3), so no notch for the USB either.
-    Keeps KEY_CLR off the keycaps.  -> (outline, [M2 hole centres])"""
+    Keeps KEY_CLR off the keycaps.  -> outline"""
     x0, y0, x1, y1 = mcu_open.buffer(-COVER_CLR, join_style=2).bounds
     corner = [(x, y) for x in (x0, x1) for y in (y0, y1) if case.contains(Point(x, y))][0]     # the one inside the case
     c = round_corner_box(x0, y0, x1, y1, corner, RING_R - COVER_CLR).intersection(top_outer(case))
@@ -402,10 +401,31 @@ def mcu_cover(case, mcu_open, screws, usb, caps):
     # (inside corners R1 for the router, 2026-10-06)
     c = c.difference(unary_union(caps).buffer(KEY_CLR, join_style=2)).buffer(1.0, quad_segs=16).buffer(-1.0, quad_segs=16)
     c = Polygon(max(getattr(c, 'geoms', [c]), key=lambda g: g.area).exterior)
-    print('MCU cover: M2 hole edge to the cover edge', [round(c.exterior.distance(Point(p)) - COVER_HOLE_D / 2, 2) for p in screws])
-    return c, list(screws)
+    print('MCU cover: steel disc edge to the cover edge %.2f' % (c.exterior.distance(Point(mag)) - DISC_D / 2))
+    return c
 
-COVER_EDGE = 3.6                # cover screws at least this far from the ring ends (hole edge ~2.5 from the cover edge)
+def mcu_magnet_boss(case, cavity, cover, usb, sw, mag, side=1):
+    """the MCU cover's magnet (2026-10-24): a boss on the top case's skirt reaching in over the XIAO's USB end (the bottom MCU
+    wall alone is ~3.7 wide).  side +1: the skirt is at +x (left case).  -> (boss plan, bottom case cut = boss + CLR)"""
+    rw = MAG_D / 2 + MAG_WALL + 0.05          # (machinability.py read 0.79 at exactly 0.8)
+    assert cover.difference(usb.buffer(1.0)).difference(sw.buffer(1.0)).contains(Point(mag).buffer(rw))
+    x, y = mag
+    to = cover                                  # under the cover only (LP: the cover stops short of the top case's outer face)
+    band = box(x, y - rw, to.bounds[2] + 1, y + rw) if side == 1 else box(to.bounds[0] - 1, y - rw, x, y + rw)
+    raw = unary_union([Point(mag).buffer(rw, quad_segs=32), band]).intersection(to)
+    skirt = to.difference(case.buffer(CLR, quad_segs=32))
+    r = max(1.5, cnc_r(MCU_COVER_Z + 1.0))       # its concave junctions with the skirt
+    near = raw.buffer(r + 1.0)
+    boss = unary_union([raw, skirt]).buffer(r, quad_segs=16).buffer(-r, quad_segs=16).intersection(near).intersection(to)
+    boss = unary_union([boss.difference(skirt), raw])
+    boss = Polygon(max(getattr(boss, 'geoms', [boss]), key=lambda g: g.area).exterior)
+    # bottom: + CLR, and the band's whole width + the fillets (r + CLR) cut square across the MCU wall (no slivers)
+    w = rw + r + CLR
+    sq = box(x, y - w, to.bounds[2] + 1, y + w) if side == 1 else box(to.bounds[0] - 1, y - w, x, y + w)
+    sq = sq.union(box(*sq.bounds).buffer(3.0, join_style=2).difference(case))      # runs out past the outline: R1 below stays outside
+    cut = unary_union([boss.buffer(CLR, quad_segs=32), sq]).buffer(-1.0, quad_segs=32).buffer(1.0, quad_segs=32)     # corners R1 (~4.2 deep)
+    cut = cut.intersection(case).simplify(0.005)
+    return boss, Polygon(max(getattr(cut, 'geoms', [cut]), key=lambda g: g.area).exterior)
 
 def port_slots(case):
     """left: USB and slide switch openings as plan slots cut from their bottom z straight up through both cases (open at the

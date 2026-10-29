@@ -36,7 +36,7 @@ def run(_c):
     ortho('front', 0, -1)
     ortho('back', 0, 1)
     ortho('side', 1 if SIDE == 'left' else -1, 0)
-    refs = [o for o in r.occurrences if o.component.name.startswith('PCB_REF')]
+    refs = [o for o in r.occurrences if o.component.name.startswith(('PCB_REF', 'J1_REF'))]
     for o in refs: o.isLightBulbOn = False
     show()
     cam = vp.camera; cam.cameraType = adsk.core.CameraTypes.PerspectiveCameraType; cam.viewOrientation = iso; cam.isFitView = True; vp.camera = cam

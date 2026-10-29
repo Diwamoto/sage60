@@ -15,13 +15,13 @@ python3 -m venv venv && ./venv/bin/pip install shapely numpy matplotlib   # 初�
 Fusion（fusion-mcp の script 実行）で、左右それぞれ順に:
 ```python
 def run(c):
-    for st in ['stage0', 'stage1', 'stage2', 'stage3', 'stage5']:   # 右は 'stage4' も（stage5 の前）
+    for st in ['stage0', 'stage1', 'stage2', 'stage3', 'stage5']:   # 右は 'stage4' も（stage5 の前）と 'stage6'（最後）
         g = {'SIDE': 'left'}                                        # 'right'
-        exec(open('/Users/daiki/Projects/sage60/mechanical/case/fusion/%s.py' % st).read(), g)
+        exec(open('/Users/daiki/Projects/sage60/mechanical/case/fusion/%s.py' % st, encoding='utf-8').read(), g)
         g['run'](c)
 ```
 - stage0: ドキュメントのタイムラインとユーザーパラメータを全部消して作り直す（保存済みの版は履歴に残る）
-- stage1: 平面とスケッチ / stage2: 下ケース（右はトラックボールのポケット・ネジ・参照メッシュも）/ stage3: 上ケース MOCK_A（A案） / stage4: 右だけ、トラックボール奥の床と上ケースの切り欠き、手前の枠の天面を `tb_front_drop` 下げる / stage5: PCB_REF（PCB＋部品のSTEP。PCB上面を −(plate_t+pcb_gap) に置く。モックの画像は必ずこれを入れて撮る）
+- stage1: 平面とスケッチ / stage2: 下ケース（右はトラックボールのポケット・磁石穴・参照メッシュも）/ stage3: 上ケース MOCK_A（A案） / stage4: 右だけ、トラックボール奥の床と上ケースの切り欠き、手前の枠の天面を `tb_front_drop` 下げる / stage6: 右だけ、J1_REF（センサー基板・J1 の丸ピンソケットとL字ヘッダの箱。J1 は x 166.64、細ピンのL字ヘッダ PHA-1x40RG のピンを 2.5 に切ってソケットに突き当て）/ stage5: PCB_REF（PCB＋部品のSTEP。PCB上面を −(plate_t+pcb_gap) に置く。モックの画像は必ずこれを入れて撮る）
 - 最後に `fusion/check.py` で干渉チェック（PCB・プレート・トラックボールケース・USBプラグの通り道・上下の重なり。全部0になること）
 - CNC の加工性は `fusion/machinability.py`（globals に `SIDE`、ロープロは `LP`）。アンダーカット・鋭い内角・R と深さ（R ≥ H/10+0.5）・穴の深さ・肉厚 0.8 を B-Rep で調べ、`cnc_<side><sfx>.json` に書く。全部0になること（2026-10-05〜）
 
@@ -46,6 +46,7 @@ Fusion では exec の globals に `'LP': True` を足す（`{'SIDE': 'left', 'L
 Fusion のユーザーパラメータで動くのは高さ方向と穴径など。平面形状はPythonで計算してスケッチに焼き込むので、外形を変えたらスクリプトから作り直す。
 
 ## trackballcase.stl
+2026-10-20 から `trackballcase_low.stl`（`case/trackballcase_low.3mf` を z+2 して STL にしたもの。+x 側が 2.7mm 短い）を使う。下は元の STL の取り方。
 roBa のトラックボールケース（Keyball Trackball Case by kepeo, CC BY 4.0 を roBa が改変）。git LFS なので取ってくる:
 ```sh
 href=$(curl -s -X POST -H 'Accept: application/vnd.git-lfs+json' -H 'Content-Type: application/vnd.git-lfs+json' \
@@ -64,7 +65,7 @@ KiCad のフットプリントは他人の環境のモデルパス（`D:/…`、
 - 干渉チェックは `fusion/check_parts.py`（globals に `SIDE` / `LP`。キーキャップは押し込んだ状態も見る）。
 
 ## mcu_cover_dxf.py
-MCU カバー（ウォルナット）の発注用 DXF を `case/sage60_{left,right}{,_lp}_mcu_cover.dxf` に書き出す（make_left.py / make_right.py の spec の `MCU_COVER` から。mm、上から見た Fusion の XY、外形＋M2 の穴）。厚さは MX 3.0 / ロープロ 1.2。
+MCU カバー（ウォルナット）の発注用 DXF を `case/sage60_{left,right}{,_lp}_mcu_cover.dxf` に書き出す（make_left.py / make_right.py の spec の `MCU_COVER` から。mm、上から見た Fusion の XY、レイヤー 0 が外形（貫通）、`RECESS_UNDERSIDE_0.6` が裏の φ8.2×深さ0.6 の凹み（φ8×0.5 の鉄の円板。カバーは上ケースの φ6×3 磁石で留める、2026-10-24）。厚さは MX 3.0 / ロープロ 2.5。
 
 ## centre_hole.py / centre_reroute.py
 一回限り（2026-10-14 適用済み）。KiCad の Python（`/Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/Current/bin/python3`）で動かす。numpy と shapely はその Python 用に `kicad_site/` へ入れる（`<KiCad python> -m pip install --target kicad_site numpy shapely`）。
@@ -73,6 +74,7 @@ MCU カバー（ウォルナット）の発注用 DXF を `case/sage60_{left,rig
 ## mag_notch.py / tongue_edge.py / tongue_trim.py
 一回限りのスクリプト（2026-10-03〜04 に適用済み。再実行すると二重に入る／tongue_edge は assert で止まる）。
 - `mag_notch.py`：左 PCB・左プレート・右プレート（鏡像）の右下の縁に、φ6 磁石の柱用の半円の切り欠きを入れる（中心は `casegeo.MAG_NOTCH`）。左 PCB の ROW4 は先に手で引き直してある。
+- `j1_thin_pin.py`（2026-10-29）：右 PCB の J1 を細ピンのL字ヘッダ用に x 166.64 へ。丸ピンソケットの胴が当たる舌の左下を x 163.4 まで削り、SDIO / MOTION を引き直し。適用後に `kicad-cli pcb drc --refill-zones --save-board`。
 - `tongue_trim.py`（2026-10-06）：右 PCB の J1 の舌の左の辺を 158.9→159.9（センサー基板との隙間）。SDIO / MOTION を J1 の右側へ引き直し（MOTION はビアで裏面）、GND のステッチビアを2つ。適用後に `kicad-cli pcb drc --refill-zones --save-board`。
 - `tongue_edge.py`：右 PCB の J1 の舌の左の辺を x 158.0→158.9 にして、トラックボールケースの脚の腕を避ける（0.49mm 重なり→0.36mm の隙間）。舌に沿う SDIO / MOTION の配線も0.32右へ。
 

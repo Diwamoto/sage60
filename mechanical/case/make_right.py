@@ -11,11 +11,12 @@ SHELF_REL = TB_ZREL0 - PLATE_T          # z_rel of the shelf top (-shelf_d)
 X_R, RIM = 168.0, 5.5               # thumb access: right limit, rim kept along the thumb cluster (4 -> 5.5: the top case rim was < 3 mm beside the keycaps)
 MAG_A2 = (C2 - MAG_NOTCH[0], MAG_NOTCH[1])     # magnet in the right PCB's notch = the shared plate's notch flipped (notch_fillet.py)
 MAG_B = (185.5, -110.5)                       # magnet at the right front corner; the outline grows round it (2026-10-05)
+HULL_X0 = 110.0                               # the front right of this is one convex hull (2026-10-28)
 import os
 DEBUG = os.environ.get('DEBUG') == '1'
 THIN_TOP, THIN_BOT = 3.0, 2.0       # around the trackball, top / bottom case parts narrower than this are cut away (slivers where the cuts meet the outline)
-TB_SCREWS = [(TBX + 9.59, TBY - 7.72), (TBX + 9.59, TBY + 8.48)]   # hex bosses of the trackball case
-TB_CB_D = 3.6
+TB_SCREWS = [(TBX + 9.59, TBY - 7.72), (TBX + 9.59, TBY + 8.48)]   # hex bosses of the trackball case = its two magnets (2026-10-29, were M1.7 screws; tb_socket_cut.py)
+TB_CB_D = 3.6                       # (feet keep-out round them)
 FRONT_LOW_R = 2.0                   # lowered frame in front of the trackball: corner R
 TB_FRONT_LIP = 4.0      # TB_FRONT_LOW under the thumb keys: this far outside their opening's front edge
 TB_FRONT_X0 = 88.0      # ... from the trackball side to this x, then out square to the wall
@@ -45,6 +46,10 @@ def build_right():
     h = Polygon(max(getattr(h, 'geoms', [h]), key=lambda g: g.area).exterior)
     tbhole = opening_rounded(h.buffer(TB_CLR, quad_segs=16).buffer(2, quad_segs=16).buffer(-2, quad_segs=16), 1.5)
     pocket = opening_rounded(fp_lo.buffer(TB_CLR, quad_segs=16).buffer(1.5, quad_segs=16).buffer(-1.5, quad_segs=16), 1.5)
+    # J1's round-pin socket on the sensor board (fusion/stage6.py) reaches 0.27 below the PCB top over the tongue's cut-out: in the
+    # pocket with CLR all round (the pocket's fit alone grazed its corner in LP).  The sensor board's bottom edge is then on TB_SEAT,
+    # level with the trackball case's legs at its ends (no slot under it: it would undercut the legs)
+    pocket = unary_union([pocket, box(158.94 - CLR, -122.395 - 8.89 - CLR, 163.14 + CLR, -122.395 + 8.89 + CLR)])
     # top ring opening: plate body + open_clr, keycaps + KEY_CLR, trackball hole -> the top case covers the bare PCB around the trackball
     caps = unary_union(keycaps(B + 'mx_right_tb/mx_right_tb.kicad_pcb')).buffer(2.5, join_style=2).buffer(-2.5, join_style=2)
     keyhole = opening_rounded(unary_union([body.buffer(OPEN_CLR, quad_segs=16), caps.buffer(KEY_CLR - GUARD_R, join_style=2).buffer(GUARD_R, quad_segs=16)]), 1.5)
@@ -67,6 +72,9 @@ def build_right():
     # under the thumb access that the sliver cut ate down the trackball hole)
     notch = unary_union([case_m.intersection(box(100, -130, 112, -115)), encf.intersection(box(110, -145, 121, -120))]).convex_hull
     ext = unary_union([case_m, encf, notch, pcb.buffer(3.0, join_style=2)])   # PCB at least 3 inside: bottom wall >= THIN_BOT outside the cavity
+    # (2026-10-28, user: keep it simple round the trackball) the front from x HULL_X0 rightwards is one convex hull: a straight
+    # edge under the trackball, round the J1 tongue (tongue_socket.py) and up to the right edge -- no box round the tongue
+    ext = unary_union([ext, ext.intersection(box(HULL_X0, -250, 250, -100)).convex_hull])
     ext = ext.buffer(CONCAVE_R, quad_segs=16).buffer(-CONCAVE_R, quad_segs=16)
     ext = ensure_boss(ext, MAG_A2)
     pockets = gasket_pockets(info)                       # top slots
@@ -135,14 +143,18 @@ def build_right():
     Q, Ql = on(T[0]), on(TB_FRONT_X0)
     (r0, r1) = ends[1]
     front_low = opening_rounded(Polygon([tuple(T), tuple(Q), tuple(Ql), tuple(Ql + 40 * m), (Ql[0] + 40 * m[0], -250), (r1[0], -250), r1, r0]), FRONT_LOW_R)
+    # J1 header + round-pin socket (fusion/stage6.py: socket on the sensor board's +x face 158.94, header leads into J1 at x 166.64,
+    # pins y -122.395 +- 8.89) stand 2.27 above the PCB: in LP that is above the top ring's underside -> a pocket there (stage4 J1_RELIEF)
+    j1_relief = box(158.94 - CLR, -122.395 - 8.89 - CLR, 166.64 + 0.25 + CLR, -122.395 + 8.89 + CLR).buffer(-1.0).buffer(1.0, quad_segs=16)
     # MCU / USB / switch: mirrored from the left
     usb = mirror_poly(L['usb']); sw = mirror_poly(L['sw']); mcu = mirror_poly(L['mcu']); mcu_open = mirror_poly(L['mcu_open'])
-    screws = [(C2 - x, y) for x, y in L['screws']]
+    mcu_mag = (C2 - MCU_MAG[0], MCU_MAG[1])
     keep = unary_union([p.buffer(1.0) for p in pockets + pockets_b] + [mcu_open, usb, sw, access_cut.buffer(1.0), tbhole.buffer(1.0), pocket.buffer(1.0), post.buffer(10), Point(mag_b).buffer(10)])
-    mags, band = magnet_spots(case, opening, cavity, keep, N_MAG - 2)
+    mags, band = magnet_spots(case, opening, cavity, keep, N_MAG - 2, fixed=[MAG_A2, mag_b])   # (2026-10-28: the hull's new front corner drew one away from the back left)
     mags = [MAG_A2, mag_b] + mags
     guard = guard_fill(keyhole, guard_region(keyhole, keycaps(B + 'mx_right_tb/mx_right_tb.kicad_pcb'), mirror_poly(box(*GUARD_BOX)).difference(unary_union([tbhole, access]).buffer(3.0))))
-    cover, cover_holes = mcu_cover(case, mcu_open, screws, usb, keycaps(B + 'mx_right_tb/mx_right_tb.kicad_pcb'))
+    cover = mcu_cover(case, mcu_open, mcu_mag, usb, keycaps(B + 'mx_right_tb/mx_right_tb.kicad_pcb'))
+    mag_boss, mag_cut = mcu_magnet_boss(case, cavity, cover, usb, sw, mcu_mag, side=-1)
     bat = None if LP else mirror_poly(L['bat'])
     cb = unary_union([Point(p).buffer(TB_CB_D / 2 + 1.5) for p in TB_SCREWS])
     feet = feet_spots(case, keepout=cb.buffer(FOOT_D / 2))
@@ -167,14 +179,18 @@ if __name__ == '__main__':
     spec['TOP_GUARD'] = sum([fit('TOP_GUARD', g) for g in getattr(G['guard'], 'geoms', [G['guard']])], [])
     spec['TB_ACCESS'] = sum([fit('TB_ACCESS', g) for g in getattr(G['access_cut'], 'geoms', [G['access_cut']])], [])
     spec['TB_FRONT_LOW'] = fit('TB_FRONT_LOW', G['front_low'])
-    spec['TB_SCREWS'] = [('circle', p, 1.0) for p in TB_SCREWS]
+    if LP: spec['J1_RELIEF'] = fit('J1_RELIEF', G['j1_relief'])
+    spec['TB_MAGS'] = [('circle', p, MAG_D / 2) for p in TB_SCREWS]
     spec['GASKET_POCKET'] = sum([fit('GASKET_POCKET', p) for p in G['pockets_b']], [])
     spec['TOP_GASKET_SLOT'] = sum([fit('TOP_GASKET_SLOT', p) for p in G['pockets']], [])
     spec['MAGNETS'] = [('circle', m, MAG_D / 2) for m in G['mags']]
     spec['TOP_MAG'] = spec['MAGNETS']
-    spec['MCU_SCREWS'] = [('circle', s, INS_D / 2) for s in G['screws']]
     spec['FEET'] = [('circle', f, FOOT_D / 2) for f in G['feet']]
-    spec['MCU_COVER'] = fit('MCU_COVER', G['cover']) + [('circle', h, COVER_HOLE_D / 2) for h in G['cover_holes']]
+    spec['MCU_COVER'] = fit('MCU_COVER', G['cover'])
+    spec['MCU_MAG'] = [('circle', G['mcu_mag'], MAG_D / 2)]
+    spec['MCU_DISC'] = [('circle', G['mcu_mag'], DISC_D / 2)]
+    spec['MCU_MAG_BOSS'] = fit('MCU_MAG_BOSS', G['mag_boss'])
+    spec['MCU_MAG_CUT'] = fit('MCU_MAG_CUT', G['mag_cut'])
     if G['bat'] is not None: spec['BAT_POCKET'] = fit('BAT_POCKET', G['bat'])
     Ls = json.load(open('left%s_spec.json' % SFX))
     for k in ('USB_RECESS', 'USB_RCPT', 'SW_SCOOP', 'SW_OPEN', 'MCU_RING', 'TOP_MCU_OPEN'):
@@ -184,7 +200,7 @@ if __name__ == '__main__':
     spec['_rings'] = {'case': list(G['case'].exterior.coords), 'cav': list(G['cavity'].exterior.coords), 'pocket': list(G['pocket'].exterior.coords)}
     json.dump(spec, open('right%s_spec.json' % SFX, 'w'))
     # trackball case STL placed in case coordinates (reference mesh / interference checks)
-    d = bytearray(open('trackballcase.stl', 'rb').read()); n = struct.unpack('<I', d[80:84])[0]
+    d = bytearray(open('trackballcase_low.stl', 'rb').read()); n = struct.unpack('<I', d[80:84])[0]
     a = np.frombuffer(bytes(d[84:84 + 50 * n]), dtype=np.dtype([('n', '<3f4'), ('v', '<9f4'), ('a', '<u2')])).copy()
     v = a['v'].reshape(-1, 3); v += np.array([TBX, TBY, -TB_ZREL0], dtype=np.float32); a['v'] = v.reshape(-1, 9)
     open('tb_placed%s.stl' % SFX, 'wb').write(bytes(d[:84]) + a.tobytes())
@@ -200,7 +216,7 @@ if __name__ == '__main__':
     for p in G['pockets']: pl(p, 'brown')
     pl(G['usb'], 'orange'); pl(G['sw'], 'orange')
     for m in G['mags']: ax.add_patch(plt.Circle(m, MAG_D / 2, color='r'))
-    for s in G['screws']: ax.add_patch(plt.Circle(s, INS_D / 2, color='m'))
+    pl(G['mag_boss'], 'm'); ax.add_patch(plt.Circle(G['mcu_mag'], MAG_D / 2, color='m'))
     for f in G['feet']: ax.add_patch(plt.Circle(f, FOOT_D / 2, fill=False, color='gray', ls='--'))
     for s in TB_SCREWS: ax.add_patch(plt.Circle(s, TB_CB_D / 2, color='k'))
     ax.set_aspect('equal'); ax.grid(True); ax.set_ylim(-150, 0)

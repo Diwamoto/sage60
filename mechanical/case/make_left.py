@@ -36,12 +36,11 @@ def build_left():
     fixed = fix_cuts({k: v[0] for k, v in slots.items()}, case.difference(cavity))      # no fins between the slots and the cavity reliefs
     slots = {k: (fixed[k], slots[k][1]) for k in slots}
     usb = unary_union([slots['USB_RECESS'][0], slots['USB_RCPT'][0]]); sw = unary_union([slots['SW_SCOOP'][0], slots['SW_OPEN'][0]])
-    walls = case.difference(cavity).intersection(mcu).difference(usb.buffer(1.0)).difference(sw.buffer(1.0))
-    screws = screw_spots(walls, 3, within=box(TOP_MCU_OPEN[0] + COVER_EDGE, TOP_MCU_OPEN[1] + COVER_EDGE, 300, 50))   # clear of the cover's edges at the ring ends
     mags, band = magnet_spots(case, inner, cavity, unary_union([p.buffer(1.0) for p in pockets + pockets_b] + [mcu_open, usb, sw, Point(MAG_NOTCH).buffer(10), Point(mag_step).buffer(10)]), N_MAG - 2)
     mags = [MAG_NOTCH, mag_step] + mags          # the notch is cut to fit the magnet post exactly
     feet = feet_spots(case)
-    cover, cover_holes = mcu_cover(case, mcu_open, screws, usb, keycaps(B + 'mx_main/mx.kicad_pcb'))
+    cover = mcu_cover(case, mcu_open, MCU_MAG, usb, keycaps(B + 'mx_main/mx.kicad_pcb'))
+    mag_boss, mag_cut = mcu_magnet_boss(case, cavity, cover, usb, sw, MCU_MAG)
     bat = None if LP else battery_pocket()
     guard = guard_fill(inner, guard_region(inner, keycaps(B + 'mx_main/mx.kicad_pcb'), box(*GUARD_BOX)))
     return locals()
@@ -53,7 +52,6 @@ if __name__ == '__main__':
     print('arc r=%.1f sag=%.2f  case back at USB y=%.2f -> top-case outer %.2f, port face %.2f, recess depth %.2f'
           % (a['r'], a['sag'], top_at_usb, top_at_usb + CLR + WALL, USB_FACE_Y, top_at_usb + CLR + WALL - USB_FACE_Y))
     print('bezel (opening edge -> top wall outer) ~', CASE_OFF - OPEN_CLR + CLR + WALL)
-    print('screws', [tuple(round(v, 2) for v in s) for s in G['screws']])
     print('magnets', [tuple(round(v, 2) for v in s) for s in G['mags']])
     print('feet', [tuple(round(v, 2) for v in s) for s in G['feet']])
     spec = {}
@@ -68,8 +66,11 @@ if __name__ == '__main__':
     spec['TOP_GASKET_SLOT'] = sum([fit('TOP_GASKET_SLOT', p) for p in G['pockets']], [])
     spec['MAGNETS'] = [('circle', m, MAG_D / 2) for m in G['mags']]
     spec['TOP_MAG'] = spec['MAGNETS']
-    spec['MCU_SCREWS'] = [('circle', s, INS_D / 2) for s in G['screws']]
-    spec['MCU_COVER'] = fit('MCU_COVER', G['cover']) + [('circle', h, COVER_HOLE_D / 2) for h in G['cover_holes']]
+    spec['MCU_COVER'] = fit('MCU_COVER', G['cover'])
+    spec['MCU_MAG'] = [('circle', MCU_MAG, MAG_D / 2)]
+    spec['MCU_DISC'] = [('circle', MCU_MAG, DISC_D / 2)]
+    spec['MCU_MAG_BOSS'] = fit('MCU_MAG_BOSS', G['mag_boss'])
+    spec['MCU_MAG_CUT'] = fit('MCU_MAG_CUT', G['mag_cut'])
     if G['bat'] is not None: spec['BAT_POCKET'] = fit('BAT_POCKET', G['bat'])
     spec['FEET'] = [('circle', f, FOOT_D / 2) for f in G['feet']]
     # USB / slide switch: plan slots cut from z_bottom up through both cases (CNC: no side machining, 2026-10-05)
@@ -94,7 +95,7 @@ if __name__ == '__main__':
     for p in G['pockets']: pl(p, 'brown')
     pl(G['usb'], 'orange'); pl(G['sw'], 'orange')
     for m in G['mags']: ax.add_patch(plt.Circle(m, MAG_D / 2, color='r'))
-    for s in G['screws']: ax.add_patch(plt.Circle(s, INS_D / 2, color='m'))
+    pl(G['mag_boss'], 'm'); ax.add_patch(plt.Circle(MCU_MAG, MAG_D / 2, color='m'))
     for f in G['feet']: ax.add_patch(plt.Circle(f, FOOT_D / 2, fill=False, color='gray', ls='--'))
     ax.axhline(USB_FACE_Y, color='orange', ls=':')
     ax.set_aspect('equal'); ax.grid(True)

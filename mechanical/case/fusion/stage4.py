@@ -27,6 +27,13 @@ def run(_c):
     inp.setOneSideExtent(adsk.fusion.DistanceExtentDefinition.create(VI.createByString('tb_front_drop + 1 mm')), adsk.fusion.ExtentDirections.PositiveExtentDirection)
     inp.participantBodies = mocks
     f = ex.add(inp); f.name = 'TB_FRONT_LOW_CUT'
+    if 'J1_RELIEF' in spec:      # LP: the J1 header / socket stand above the top ring's underside (2026-10-28, tongue_socket.py)
+        sk = new_sketch(r, 'J1_RELIEF', r.xYConstructionPlane, spec['J1_RELIEF']); sk.isVisible = False
+        inp = ex.createInput(oc(profiles(sk)), FO.CutFeatureOperation)
+        inp.startExtent = adsk.fusion.OffsetStartDefinition.create(VI.createByString('-5 mm'))
+        inp.setOneSideExtent(adsk.fusion.DistanceExtentDefinition.create(VI.createByString('5 mm - ( plate_t + pcb_gap ) + j1_hdr_h + clr')), adsk.fusion.ExtentDirections.PositiveExtentDirection)
+        inp.participantBodies = mocks
+        f = ex.add(inp); f.name = 'J1_RELIEF_CUT'
     for b in [b for b in r.bRepBodies if b.name.startswith('MOCK_A ') and b.volume < 1e-3]:   # zero-thickness specks the cut can leave where its edge meets the key opening's
         r.features.removeFeatures.add(b).name = 'DROP_SPECK'
     top_chamfer(r, spec)

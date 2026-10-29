@@ -1,6 +1,7 @@
 """MCU cover (walnut) outlines for ordering -> case/sage60_{left,right}{,_lp}_mcu_cover.dxf (mm, seen from above, Fusion XY).
-Reads MCU_COVER from {side}{_lp}_spec.json (make_left.py / make_right.py first): outline lines/arcs + the M2 holes.
-Thickness: MX 3.0 mm, low profile 1.2 mm (cover_t).  Countersink the M2 holes for flat heads."""
+Reads MCU_COVER / MCU_DISC from {side}{_lp}_spec.json (make_left.py / make_right.py first).  Layer 0: the outline (through).
+Layer RECESS_UNDERSIDE_0.6: phi8.2 x 0.6 deep blind recess on the underside for a phi8 x 0.5 steel disc (the cover is held by
+a phi6 magnet in the top case, 2026-10-24; no screws).  Thickness: MX 3.0 mm, low profile 2.5 mm (cover_t)."""
 import json, math, os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -17,9 +18,11 @@ def arc3(a, m, b):
     if (t - s) % 360 > (e - s) % 360: s, e = e, s          # clockwise a -> b: swap so DXF's CCW sweep goes through m
     return (ux, uy), math.hypot(x1 - ux, y1 - uy), s, e
 
-def dxf(curves):
+def dxf(curves, recess=()):
     out = ['0', 'SECTION', '2', 'HEADER', '9', '$INSUNITS', '70', '4', '0', 'ENDSEC', '0', 'SECTION', '2', 'ENTITIES']
-    ent = lambda kind, *kv: out.extend(['0', kind, '8', '0'] + [str(v) for v in kv])
+    ent = lambda kind, *kv, layer='0': out.extend(['0', kind, '8', layer] + [str(v) for v in kv])
+    for c in recess:
+        ent('CIRCLE', 10, c[1][0], 20, c[1][1], 30, 0.0, 40, c[2], layer='RECESS_UNDERSIDE_0.6')
     for c in curves:
         if c[0] == 'line':
             ent('LINE', 10, c[1][0], 20, c[1][1], 30, 0.0, 11, c[2][0], 21, c[2][1], 31, 0.0)
@@ -39,8 +42,8 @@ if __name__ == '__main__':
             spec = json.load(open(os.path.join(HERE, '%s%s_spec.json' % (side, sfx))))
             cv = spec['MCU_COVER']
             path = os.path.join(OUT, 'sage60_%s%s_mcu_cover.dxf' % (side, sfx))
-            open(path, 'w').write(dxf(cv))
+            open(path, 'w').write(dxf(cv, spec['MCU_DISC']))
             pts = [p for c in cv if c[0] in ('line', 'arc') for p in c[1:] if isinstance(p, list)]
             xs, ys = [p[0] for p in pts], [p[1] for p in pts]
             print(os.path.relpath(path, os.path.join(HERE, '..', '..')), '%.1f x %.1f mm' % (max(xs) - min(xs), max(ys) - min(ys)),
-                  'holes', sum(1 for c in cv if c[0] == 'circle'))
+                  'disc recess', spec['MCU_DISC'][0][1])

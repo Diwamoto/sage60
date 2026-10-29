@@ -24,7 +24,10 @@ def run(_c):
     new_sketch(r, 'MCU_RING', SHELF, spec['MCU_RING'])
     dims(new_sketch(r, 'MAGNETS', SHELF, spec['MAGNETS']), 'mag_d')
     MCUT = off_plane('MCU_RING_TOP', XY, 'mcu_cover_z')
-    dims(new_sketch(r, 'MCU_SCREWS', MCUT, spec['MCU_SCREWS']), 'ins_d')
+    dims(new_sketch(r, 'MCU_MAG', XY, spec['MCU_MAG']), 'mag_d')       # the MCU cover's magnet (top case boss, 2026-10-24)
+    dims(new_sketch(r, 'MCU_DISC', XY, spec['MCU_DISC']), 'disc_d')    # steel disc in the cover's underside
+    new_sketch(r, 'MCU_MAG_BOSS', XY, spec['MCU_MAG_BOSS'])
+    new_sketch(r, 'MCU_MAG_CUT', XY, spec['MCU_MAG_CUT'])
     if 'BAT_POCKET' in spec: new_sketch(r, 'BAT_POCKET', XY, spec['BAT_POCKET'])     # MX (flat floor, 2026-10-06)
     for n in ('USB_RECESS', 'USB_RCPT', 'SW_SCOOP', 'SW_OPEN'):      # plan slots, cut upward from their bottom z (CNC, 2026-10-05)
         new_sketch(r, n, XY, spec[n])
@@ -43,9 +46,7 @@ def run(_c):
     if SIDE == 'right':
         SEAT = off_plane('TB_SEAT', XY, '-( plate_t + pcb_gap + tb_gap + tb_leg_h )')
         new_sketch(r, 'TB_POCKET', XY, spec['TB_POCKET'])
-        dims(new_sketch(r, 'TB_SCREWS', SEAT, spec['TB_SCREWS']), 'tb_scr_d')
-        desk_circles('TB_SCREW_CB', spec['TB_SCREWS'], 'tb_cb_d')       # counterbores along the desk normal (setup 2); the holes stay plate-normal (from the top)
-        off_plane('TB_CB_FLOOR', XY, '-( plate_t + pcb_gap + tb_gap + tb_leg_h + tb_cb_t )')
+        dims(new_sketch(r, 'TB_MAGS', SEAT, spec['TB_MAGS']), 'mag_d')   # magnets facing the trackball case's (2026-10-29, were M1.7 screws from the desk)
     for p in cp: p.isLightBulbOn = False
     for s in r.sketches:
         print(s.name, 'curves', s.sketchCurves.count, 'profiles', s.profiles.count)

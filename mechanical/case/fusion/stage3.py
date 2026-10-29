@@ -69,12 +69,18 @@ def run(_c):
         ok, bad = fillet(r, es, 'inner_r', 'TOP_MCU_FILLET_' + X)
         print('TOP_MCU_FILLET', len(es), bad)
         m = r.bRepBodies.itemByName('MOCK_' + X)
+        # the MCU cover's magnet (2026-10-24): a boss off the skirt under the cover, over the XIAO's USB end
+        extrude('MCU_MAG_BOSS_' + X, allp('MCU_MAG_BOSS'), FO.JoinFeatureOperation, 'mcu_cover_z - mcu_mag_h - mcu_mag_floor', 'mcu_mag_h + mcu_mag_floor', bodies=[m])
+        thru = up.itemByName('mcu_mag_floor').value < 1e-6       # LP: through the boss (glued)
+        extrude('MCU_MAG_' + X, allp('MCU_MAG'), FO.CutFeatureOperation, 'mcu_cover_z', '-( mcu_mag_h + 1 mm )' if thru else '-mcu_mag_h', bodies=[m])
+        m = r.bRepBodies.itemByName('MOCK_' + X)
         slot_cuts(r, spec, [m], '_' + X, ('USB_RECESS', 'SW_SCOOP'))      # USB / switch: notches open at the top through the skirt
         if SIDE == 'left': top_chamfer(r, spec)                          # right: after stage4's cuts
     # MCU cover (walnut, cut from mcu_cover_dxf.py's DXF): on the MCU wall and the lowered skirt
     cs = new_sketch(r, 'MCU_COVER', pl('MCU_RING_TOP'), spec['MCU_COVER'])
     f = extrude('MCU_COVER', oc([max(profiles(cs), key=lambda p: p.areaProperties().area)]), FO.NewBodyFeatureOperation, '0 mm', 'cover_t')   # the sketch plane is already at mcu_cover_z
     cov = f.bodies.item(0); cov.name = 'MCU_COVER'
+    extrude('MCU_DISC', allp('MCU_DISC'), FO.CutFeatureOperation, 'mcu_cover_z', 'disc_t', bodies=[cov])     # steel disc recess (underside)
     aps = [l.appearances.item(i) for l in app.materialLibraries for i in range(l.appearances.count)]   # (iterating .appearances yields nothing)
     wal = [a for a in aps if 'walnut' in a.name.lower() or 'クルミ' in a.name]                          # name follows the UI language
     if wal: cov.appearance = d.appearances.itemByName(wal[0].name) or d.appearances.addByCopy(wal[0], wal[0].name)

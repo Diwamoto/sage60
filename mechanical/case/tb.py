@@ -5,7 +5,7 @@ from shapely import affinity
 import numpy as np
 TBX,TBY=160.995-25.94, -122.395-0.08   # ball centre (Fusion XY)
 def tb_tris():
-    t=load(__file__.rsplit('/', 1)[0] + '/trackballcase.stl')
+    t=load(__file__.rsplit('/', 1)[0] + '/trackballcase_low.stl')
     t=t.copy(); t[:,:,0]+=TBX; t[:,:,1]+=TBY; return t
 def footprint(t, zmin=-1e9, zmax=1e9):
     # union of projected triangles with any vertex in z range (approx)
