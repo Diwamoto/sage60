@@ -1,0 +1,88 @@
+# interference checks for both sides (run after stage3/4; needs checkpts.json from make_checkpts.py)
+import adsk.core, adsk.fusion, json, struct
+LP = globals().get('LP', False)                 # set LP=True in the exec globals for the low-profile documents
+DOCN = 'sage60_lp_%s' if LP else 'sage60_%s_bottom'
+def zs(r):
+    """z stack from the document's parameters (mm): plate_t, pcb top, USB receptacle centre, trackball seat"""
+    v = lambda n: r.parentDesign.userParameters.itemByName(n).value * 10
+    pt, gap = v('plate_t'), v('pcb_gap'); top = -(pt + gap)
+    seat = top - (v('tb_gap') + v('tb_leg_h')) if r.parentDesign.userParameters.itemByName('tb_gap') else None
+    return pt, top, top + v('xiao_t') + v('usb_h_c') / 2, seat, v('mcu_cover_z'), v('usb_h')
+
+def run(_c):
+    app = adsk.core.Application.get()
+    P = json.load(open('/Users/daiki/Projects/sage60/case/checkpts.json'))
+    IN = adsk.fusion.PointContainment.PointInsidePointContainment
+    for side in globals().get('SIDES', ('left', 'right')):
+        doc = [d for d in app.documents if d.name.startswith(DOCN % side)][0]
+        r = adsk.fusion.Design.cast(doc.products.itemByProductType('DesignProductType')).rootComponent
+        bodies = [r.bRepBodies.itemByName(n) for n in ('%s_bottom' % side, 'MOCK_A')]
+        pt, top, zc, seat, _, _ = zs(r)
+        res = {}
+        for b in bodies:
+            n_pcb = sum(1 for (x, y) in P[side]['pcb'] for z in (top - 0.1, top - 0.8, top - 1.5) if b.pointContainment(adsk.core.Point3D.create(x / 10, y / 10, z / 10)) == IN)
+            n_pl = sum(1 for (x, y) in P[side]['plate'] for z in (-0.2, -pt / 2, -pt + 0.2) if b.pointContainment(adsk.core.Point3D.create(x / 10, y / 10, z / 10)) == IN)
+            res[b.name] = (n_pcb, n_pl)
+        tbm = adsk.fusion.TemporaryBRepManager.get(); ov = {}
+        for m in bodies[1:]:
+            try:
+                a = tbm.copy(m); bb = tbm.copy(bodies[0]); tbm.booleanOperation(a, bb, adsk.fusion.BooleanTypes.IntersectionBooleanType)
+                ov[m.name] = round(a.volume * 1000, 4) if a.faces.count else 0
+            except RuntimeError:            # near-coincident faces (the bodies touch): Fusion's interference analysis instead
+                des = r.parentDesign
+                ii = des.createInterferenceInput(adsk.core.ObjectCollection.createWithArray([m, bodies[0]])); ii.areCoincidentFacesIncluded = False
+                res_i = des.analyzeInterference(ii)
+                ov[m.name] = round(sum(res_i.item(i).interferenceBody.volume for i in range(res_i.count)) * 1000, 4) if res_i else 0
+        cov = r.bRepBodies.itemByName('MCU_COVER')        # walnut cover (2026-10-06) vs both cases
+        if cov:
+            for m in bodies:
+                a = tbm.copy(cov); bb = tbm.copy(m)
+                try:
+                    tbm.booleanOperation(a, bb, adsk.fusion.BooleanTypes.IntersectionBooleanType); ov['cover∩' + m.name] = round(a.volume * 1000, 4) if a.faces.count else 0
+                except RuntimeError: ov['cover∩' + m.name] = 'touching'
+            ov['cover seat gap'] = round(cov.boundingBox.minPoint.z * 10 - zs(r)[4], 3)    # must be 0: on the MCU wall (no overlap alone passes a floating cover)
+        print(side, 'PCB/plate points inside (pcb, plate):', res, ' overlaps mm3:', ov)
+        if not LP:      # MX battery pocket (2026-10-06): a 36 x 20 x 5.5 battery under the sockets and the JST PH body below the PCB
+            X = (lambda x: x) if side == 'left' else (lambda x: 245.84 - x)
+            v = lambda n: r.parentDesign.userParameters.itemByName(n).value * 10
+            zb = -v('bat_z'); rng = lambda a, b, n: [a + (b - a) * i / (n - 1) for i in range(n)]
+            batp = [(x, y, z) for x in rng(140.3, 176.3, 19) for y in rng(-64.55, -44.55, 11) for z in rng(zb + 0.05, zb + v('bat_t'), 4)]
+            jst = [(x, y, z) for x in rng(177.3, 185.99, 8) for y in rng(-58.05, -51.06, 6) for z in rng(top - v('pcb_t') - 4.85, top - v('pcb_t') - 0.1, 4)]
+            hit = lambda pts: sum(1 for (x, y, z) in pts if bodies[0].pointContainment(adsk.core.Point3D.create(X(x) / 10, y / 10, z / 10)) == IN)
+            print(side, 'battery box hits %d / %d, JST hits %d / %d' % (hit(batp), len(batp), hit(jst), len(jst)))
+        # USB plug overmold corridor (12.5 x 7, from the port face outwards). The 15 x 9 recess has R1.5 in its back corners.
+        x0 = 174.75 if side == 'left' else 245.84 - 187.25
+        hit = sum(1 for b in bodies for i in range(26) for k in range(15) for j in range(30)
+                  if b.pointContainment(adsk.core.Point3D.create((x0 + i * 0.5) / 10, (-27.0 + j * 0.5) / 10, (zc - 3.5 + k * 0.5) / 10)) == IN)
+        print(side, 'USB corridor hits', hit)
+        if side == 'right':
+            data = open('/Users/daiki/Projects/sage60/case/tb_placed%s.stl' % ('_lp' if LP else ''), 'rb').read(); n = struct.unpack('<I', data[80:84])[0]
+            pts = set()
+            for i in range(n):
+                v = struct.unpack('<9f', data[84 + 50 * i + 12:84 + 50 * i + 48])
+                for k in range(3): pts.add((v[3 * k], v[3 * k + 1], v[3 * k + 2]))
+            hits = {b.name: sum(1 for p in pts if b.pointContainment(adsk.core.Point3D.create(p[0] / 10, p[1] / 10, (p[2] + 0.05) / 10)) == IN) for b in bodies}
+            feet = [p for p in pts if abs(p[2] - seat) < 0.01]
+            sup = sum(1 for p in feet if bodies[0].pointContainment(adsk.core.Point3D.create(p[0] / 10, p[1] / 10, (seat - 0.05) / 10)) == IN)
+            print('right trackball verts inside', hits, 'of', len(pts), '; feet supported', sup, '/', len(feet))
+
+def run_openings(_c):
+    """USB flush wall + receptacle opening, slide-switch window"""
+    app = adsk.core.Application.get(); IN = adsk.fusion.PointContainment.PointInsidePointContainment
+    for side in globals().get('SIDES', ('left', 'right')):
+        doc = [d for d in app.documents if d.name.startswith(DOCN % side)][0]
+        r = adsk.fusion.Design.cast(doc.products.itemByProductType('DesignProductType')).rootComponent
+        bodies = [r.bRepBodies.itemByName(n) for n in ('%s_bottom' % side, 'MOCK_A')]
+        _, top, zc, _, mcz, uh = zs(r); dz = top + 5.0       # the numbers below are for the MX stack (PCB top -5.0)
+        X = (lambda x: x) if side == 'left' else (lambda x: 245.84 - x)
+        inside = lambda pts, bs: sum(1 for (x, y, z) in pts for b in bs if b.pointContainment(adsk.core.Point3D.create(X(x) / 10, y / 10, z / 10)) == IN)
+        rng = lambda a, b, n: [a + (b - a) * i / (n - 1) for i in range(n)]
+        import math   # receptacle body: stadium 8.94 x 3.26 centred (181.0, -2.37)
+        rcpt = [(x, y, z) for x in rng(176.6, 185.4, 12) for y in rng(-34.3, -27.1, 10) for z in rng(zc - 1.58, zc + 1.57, 6)
+                if math.hypot(max(abs(x - 181.0) - (4.47 - 1.63), 0), z - zc) <= 1.6]
+        wall = [(x, y, z) for x in rng(174.0, 175.8, 4) + rng(186.2, 186.8, 4) for y in rng(-27.8, -27.2, 3) for z in rng(zc - 4.1, zc + 0.8, 6)]   # flush wall beside it (clear of the cavity relief at the MCU corner, 2026-10-05)
+        knob = [(x, y, z) for x in rng(191.5, 197.0, 10) for y in rng(-52.3 - 1.6, -52.3 + 1.6, 6) for z in rng(top, top + 1.4, 4)]       # knob travel
+        fill = [(194.0, y, -4.3 + dz) for y in (-61.0, -43.6)] + [(192.0, y, -4.3 + dz) for y in (-59.0, -45.6)] + [(192.0, -52.3, -8.3 + dz)]   # around scoop / opening (open at the top since 2026-10-05)
+        reach = [(x, y, z) for x in (193.5, 196.0, 198.0) for y in (-58.3, -46.3) for z in (-8.5 + dz, -0.1 + dz)]                                           # scoop is empty (top + bottom)
+        print(side, 'receptacle hits', inside(rcpt, bodies), '| flush wall solid %d/%d' % (inside(wall, bodies[:1]), len(wall)),
+              '| knob path hits', inside(knob, bodies), '| filled around switch %d/%d' % (inside(fill, bodies[:1]), len(fill)), '| scoop hits', inside(reach, bodies))

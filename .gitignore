@@ -1,6 +1,17 @@
-pcb/**/*/*-backups
-pcb/**/*/*.lck
-pcb/**/*/fp-info-cache
-pcb/**/*/production
-
 .DS_Store
+.claude/settings.local.json
+pcb/.claude/
+
+# pcb: only the KiCad sources (.kicad_pro / .kicad_pcb / .kicad_sch).
+# Backups, .kicad_prl, fp-info-cache, plugin settings, autorouter files and
+# fabrication outputs stay local; order files go to production/.
+pcb/**
+!pcb/**/
+!pcb/**/*.kicad_pro
+!pcb/**/*.kicad_pcb
+!pcb/**/*.kicad_sch
+!pcb/README.md
+pcb/**/*-backups/
+
+# Local ZMK build output (firmware/zmk/build.sh)
+firmware/zmk/out/

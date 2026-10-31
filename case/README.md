@@ -1,0 +1,81 @@
+# sage60 ケース生成スクリプト（左右）
+
+Fusion の `sage60_left_bottom` / `sage60_right_bottom`（下ケース＋上ケース MOCK_A。A案で確定）をKiCadから作り直す。
+設計の前提とルールは `.claude/skills/sage60-case/SKILL.md`。
+
+## 手順
+```sh
+python3 -m venv venv && ./venv/bin/pip install shapely numpy matplotlib manifold3d   # 初回のみ
+./venv/bin/python make_left.py      # left_spec.json  (+ left_geo.png で確認)
+./venv/bin/python make_right.py     # right_spec.json, tb_placed.stl (+ right_geo.png)
+./venv/bin/python make_checkpts.py  # 干渉チェック用の点
+./venv/bin/python pcb_step.py       # models/{left,right}{,_lp}_pcb.step（PCB＋部品＋スイッチ＋キーキャップ。KiCadが変わったら）
+```
+Fusion（fusion-mcp の script 実行）で、左右それぞれ順に:
+```python
+def run(c):
+    for st in ['stage0', 'stage1', 'stage2', 'stage3', 'stage5']:   # 右は 'stage4' も（stage5 の前）と 'stage6'（最後）
+        g = {'SIDE': 'left'}                                        # 'right'
+        exec(open('/Users/daiki/Projects/sage60/case/fusion/%s.py' % st, encoding='utf-8').read(), g)
+        g['run'](c)
+```
+- stage0: ドキュメントのタイムラインとユーザーパラメータを全部消して作り直す（保存済みの版は履歴に残る）
+- stage1: 平面とスケッチ / stage2: 下ケース（右はトラックボールのポケット・磁石穴・参照メッシュも）/ stage3: 上ケース MOCK_A（A案） / stage4: 右だけ、トラックボール奥の床と上ケースの切り欠き、手前の枠の天面を `tb_front_drop` 下げる / stage6: 右だけ、J1_REF（センサー基板・J1 の丸ピンソケットとL字ヘッダの箱。J1 は x 166.64、細ピンのL字ヘッダ PHA-1x40RG のピンを 2.5 に切ってソケットに突き当て）/ stage5: PCB_REF（PCB＋部品のSTEP。PCB上面を −(plate_t+pcb_gap) に置く。モックの画像は必ずこれを入れて撮る）
+- 最後に `fusion/check.py` で干渉チェック（PCB・プレート・トラックボールケース・USBプラグの通り道・上下の重なり。全部0になること）
+- CNC の加工性は `fusion/machinability.py`（globals に `SIDE`、ロープロは `LP`）。アンダーカット・鋭い内角・R と深さ（R ≥ H/10+0.5）・穴の深さ・肉厚 0.8 を B-Rep で調べ、`cnc_<side><sfx>.json` に書く。全部0になること（2026-10-05〜）
+
+## ロープロファイル版（Choc、2026-10-03〜）
+同じPCB（フットプリントが MX/Choc 両対応）に Choc を載せる薄型ケース。Fusion のドキュメントは `sage60_lp_left` / `sage60_lp_right`（stage0 が無ければ Admin Project に作る）。
+```sh
+SAGE60_LP=1 ./venv/bin/python make_left.py    # left_lp_spec.json, left_lp_geo.png
+SAGE60_LP=1 ./venv/bin/python make_right.py   # right_lp_spec.json, tb_placed_lp.stl
+```
+Fusion では exec の globals に `'LP': True` を足す（`{'SIDE': 'left', 'LP': True}`）。check.py も `{'LP': True}`（片側だけなら `'SIDES': ('left',)`）。
+ギャラリー用の画像は `fusion/shots.py`（globals に `SIDE` / `LP` / `OUT`、1ドキュメントずつ実行）。
+平面の差分は `casegeo.py` の `LP` 分岐（CASE_OFF 3.5 / clr 0.2 / wall 1.5 / open_clr 0.5 / Zスタック）、高さ方向は `fusion/stage0.py` の `LP_PARAMS`。
+
+## プレートの3MF（試作プリント用）
+```sh
+./venv/bin/python plate_3mf.py      # production/plate/sage60_{left,right}_plate.3mf（左右別プレート 1.2mm、MX / Choc v2 共通。Edge.Cuts を Python で押し出す）
+# ケース: Fusion で fusion/export_3mf.py を exec（globals SIDE / LP）→ production/case_print/sage60_<side>{,_lp}_{bottom,top,cover}.3mf（モデルの向きのまま。上ケースはスライサーで裏返す）
+```
+
+## 形を決めている数値
+`casegeo.py` の先頭（外形オフセット、角R、壁、磁石、ゴム足、USB、スライドスイッチ）と `make_right.py` の先頭（トラックボール）。
+Fusion のユーザーパラメータで動くのは高さ方向と穴径など。平面形状はPythonで計算してスケッチに焼き込むので、外形を変えたらスクリプトから作り直す。
+
+## トラックボールケース
+`trackball/README.md`（元データ・改造版・出典とライセンス）。
+
+## pcb_step.py
+KiCad のフットプリントは他人の環境のモデルパス（`D:/…`、`/Users/foostan/…`、`${AMZPATH}`）を指しているので、一時コピーでパスを `models/` と KiCad 標準ライブラリに書き換えて `kicad-cli pcb export step` する。KiCad のファイルは変えない。
+- `models/XIAO-nRF52840 v15.step`（Seeed 公式）と `models/Kailh-CherryMX-Socket.step`（foostan/kbd）はコピーして置いてある。
+- 左の XIAO はフットプリントの offset z が 6 で5.6mm 浮くので 0.381（右と同じ）にする。右は XIAO 5種のモデルが重なっていて nRF52840 が非表示なので、それだけ表示する。
+- 実物の XIAO は基板1.2mm＋はんだで0.17mm 浮くので `xiao_t` は 1.4（1.0 だと MX でレセプタクルが穴の上端に0.05mm 当たっていた。2026-10-03）。
+- スイッチ（`models/cherry_mx.step`、`models/kailh_choc.step`。どちらも foostan/kbd、原点はPCB上面）とキーキャップ（`models/keycap_{mx,lp}.step`、`fusion/keycap.py` で作る簡易形状）を各スイッチのフットプリントに足す。キーキャップの下端はプレート上面＋6.0（MX）／＋3.3（ロープロ）。
+- 干渉チェックは `fusion/check_parts.py`（globals に `SIDE` / `LP`。キーキャップは押し込んだ状態も見る）。
+
+## mcu_cover_dxf.py
+MCU カバー（ウォルナット）の発注用 DXF を `production/mcu_cover/sage60_{left,right}{,_lp}_mcu_cover.dxf` に書き出す（make_left.py / make_right.py の spec の `MCU_COVER` から。mm、上から見た Fusion の XY、レイヤー 0 が外形（貫通）、`RECESS_UNDERSIDE_0.6` が裏の φ8.2×深さ0.6 の凹み（φ8×0.5 の鉄の円板。カバーは上ケースの φ6×3 磁石で留める、2026-10-24）。厚さは MX 3.0 / ロープロ 2.5。
+
+## oneshot/centre_hole.py / centre_reroute.py
+一回限り（2026-10-14 適用済み）。KiCad の Python（`/Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/Current/bin/python3`）で動かす。numpy と shapely はその Python 用に `kicad_site/` へ入れる（`<KiCad python> -m pip install --target kicad_site numpy shapely`）。
+- `centre_hole.py`：スイッチの中心穴 φ4.1→φ5（Choc v2）。`centre_reroute.py <pcb> [--dry]`：穴のクリアランスに入った配線を引き直す（右は `REVERSE=1`。左右とも HEAD のPCBから `centre_hole.py` → これ、で同じ結果になる）。
+
+## oneshot/（mag_notch.py / tongue_*.py / j1_thin_pin.py / notch_fillet.py）
+`oneshot/` は PCB・プレートを直接書き換えた一回限りのスクリプト（記録として残す）。いずれも（2026-10-03〜04 に適用済み。再実行すると二重に入る／tongue_edge は assert で止まる）。
+- `mag_notch.py`：左 PCB・左プレート・右プレート（鏡像）の右下の縁に、φ6 磁石の柱用の半円の切り欠きを入れる（中心は `casegeo.MAG_NOTCH`）。左 PCB の ROW4 は先に手で引き直してある。
+- `j1_thin_pin.py`（2026-10-29）：右 PCB の J1 を細ピンのL字ヘッダ用に x 166.64 へ。丸ピンソケットの胴が当たる舌の左下を x 163.4 まで削り、SDIO / MOTION を引き直し。適用後に `kicad-cli pcb drc --refill-zones --save-board`。
+- `tongue_trim.py`（2026-10-06）：右 PCB の J1 の舌の左の辺を 158.9→159.9（センサー基板との隙間）。SDIO / MOTION を J1 の右側へ引き直し（MOTION はビアで裏面）、GND のステッチビアを2つ。適用後に `kicad-cli pcb drc --refill-zones --save-board`。
+- `tongue_edge.py`：右 PCB の J1 の舌の左の辺を x 158.0→158.9 にして、トラックボールケースの脚の腕を避ける（0.49mm 重なり→0.36mm の隙間）。舌に沿う SDIO / MOTION の配線も0.32右へ。
+
+## oneshot/shorten_tabs.py
+プレートのタブを5→2.5mmにした一回限りのスクリプト（2026-10-02に適用済み。再実行するとさらに短くなる）。2026-10-09 に `cut -0.9 keep 1.2` で 2.5→3.4mm に伸ばした（適用済み）。
+
+## プレートの発注（2026-10-10〜 左右別）
+左 `pcb/mx/left_plate/`、右 `pcb/mx/right_tb_plate/`。ガーバー:
+```sh
+for n in left_plate right_tb_plate; do d=../production/plate/gerber_$n; mkdir -p $d
+  kicad-cli pcb export gerbers -l F.Cu,B.Cu,F.Silkscreen,Edge.Cuts -o $d/ ../pcb/mx/$n/mx_$n.kicad_pcb && kicad-cli pcb export drill -o $d/ ../pcb/mx/$n/mx_$n.kicad_pcb
+  (cd $d && zip -q ../mx_$n.zip *) && rm -r $d; done
+```

@@ -1,0 +1,132 @@
+/*
+ * Copyright (c) 2026 Diwamoto_
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Sage60 (Cherry MX / mechanical switch version)
+ *
+ * Split keyboard, 58 keys. Per half the PCB matrix is 6 COL x 5 ROW, but ROW4
+ * is not a bottom row: COL4/COL5 are the two inner-column keys beside rows 2-3
+ * and COL0..COL3 are the thumb keys (left 4; right only COL2/COL3, the
+ * trackball takes COL0/COL1). Positions below are from the KiCad footprints.
+ * Controller: XIAO nRF52840 (left) / XIAO nRF52840 Plus (right, with trackball).
+ * Diode direction: col2row (cathode on ROW, as the KiCad netlist and silk show).
+ *
+ * GPIO assignment is asymmetric between halves, so the actual row-gpios and
+ * col-gpios are defined per-half in sage60_left.overlay / sage60_right.overlay.
+ */
+
+#include <dt-bindings/zmk/matrix_transform.h>
+#include <physical_layouts.dtsi>
+
+/ {
+    chosen {
+        zmk,kscan = &kscan0;
+        zmk,physical-layout = &sage60_layout;
+    };
+
+    /* Trackball: the right half owns the sensor (device set in
+     * sage60_right.overlay), the left half receives it over the split link. */
+    split_inputs {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        trackball_split: trackball_split@0 {
+            compatible = "zmk,input-split";
+            reg = <0>;
+        };
+    };
+
+    kscan0: kscan {
+        compatible = "zmk,kscan-gpio-matrix";
+        wakeup-source;
+
+        diode-direction = "col2row";
+        /* row-gpios and col-gpios are provided per-half in the overlays */
+    };
+
+    default_transform: keymap_transform_0 {
+        compatible = "zmk,matrix-transform";
+        columns = <12>;
+        rows = <5>;
+        /* col-offset is set to 6 on the right half (see sage60_right.overlay) */
+        map = <
+RC(0,0) RC(0,1) RC(0,2) RC(0,3) RC(0,4) RC(0,5) RC(0,6) RC(0,7) RC(0,8) RC(0,9) RC(0,10) RC(0,11)
+RC(1,0) RC(1,1) RC(1,2) RC(1,3) RC(1,4) RC(1,5) RC(1,6) RC(1,7) RC(1,8) RC(1,9) RC(1,10) RC(1,11)
+RC(2,0) RC(2,1) RC(2,2) RC(2,3) RC(2,4) RC(2,5) RC(4,5) RC(4,6) RC(2,6) RC(2,7) RC(2,8) RC(2,9) RC(2,10) RC(2,11)
+RC(3,0) RC(3,1) RC(3,2) RC(3,3) RC(3,4) RC(3,5) RC(4,4) RC(4,7) RC(3,6) RC(3,7) RC(3,8) RC(3,9) RC(3,10) RC(3,11)
+RC(4,0) RC(4,1) RC(4,2) RC(4,3) RC(4,8) RC(4,9)
+        >;
+    };
+
+    sage60_layout: physical_layout {
+        compatible = "zmk,physical-layout";
+        display-name = "Sage60";
+        transform = <&default_transform>;
+
+        keys  //                     w   h    x    y     rot    rx    ry
+            = <&key_physical_attrs 100 100    0   50      0    0    0> //  0  L SW1  RC(0,0)
+            , <&key_physical_attrs 100 100  100   50      0    0    0> //  1  L SW2  RC(0,1)
+            , <&key_physical_attrs 100 100  200   10      0    0    0> //  2  L SW3  RC(0,2)
+            , <&key_physical_attrs 100 100  300    0      0    0    0> //  3  L SW4  RC(0,3)
+            , <&key_physical_attrs 100 100  400   15      0    0    0> //  4  L SW5  RC(0,4)
+            , <&key_physical_attrs 100 100  500   35      0    0    0> //  5  L SW6  RC(0,5)
+            , <&key_physical_attrs 100 100  950   35      0    0    0> //  6  R SW6  RC(0,6)
+            , <&key_physical_attrs 100 100 1050   15      0    0    0> //  7  R SW5  RC(0,7)
+            , <&key_physical_attrs 100 100 1150    0      0    0    0> //  8  R SW4  RC(0,8)
+            , <&key_physical_attrs 100 100 1250   10      0    0    0> //  9  R SW3  RC(0,9)
+            , <&key_physical_attrs 100 100 1350   50      0    0    0> // 10  R SW2  RC(0,10)
+            , <&key_physical_attrs 100 100 1450   50      0    0    0> // 11  R SW1  RC(0,11)
+            , <&key_physical_attrs 100 100    0  150      0    0    0> // 12  L SW7  RC(1,0)
+            , <&key_physical_attrs 100 100  100  150      0    0    0> // 13  L SW8  RC(1,1)
+            , <&key_physical_attrs 100 100  200  110      0    0    0> // 14  L SW9  RC(1,2)
+            , <&key_physical_attrs 100 100  300  100      0    0    0> // 15  L SW10 RC(1,3)
+            , <&key_physical_attrs 100 100  400  115      0    0    0> // 16  L SW11 RC(1,4)
+            , <&key_physical_attrs 100 100  500  135      0    0    0> // 17  L SW12 RC(1,5)
+            , <&key_physical_attrs 100 100  950  135      0    0    0> // 18  R SW12 RC(1,6)
+            , <&key_physical_attrs 100 100 1050  115      0    0    0> // 19  R SW11 RC(1,7)
+            , <&key_physical_attrs 100 100 1150  100      0    0    0> // 20  R SW10 RC(1,8)
+            , <&key_physical_attrs 100 100 1250  110      0    0    0> // 21  R SW9  RC(1,9)
+            , <&key_physical_attrs 100 100 1350  150      0    0    0> // 22  R SW8  RC(1,10)
+            , <&key_physical_attrs 100 100 1450  150      0    0    0> // 23  R SW7  RC(1,11)
+            , <&key_physical_attrs 100 100    0  250      0    0    0> // 24  L SW13 RC(2,0)
+            , <&key_physical_attrs 100 100  100  250      0    0    0> // 25  L SW14 RC(2,1)
+            , <&key_physical_attrs 100 100  200  210      0    0    0> // 26  L SW15 RC(2,2)
+            , <&key_physical_attrs 100 100  300  200      0    0    0> // 27  L SW16 RC(2,3)
+            , <&key_physical_attrs 100 100  400  215      0    0    0> // 28  L SW17 RC(2,4)
+            , <&key_physical_attrs 100 100  500  235      0    0    0> // 29  L SW18 RC(2,5)
+            , <&key_physical_attrs 100 100  600  215      0    0    0> // 30  L SW30 RC(4,5)
+            , <&key_physical_attrs 100 100  850  215      0    0    0> // 31  R SW30 RC(4,6)
+            , <&key_physical_attrs 100 100  950  235      0    0    0> // 32  R SW18 RC(2,6)
+            , <&key_physical_attrs 100 100 1050  215      0    0    0> // 33  R SW17 RC(2,7)
+            , <&key_physical_attrs 100 100 1150  200      0    0    0> // 34  R SW16 RC(2,8)
+            , <&key_physical_attrs 100 100 1250  210      0    0    0> // 35  R SW15 RC(2,9)
+            , <&key_physical_attrs 100 100 1350  250      0    0    0> // 36  R SW14 RC(2,10)
+            , <&key_physical_attrs 100 100 1450  250      0    0    0> // 37  R SW13 RC(2,11)
+            , <&key_physical_attrs 100 100    0  350      0    0    0> // 38  L SW19 RC(3,0)
+            , <&key_physical_attrs 100 100  100  350      0    0    0> // 39  L SW20 RC(3,1)
+            , <&key_physical_attrs 100 100  200  310      0    0    0> // 40  L SW21 RC(3,2)
+            , <&key_physical_attrs 100 100  300  300      0    0    0> // 41  L SW22 RC(3,3)
+            , <&key_physical_attrs 100 100  400  315      0    0    0> // 42  L SW23 RC(3,4)
+            , <&key_physical_attrs 100 100  500  335      0    0    0> // 43  L SW24 RC(3,5)
+            , <&key_physical_attrs 100 100  600  315      0    0    0> // 44  L SW29 RC(4,4)
+            , <&key_physical_attrs 100 100  850  315      0    0    0> // 45  R SW29 RC(4,7)
+            , <&key_physical_attrs 100 100  950  335      0    0    0> // 46  R SW24 RC(3,6)
+            , <&key_physical_attrs 100 100 1050  315      0    0    0> // 47  R SW23 RC(3,7)
+            , <&key_physical_attrs 100 100 1150  300      0    0    0> // 48  R SW22 RC(3,8)
+            , <&key_physical_attrs 100 100 1250  310      0    0    0> // 49  R SW21 RC(3,9)
+            , <&key_physical_attrs 100 100 1350  350      0    0    0> // 50  R SW20 RC(3,10)
+            , <&key_physical_attrs 100 100 1450  350      0    0    0> // 51  R SW19 RC(3,11)
+            , <&key_physical_attrs 100 100  244  410      0    0    0> // 52  L SW25 RC(4,0)
+            , <&key_physical_attrs 100 100  350  417    750  400  467> // 53  L SW26 RC(4,1)
+            , <&key_physical_attrs 100 100  454  438   1500  504  488> // 54  L SW27 RC(4,2)
+            , <&key_physical_attrs 100 100  555  472   2250  605  522> // 55  L SW28 RC(4,3)
+            , <&key_physical_attrs 100 100  895  472 (-2250)  945  522> // 56  R SW28 RC(4,8)
+            , <&key_physical_attrs 100 100  996  438 (-1500) 1046  488> // 57  R SW27 RC(4,9)
+            ;
+    };
+};
+
+/* uart0 (D6/D7) and i2c1 (D4/D5) default to the matrix pins on xiao_ble. */
+&uart0 { status = "disabled"; };
+&i2c1 { status = "disabled"; };

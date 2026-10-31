@@ -1,0 +1,13 @@
+file_format: "1"
+id: sage60
+name: Sage60
+type: shield
+url: https://github.com/Diwamoto/sage60
+requires: [seeed_xiao]
+features:
+  - keys
+  - pointer
+  - studio
+siblings:
+  - sage60_left
+  - sage60_right
