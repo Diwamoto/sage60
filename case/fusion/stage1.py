@@ -1,0 +1,52 @@
+# construction planes + sketches.  globals: SIDE
+exec(open('/Users/daiki/Projects/sage60/case/fusion/fx.py').read())
+
+def dims(sk, expr):
+    for c in sk.sketchCurves.sketchCircles:
+        g = c.centerSketchPoint.geometry
+        sk.sketchDimensions.addDiameterDimension(c, adsk.core.Point3D.create(g.x + 0.3, g.y + 0.3, 0)).parameter.expression = expr
+
+def run(_c):
+    spec = json.load(open(SCR + '%s%s_spec.json' % (SIDE, SFX)))
+    d = design(DOC); r = d.rootComponent
+    cp = r.constructionPlanes
+    def off_plane(name, base, expr):
+        i = cp.createInput(); i.setByOffset(base, VI.createByString(expr)); p = cp.add(i); p.name = name; return p
+    XY = r.xYConstructionPlane
+    new_sketch(r, 'LEFT_PLATE_SURFACE' if SIDE == 'left' else 'RIGHT_TB_PLATE_SURFACE', XY, spec['PLATE_SURFACE'])
+    SHELF = off_plane('SHELF_TOP', XY, '-shelf_d')
+    FBR = off_plane('FRONT_BOTTOM_REF', XY, '-( cav_z + floor_t )')
+    ta = new_sketch(r, 'TILT_AXIS', FBR, spec['TILT_AXIS'])
+    i = cp.createInput(); i.setByAngle(ta.sketchCurves.sketchLines.item(0), VI.createByString('-tilt'), FBR)
+    DESK = cp.add(i); DESK.name = 'DESK_PLANE'
+    new_sketch(r, 'CASE_OUTER', XY, spec['CASE_OUTER'])
+    new_sketch(r, 'CAVITY', XY, spec['CAVITY'])
+    new_sketch(r, 'MCU_RING', SHELF, spec['MCU_RING'])
+    dims(new_sketch(r, 'MAGNETS', SHELF, spec['MAGNETS']), 'mag_d')
+    MCUT = off_plane('MCU_RING_TOP', XY, 'mcu_cover_z')
+    dims(new_sketch(r, 'MCU_MAG', XY, spec['MCU_MAG']), 'mag_d')       # the MCU cover's magnet (top case boss, 2026-10-24)
+    dims(new_sketch(r, 'MCU_DISC', XY, spec['MCU_DISC']), 'disc_d')    # steel disc in the cover's underside
+    new_sketch(r, 'MCU_MAG_BOSS', XY, spec['MCU_MAG_BOSS'])
+    new_sketch(r, 'MCU_MAG_CUT', XY, spec['MCU_MAG_CUT'])
+    if 'BAT_POCKET' in spec: new_sketch(r, 'BAT_POCKET', XY, spec['BAT_POCKET'])     # MX (flat floor, 2026-10-06)
+    for n in ('USB_RECESS', 'USB_RCPT', 'SW_SCOOP', 'SW_OPEN'):      # plan slots, cut upward from their bottom z (CNC, 2026-10-05)
+        new_sketch(r, n, XY, spec[n])
+    new_sketch(r, 'GASKET_POCKET', XY, spec['GASKET_POCKET'])          # bottom (runs out past the wall)
+    new_sketch(r, 'TOP_GASKET_SLOT', XY, spec['TOP_GASKET_SLOT'])      # top ring (ends inside it)
+    # rubber feet on the (tilted) desk face; machined from below along the desk normal (setup 2)
+    def desk_circles(name, circles, expr):
+        sk = r.sketches.add(DESK); sk.name = name
+        pg = DESK.geometry; o, n = pg.origin, pg.normal
+        for c in circles:
+            x, y = c[1][0] / 10, c[1][1] / 10
+            z = o.z - (n.x * (x - o.x) + n.y * (y - o.y)) / n.z
+            sk.sketchCurves.sketchCircles.addByCenterRadius(sk.modelToSketchSpace(adsk.core.Point3D.create(x, y, z)), c[2] / 10)
+        dims(sk, expr)
+    desk_circles('FEET', spec['FEET'], 'foot_d')
+    if SIDE == 'right':
+        SEAT = off_plane('TB_SEAT', XY, '-( plate_t + pcb_gap + tb_gap + tb_leg_h )')
+        new_sketch(r, 'TB_POCKET', XY, spec['TB_POCKET'])
+        dims(new_sketch(r, 'TB_MAGS', SEAT, spec['TB_MAGS']), 'mag_d')   # magnets facing the trackball case's (2026-10-29, were M1.7 screws from the desk)
+    for p in cp: p.isLightBulbOn = False
+    for s in r.sketches:
+        print(s.name, 'curves', s.sketchCurves.count, 'profiles', s.profiles.count)
