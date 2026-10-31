@@ -1,6 +1,6 @@
 # pcb
 
-KiCad の元データ（`.kicad_pro` / `.kicad_pcb` / `.kicad_sch`）だけをコミットする。バックアップ・`.kicad_prl`・プラグイン設定・ガーバーなどの出力はローカルのみ（`.gitignore`）。発注に使うファイルは `production/`。
+KiCad の元データ（`.kicad_pro` / `.kicad_pcb` / `.kicad_sch`）だけをコミットする。バックアップ・`.kicad_prl`・プラグイン設定・ガーバーなどの出力はローカルのみ（`.gitignore`）。発注に使うファイルは `production/`。JLCPCB 用ガーバーは `.kicad_pcb` を push すると Actions（`.github/workflows/gerber.yml`）が基板ごとの artifact `gerber-*` に出す。ダウンロードした zip をそのまま JLCPCB に上げられる。
 
 | フォルダ | 中身 |
 | --- | --- |

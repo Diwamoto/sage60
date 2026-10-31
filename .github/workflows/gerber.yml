@@ -1,0 +1,38 @@
+name: Export JLCPCB gerbers
+on:
+  push:
+    paths: ["pcb/**/*.kicad_pcb", ".github/workflows/gerber.yml"]
+  workflow_dispatch:
+
+jobs:
+  gerber:
+    runs-on: ubuntu-latest
+    container:
+      image: kicad/kicad:10.0.7
+      # The image's default user can't write to the runner-owned workspace.
+      options: --user root
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: mx_left, pcb: pcb/mx/left/mx.kicad_pcb }
+          - { name: mx_right_tb, pcb: pcb/mx/right_tb/mx_right_tb.kicad_pcb }
+          - { name: mx_left_plate, pcb: pcb/mx/left_plate/mx_left_plate.kicad_pcb }
+          - { name: mx_right_tb_plate, pcb: pcb/mx/right_tb_plate/mx_right_tb_plate.kicad_pcb }
+          - { name: ec_main, pcb: pcb/ec/main/ec.kicad_pcb }
+          - { name: ec_right, pcb: pcb/ec/right/ec_right.kicad_pcb }
+          - { name: ec_plate, pcb: pcb/ec/plate/ec.kicad_pcb }
+          - { name: ec_scan_module, pcb: pcb/ec/scan_module/ec_scan_module.kicad_pcb }
+    steps:
+      - uses: actions/checkout@v7
+      - run: >
+          kicad-cli pcb export gerbers --check-zones --subtract-soldermask -o out/
+          -l F.Cu,B.Cu,F.Paste,B.Paste,F.Silkscreen,B.Silkscreen,F.Mask,B.Mask,Edge.Cuts
+          "${{ matrix.pcb }}"
+      - run: kicad-cli pcb export drill --excellon-separate-th -o out/ "${{ matrix.pcb }}"
+      # The downloaded artifact zip is what gets uploaded to JLCPCB.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: gerber-${{ matrix.name }}
+          path: out
