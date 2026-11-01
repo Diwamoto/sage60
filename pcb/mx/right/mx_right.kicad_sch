@@ -5,617 +5,47 @@
 	(uuid "6e471c34-fb9c-4836-aac9-8239f9e8a673")
 	(paper "A4")
 	(lib_symbols
-		(symbol "0_Seeed_Studio_XIAO_Series:XIAO-nRF52840_Plus_SMD"
+		(symbol "sage60:XIAO_nRF52840_Plus"
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "U"
-				(at -2.54 2.54 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
+			(property "Reference" "U" (at 21.59 5.08 0) (effects (font (size 1.27 1.27))))
+			(property "Value" "" (at 21.59 -58.42 0) (effects (font (size 1.27 1.27))))
+			(property "Footprint" "sage60:XIAO_nRF52840_Plus" (at 0 0 0) (effects (font (size 1.27 1.27)) (hide yes)))
+			(property "Datasheet" "" (at 0 0 0) (effects (font (size 1.27 1.27)) (hide yes)))
+			(property "Description" "XIAO nRF52840 Plus" (at 0 0 0) (effects (font (size 1.27 1.27)) (hide yes)))
+			(symbol "XIAO_nRF52840_Plus_1_1"
+				(rectangle (start 0 0) (end 43.18 -52.07) (stroke (width 0.254) (type solid)) (fill (type background)))
+				(pin passive line (at -2.54 -2.54 0) (length 2.54) (name "P0.02_AIN0_LOW_A0_D0" (effects (font (size 1.27 1.27)))) (number "1" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at -2.54 -10.16 0) (length 2.54) (name "P0.03_AIN1_LOW_A1_D1" (effects (font (size 1.27 1.27)))) (number "2" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at -2.54 -17.78 0) (length 2.54) (name "P0.28_AIN4_LOW_A2_D2" (effects (font (size 1.27 1.27)))) (number "3" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at -2.54 -25.4 0) (length 2.54) (name "P0.29_AIN5_LOW_A3_D3" (effects (font (size 1.27 1.27)))) (number "4" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at -2.54 -33.02 0) (length 2.54) (name "P0.04_AIN2_A4_D4" (effects (font (size 1.27 1.27)))) (number "5" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at -2.54 -40.64 0) (length 2.54) (name "P0.05_AIN3_A5_D5" (effects (font (size 1.27 1.27)))) (number "6" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at -2.54 -48.26 0) (length 2.54) (name "P1.11_TX_D6" (effects (font (size 1.27 1.27)))) (number "7" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at 45.72 -48.26 180) (length 2.54) (name "P1.12_RX_D7" (effects (font (size 1.27 1.27)))) (number "8" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at 45.72 -40.64 180) (length 2.54) (name "P1.13_SCK_D8" (effects (font (size 1.27 1.27)))) (number "9" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at 45.72 -33.02 180) (length 2.54) (name "P1.14_MISO_D9" (effects (font (size 1.27 1.27)))) (number "10" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at 45.72 -25.4 180) (length 2.54) (name "P1.15_MOSI_D10" (effects (font (size 1.27 1.27)))) (number "11" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at 45.72 -17.78 180) (length 2.54) (name "3V3" (effects (font (size 1.27 1.27)))) (number "12" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at 45.72 -10.16 180) (length 2.54) (name "GND" (effects (font (size 1.27 1.27)))) (number "13" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at 45.72 -2.54 180) (length 2.54) (name "5V" (effects (font (size 1.27 1.27)))) (number "14" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at -2.54 -6.35 0) (length 2.54) (name "P0.15_I2S_SD" (effects (font (size 1.27 1.27)))) (number "15" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at -2.54 -13.97 0) (length 2.54) (name "P0.19_I2S_SCK" (effects (font (size 1.27 1.27)))) (number "16" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at -2.54 -21.59 0) (length 2.54) (name "P1.01_I2S_WS" (effects (font (size 1.27 1.27)))) (number "17" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at -2.54 -29.21 0) (length 2.54) (name "P0.09/NFC1/RX1" (effects (font (size 1.27 1.27)))) (number "18" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at -2.54 -36.83 0) (length 2.54) (name "P0.10/NFC2/TX1" (effects (font (size 1.27 1.27)))) (number "19" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at -2.54 -44.45 0) (length 2.54) (name "P0.31_AIN7_BAT" (effects (font (size 1.27 1.27)))) (number "20" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at 45.72 -44.45 180) (length 2.54) (name "P1.03_SCK1" (effects (font (size 1.27 1.27)))) (number "21" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at 45.72 -36.83 180) (length 2.54) (name "P1.05_MISO1" (effects (font (size 1.27 1.27)))) (number "22" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at 45.72 -29.21 180) (length 2.54) (name "P1.07_MOSI1" (effects (font (size 1.27 1.27)))) (number "23" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at 27.94 2.54 270) (length 2.54) (name "SWDIO" (effects (font (size 1.27 1.27)))) (number "24" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at 30.48 2.54 270) (length 2.54) (name "SWDCLK" (effects (font (size 1.27 1.27)))) (number "25" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at 33.02 2.54 270) (length 2.54) (name "REST" (effects (font (size 1.27 1.27)))) (number "26" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at 35.56 2.54 270) (length 2.54) (name "GND" (effects (font (size 1.27 1.27)))) (number "27" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at 20.32 -54.61 90) (length 2.54) (name "VBAT" (effects (font (size 1.27 1.27)))) (number "32" (effects (font (size 1.27 1.27)))))
+				(pin passive line (at 24.13 -54.61 90) (length 2.54) (name "GND" (effects (font (size 1.27 1.27)))) (number "33" (effects (font (size 1.27 1.27)))))
 			)
-			(property "Value" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "XIAO-nRF52840_Plus_SMD_0_1"
-				(rectangle
-					(start 0 0)
-					(end 43.18 -52.07)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "XIAO-nRF52840_Plus_SMD_1_0"
-				(polyline
-					(pts
-						(xy 0 -2.54) (xy -1.27 -2.54)
-					)
-					(stroke
-						(width 0.1524)
-						(type solid)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(pin passive line
-					(at -2.54 -2.54 0)
-					(length 2.54)
-					(name "P0.02_AIN0_LOW_A0_D0"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -2.54 -10.16 0)
-					(length 2.54)
-					(name "P0.03_AIN1_LOW_A1_D1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -2.54 -17.78 0)
-					(length 2.54)
-					(name "P0.28_AIN4_LOW_A2_D2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -2.54 -25.4 0)
-					(length 2.54)
-					(name "P0.29_AIN5_LOW_A3_D3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "4"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -2.54 -33.02 0)
-					(length 2.54)
-					(name "P0.04_AIN2_A4_D4"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "5"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -2.54 -40.64 0)
-					(length 2.54)
-					(name "P0.05_AIN3_A5_D5"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "6"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -2.54 -48.26 0)
-					(length 2.54)
-					(name "P1.11_TX_D6"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "7"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 45.72 -48.26 180)
-					(length 2.54)
-					(name "P1.12_RX_D7"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "8"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 45.72 -40.64 180)
-					(length 2.54)
-					(name "P1.13_SCK_D8"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "9"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 45.72 -33.02 180)
-					(length 2.54)
-					(name "P1.14_MISO_D9"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "10"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 45.72 -25.4 180)
-					(length 2.54)
-					(name "P1.15_MOSI_D10"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "11"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 45.72 -17.78 180)
-					(length 2.54)
-					(name "3V3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "12"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 45.72 -10.16 180)
-					(length 2.54)
-					(name "GND"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "13"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 45.72 -2.54 180)
-					(length 2.54)
-					(name "5V"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "14"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(symbol "XIAO-nRF52840_Plus_SMD_1_1"
-				(pin passive line
-					(at -2.54 -6.35 0)
-					(length 2.54)
-					(name "P0.15_I2S_SD"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "15"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -2.54 -13.97 0)
-					(length 2.54)
-					(name "P0.19_I2S_SCK"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "16"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -2.54 -21.59 0)
-					(length 2.54)
-					(name "P1.01_I2S_WS"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "17"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -2.54 -29.21 0)
-					(length 2.54)
-					(name "P0.09/NFC1/RX1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "18"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -2.54 -36.83 0)
-					(length 2.54)
-					(name "P0.10/NFC2/TX1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "19"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -2.54 -44.45 0)
-					(length 2.54)
-					(name "P0.31_AIN7_BAT"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "20"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 45.72 -44.45 180)
-					(length 2.54)
-					(name "P1.03_SCK1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "21"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 45.72 -36.83 180)
-					(length 2.54)
-					(name "P1.05_MISO1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "22"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 45.72 -29.21 180)
-					(length 2.54)
-					(name "P1.07_MOSI1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "23"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 27.94 2.54 270)
-					(length 2.54)
-					(name "SWDIO"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "24"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 30.48 2.54 270)
-					(length 2.54)
-					(name "SWDCLK"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "25"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 33.02 2.54 270)
-					(length 2.54)
-					(name "REST"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "26"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 35.56 2.54 270)
-					(length 2.54)
-					(name "GND"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "27"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 20.32 -54.61 90)
-					(length 2.54)
-					(name "VBAT"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "32"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 24.13 -54.61 90)
-					(length 2.54)
-					(name "GND"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "33"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
 		)
 		(symbol "0_kbd:SW_PUSH"
 			(pin_numbers
@@ -1383,14 +813,18 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "my:pmw3610_breakout"
+		(symbol "Connector_Generic:Conn_01x07"
+			(pin_names
+				(offset 1.016)
+				(hide yes)
+			)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
 			(in_pos_files yes)
 			(duplicate_pin_numbers_are_jumpers no)
 			(property "Reference" "J"
-				(at -1.27 1.27 0)
+				(at 0 10.16 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(effects
@@ -1399,8 +833,8 @@
 					)
 				)
 			)
-			(property "Value" ""
-				(at 0 0 0)
+			(property "Value" "Conn_01x07"
+				(at 0 -10.16 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(effects
@@ -1431,7 +865,7 @@
 					)
 				)
 			)
-			(property "Description" ""
+			(property "Description" "Generic connector, single row, 01x07, script generated (kicad-library-utils/schlib/autogen/connector/)"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -1442,24 +876,121 @@
 					)
 				)
 			)
-			(symbol "pmw3610_breakout_0_1"
+			(property "ki_keywords" "connector"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_fp_filters" "Connector*:*_1x??_*"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "Conn_01x07_1_1"
 				(rectangle
-					(start -6.35 0)
-					(end 2.54 -20.32)
+					(start -1.27 8.89)
+					(end 1.27 -8.89)
 					(stroke
-						(width 0)
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(rectangle
+					(start -1.27 7.747)
+					(end 0 7.493)
+					(stroke
+						(width 0.1524)
 						(type default)
 					)
 					(fill
 						(type none)
 					)
 				)
-			)
-			(symbol "pmw3610_breakout_1_1"
-				(pin unspecified line
-					(at 5.08 -2.54 180)
-					(length 2.54)
-					(name "SCLK"
+				(rectangle
+					(start -1.27 5.207)
+					(end 0 4.953)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 2.667)
+					(end 0 2.413)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 0.127)
+					(end 0 -0.127)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 -2.413)
+					(end 0 -2.667)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 -4.953)
+					(end 0 -5.207)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 -7.493)
+					(end 0 -7.747)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -5.08 7.62 0)
+					(length 3.81)
+					(name "Pin_1"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1474,10 +1005,10 @@
 						)
 					)
 				)
-				(pin unspecified line
-					(at 5.08 -5.08 180)
-					(length 2.54)
-					(name "nCS"
+				(pin passive line
+					(at -5.08 5.08 0)
+					(length 3.81)
+					(name "Pin_2"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1492,10 +1023,10 @@
 						)
 					)
 				)
-				(pin unspecified line
-					(at 5.08 -7.62 180)
-					(length 2.54)
-					(name "GND"
+				(pin passive line
+					(at -5.08 2.54 0)
+					(length 3.81)
+					(name "Pin_3"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1510,10 +1041,10 @@
 						)
 					)
 				)
-				(pin unspecified line
-					(at 5.08 -10.16 180)
-					(length 2.54)
-					(name "Vin"
+				(pin passive line
+					(at -5.08 0 0)
+					(length 3.81)
+					(name "Pin_4"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1528,10 +1059,10 @@
 						)
 					)
 				)
-				(pin unspecified line
-					(at 5.08 -12.7 180)
-					(length 2.54)
-					(name "nc"
+				(pin passive line
+					(at -5.08 -2.54 0)
+					(length 3.81)
+					(name "Pin_5"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1546,10 +1077,10 @@
 						)
 					)
 				)
-				(pin unspecified line
-					(at 5.08 -15.24 180)
-					(length 2.54)
-					(name "SDIO"
+				(pin passive line
+					(at -5.08 -5.08 0)
+					(length 3.81)
+					(name "Pin_6"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1564,10 +1095,10 @@
 						)
 					)
 				)
-				(pin unspecified line
-					(at 5.08 -17.78 180)
-					(length 2.54)
-					(name "MOTION"
+				(pin passive line
+					(at -5.08 -7.62 0)
+					(length 3.81)
+					(name "Pin_7"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -7106,7 +6637,7 @@
 		)
 	)
 	(symbol
-		(lib_id "0_Seeed_Studio_XIAO_Series:XIAO-nRF52840_Plus_SMD")
+		(lib_id "sage60:XIAO_nRF52840_Plus")
 		(at 181.61 26.67 0)
 		(unit 1)
 		(body_style 1)
@@ -7137,7 +6668,7 @@
 				)
 			)
 		)
-		(property "Footprint" "0_Seeed Studio XIAO Series Library:XIAO-nRF52840-Plus-DIP"
+		(property "Footprint" "sage60:XIAO_nRF52840_Plus"
 			(at 181.61 26.67 0)
 			(hide yes)
 			(show_name no)
@@ -7472,8 +7003,9 @@
 		)
 	)
 	(symbol
-		(lib_id "my:pmw3610_breakout")
-		(at 177.8 95.25 0)
+		(lib_id "Connector_Generic:Conn_01x07")
+		(at 177.8 105.41 0)
+		(mirror y)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -7503,7 +7035,7 @@
 				)
 			)
 		)
-		(property "Footprint" "0_sora:pmw3610_connector"
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x07_P2.54mm_Vertical"
 			(at 177.8 95.25 0)
 			(hide yes)
 			(show_name no)

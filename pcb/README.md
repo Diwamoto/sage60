@@ -5,10 +5,9 @@ KiCad の元データ（`.kicad_pro` / `.kicad_pcb` / `.kicad_sch`）だけを�
 | フォルダ | 中身 |
 | --- | --- |
 | `mx/left/` | MX 左のメイン基板（`mx.kicad_*`、XIAO nRF52840） |
-| `mx/right_tb/` | MX 右（トラックボール、PMW3610 センサー基板へ J1） |
-| `mx/left_plate/` | 左プレート（MX / Choc v2 共通、1.2mm） |
-| `mx/right_tb_plate/` | 右プレート（トラックボールまわりの親指キー2つと手前のタブが無い形） |
+| `mx/right/` | MX 右（トラックボール、PMW3610 センサー基板へ J1） |
 | `ec/main/` | 東プレ（静電容量）左メイン |
-| `ec/right/` | 東プレ右（`ec/main` の左右ミラー） |
-| `ec/plate/` | 東プレ用プレート |
 | `ec/scan_module/` | 静電容量の読み取りモジュール |
+| `modules/footprint/sage60.pretty/`、`modules/symbol/sage60.kicad_sym` | 自作部品（XIAO nRF52840 Plus）。`mx/right` と `ec/main` の `fp-lib-table` / `sym-lib-table` が読む |
+
+PMW3610 センサー基板は GPL-3.0 なのでここには置かない。元データは [Diwamoto/roBa](https://github.com/Diwamoto/roBa/tree/sage60/pcb/pmw3610_breakout_for_roBa)（roBa のまま無改変）で、ガーバーは同じ Actions の `gerber-pmw3610_breakout` に出る。

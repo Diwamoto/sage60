@@ -11,7 +11,14 @@ pcb/**
 !pcb/**/*.kicad_pcb
 !pcb/**/*.kicad_sch
 !pcb/README.md
+!pcb/modules/**
+!pcb/**/fp-lib-table
+!pcb/**/sym-lib-table
 pcb/**/*-backups/
+
+# Trackball case: GPL-3.0, lives in the fork (case/trackball/README.md)
+case/trackball/*.stl
+production/case_print/trackballcase_low.3mf
 
 # Local ZMK build output (firmware/zmk/build.sh)
 firmware/zmk/out/

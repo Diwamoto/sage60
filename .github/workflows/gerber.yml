@@ -17,15 +17,16 @@ jobs:
       matrix:
         include:
           - { name: mx_left, pcb: pcb/mx/left/mx.kicad_pcb }
-          - { name: mx_right_tb, pcb: pcb/mx/right_tb/mx_right_tb.kicad_pcb }
-          - { name: mx_left_plate, pcb: pcb/mx/left_plate/mx_left_plate.kicad_pcb }
-          - { name: mx_right_tb_plate, pcb: pcb/mx/right_tb_plate/mx_right_tb_plate.kicad_pcb }
+          - { name: mx_right, pcb: pcb/mx/right/mx_right.kicad_pcb }
           - { name: ec_main, pcb: pcb/ec/main/ec.kicad_pcb }
-          - { name: ec_right, pcb: pcb/ec/right/ec_right.kicad_pcb }
-          - { name: ec_plate, pcb: pcb/ec/plate/ec.kicad_pcb }
           - { name: ec_scan_module, pcb: pcb/ec/scan_module/ec_scan_module.kicad_pcb }
+          # GPL-3.0, kept out of this repository (LICENSE).
+          - { name: pmw3610_breakout, pcb: pcb/pmw3610_breakout_for_roBa/pmw3610_breakout_for_roBa.kicad_pcb, repo: Diwamoto/roBa, ref: 8c4270c27fa89b2665fa79c7284dcb1bcf0a1e8f }
     steps:
       - uses: actions/checkout@v7
+        with:
+          repository: ${{ matrix.repo || github.repository }}
+          ref: ${{ matrix.ref }}
       - run: >
           kicad-cli pcb export gerbers --check-zones --subtract-soldermask -o out/
           -l F.Cu,B.Cu,F.Paste,B.Paste,F.Silkscreen,B.Silkscreen,F.Mask,B.Mask,Edge.Cuts

@@ -36,7 +36,7 @@ Fusion では exec の globals に `'LP': True` を足す（`{'SIDE': 'left', 'L
 
 ## プレートの3MF（試作プリント用）
 ```sh
-./venv/bin/python plate_3mf.py      # production/plate/sage60_{left,right}_plate.3mf（左右別プレート 1.2mm、MX / Choc v2 共通。Edge.Cuts を Python で押し出す）
+./venv/bin/python plate_3mf.py      # production/plate/sage60_{left,right}_plate.3mf（左右別プレート 1.2mm、MX / Choc v2 共通。`production/plate/mx_{left,right}_plate.dxf` を Python で押し出す）
 # ケース: Fusion で fusion/export_3mf.py を exec（globals SIDE / LP）→ production/case_print/sage60_<side>{,_lp}_{bottom,top,cover}.3mf（モデルの向きのまま。上ケースはスライサーで裏返す）
 ```
 
@@ -65,17 +65,11 @@ MCU カバー（ウォルナット）の発注用 DXF を `production/mcu_cover/
 ## oneshot/（mag_notch.py / tongue_*.py / j1_thin_pin.py / notch_fillet.py）
 `oneshot/` は PCB・プレートを直接書き換えた一回限りのスクリプト（記録として残す）。いずれも（2026-10-03〜04 に適用済み。再実行すると二重に入る／tongue_edge は assert で止まる）。
 - `mag_notch.py`：左 PCB・左プレート・右プレート（鏡像）の右下の縁に、φ6 磁石の柱用の半円の切り欠きを入れる（中心は `casegeo.MAG_NOTCH`）。左 PCB の ROW4 は先に手で引き直してある。
+- `j1_stock.py`（2026-11-01 適用済み）：右 PCB の J1 のフットプリントとシンボルを、roBa のもの（GPL-3.0）から KiCad 標準へ。パッドの位置と結線は変えない。
+- `xiao_own.py`（2026-11-01 適用済み）：`mx/right` と `ec/main` の XIAO のフットプリントとシンボルを、Seeed のもの（CC BY-SA 4.0）から自作（`pcb/modules/`）へ。銅箔・穴・切り抜きは同じで、シルクとシンボルの本体が変わる。
 - `j1_thin_pin.py`（2026-10-29）：右 PCB の J1 を細ピンのL字ヘッダ用に x 166.64 へ。丸ピンソケットの胴が当たる舌の左下を x 163.4 まで削り、SDIO / MOTION を引き直し。適用後に `kicad-cli pcb drc --refill-zones --save-board`。
 - `tongue_trim.py`（2026-10-06）：右 PCB の J1 の舌の左の辺を 158.9→159.9（センサー基板との隙間）。SDIO / MOTION を J1 の右側へ引き直し（MOTION はビアで裏面）、GND のステッチビアを2つ。適用後に `kicad-cli pcb drc --refill-zones --save-board`。
 - `tongue_edge.py`：右 PCB の J1 の舌の左の辺を x 158.0→158.9 にして、トラックボールケースの脚の腕を避ける（0.49mm 重なり→0.36mm の隙間）。舌に沿う SDIO / MOTION の配線も0.32右へ。
 
 ## oneshot/shorten_tabs.py
 プレートのタブを5→2.5mmにした一回限りのスクリプト（2026-10-02に適用済み。再実行するとさらに短くなる）。2026-10-09 に `cut -0.9 keep 1.2` で 2.5→3.4mm に伸ばした（適用済み）。
-
-## プレートの発注（2026-10-10〜 左右別）
-左 `pcb/mx/left_plate/`、右 `pcb/mx/right_tb_plate/`。ガーバー:
-```sh
-for n in left_plate right_tb_plate; do d=../production/plate/gerber_$n; mkdir -p $d
-  kicad-cli pcb export gerbers -l F.Cu,B.Cu,F.Silkscreen,Edge.Cuts -o $d/ ../pcb/mx/$n/mx_$n.kicad_pcb && kicad-cli pcb export drill -o $d/ ../pcb/mx/$n/mx_$n.kicad_pcb
-  (cd $d && zip -q ../mx_$n.zip *) && rm -r $d; done
-```
