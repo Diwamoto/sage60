@@ -77,7 +77,7 @@ def main():
     out = m.to_mesh(); v2, t2 = np.array(out.vert_properties)[:, :3].astype(float), np.array(out.tri_verts)
     print('trackball case: volume %.1f -> %.1f mm3 (%.1f removed), %d triangles' % (vol0, m.volume(), vol0 - m.volume(), len(t2)))
     # checks (Fusion coordinates)
-    pcb = orient(outline(B + 'mx/right_tb/mx_right_tb.kicad_pcb')[0])
+    pcb = orient(outline(B + 'mx/right/mx_right.kicad_pcb')[0])
     xy = [tuple(q) for q in pcb.exterior.coords[:-1]]
     ext = mf.CrossSection([xy]).extrude(1.6).translate((0, 0, PCB_TOP - 1.6))
     case = m.translate(tuple(OFF))

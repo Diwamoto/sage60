@@ -3,7 +3,7 @@ import json, pickle
 from casegeo import *
 
 def build_left():
-    plate, _ = outline(B + 'mx/left_plate/mx_left_plate.kicad_pcb')
+    plate, _ = plate_outline('left')
     pcb, _ = outline(B + 'mx/left/mx.kicad_pcb')
     spcb = sharp_pcb(B + 'mx/left/mx.kicad_pcb')
     tabs, body, info = tabs_and_body(plate, pcb)

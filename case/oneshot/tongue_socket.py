@@ -14,7 +14,7 @@ import re, uuid, math
 import numpy as np
 from geo import B
 
-PCB = B + 'mx/right_tb/mx_right_tb.kicad_pcb'
+PCB = B + 'mx/right/mx_right.kicad_pcb'
 J0, J = (160.995, 122.395), (171.48, 122.395)
 XR, R = 174.0, 1.0                                  # new right edge of the tongue, corner radius
 BOT, DIAG_TOP = 132.315, (180.06647, 104.779824)

@@ -5,7 +5,7 @@ import numpy as np
 from shapely.geometry import Polygon, LineString, Point, box
 from shapely.ops import unary_union
 from shapely import affinity
-from geo import outline, edges, B
+from geo import outline, plate_outline, edges, B
 from emit import ring_curves, _circ
 
 LP = os.environ.get('SAGE60_LP') == '1'      # low-profile variant (Choc on the same PCB): thinner stack, less margin

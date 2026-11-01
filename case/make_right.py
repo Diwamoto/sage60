@@ -29,9 +29,9 @@ def opening_rounded(p, r):
 
 def build_right():
     L = build_left()
-    plate, _ = outline(B + 'mx/right_tb_plate/mx_right_tb_plate.kicad_pcb')
-    pcb, _ = outline(B + 'mx/right_tb/mx_right_tb.kicad_pcb')
-    spcb = sharp_pcb(B + 'mx/right_tb/mx_right_tb.kicad_pcb')
+    plate, _ = plate_outline('right')
+    pcb, _ = outline(B + 'mx/right/mx_right.kicad_pcb')
+    spcb = sharp_pcb(B + 'mx/right/mx_right.kicad_pcb')
     tabs, body, info = tabs_and_body(plate, pcb)
     # sharp corners where the PCB is convex, the PCB's own fillets where it is concave
     cav = Polygon(unary_union([spcb.buffer(0.3, join_style=2, mitre_limit=10), pcb.buffer(0.3, quad_segs=16)]).exterior).simplify(0.002)
@@ -51,7 +51,7 @@ def build_right():
     # level with the trackball case's legs at its ends (no slot under it: it would undercut the legs)
     pocket = unary_union([pocket, box(158.94 - CLR, -122.395 - 8.89 - CLR, 163.14 + CLR, -122.395 + 8.89 + CLR)])
     # top ring opening: plate body + open_clr, keycaps + KEY_CLR, trackball hole -> the top case covers the bare PCB around the trackball
-    caps = unary_union(keycaps(B + 'mx/right_tb/mx_right_tb.kicad_pcb')).buffer(2.5, join_style=2).buffer(-2.5, join_style=2)
+    caps = unary_union(keycaps(B + 'mx/right/mx_right.kicad_pcb')).buffer(2.5, join_style=2).buffer(-2.5, join_style=2)
     keyhole = opening_rounded(unary_union([body.buffer(OPEN_CLR, quad_segs=16), caps.buffer(KEY_CLR - GUARD_R, join_style=2).buffer(GUARD_R, quad_segs=16)]), 1.5)
     keyhole, tbhole = relieve(keyhole, RING_R), relieve(tbhole, RING_R)
     opening = unary_union([keyhole, tbhole]).buffer(0)          # each rounded on its own: rounding the union pinched off the sensor housing
@@ -152,8 +152,8 @@ def build_right():
     keep = unary_union([p.buffer(1.0) for p in pockets + pockets_b] + [mcu_open, usb, sw, access_cut.buffer(1.0), tbhole.buffer(1.0), pocket.buffer(1.0), post.buffer(10), Point(mag_b).buffer(10)])
     mags, band = magnet_spots(case, opening, cavity, keep, N_MAG - 2, fixed=[MAG_A2, mag_b])   # (2026-10-28: the hull's new front corner drew one away from the back left)
     mags = [MAG_A2, mag_b] + mags
-    guard = guard_fill(keyhole, guard_region(keyhole, keycaps(B + 'mx/right_tb/mx_right_tb.kicad_pcb'), mirror_poly(box(*GUARD_BOX)).difference(unary_union([tbhole, access]).buffer(3.0))))
-    cover = mcu_cover(case, mcu_open, mcu_mag, usb, keycaps(B + 'mx/right_tb/mx_right_tb.kicad_pcb'))
+    guard = guard_fill(keyhole, guard_region(keyhole, keycaps(B + 'mx/right/mx_right.kicad_pcb'), mirror_poly(box(*GUARD_BOX)).difference(unary_union([tbhole, access]).buffer(3.0))))
+    cover = mcu_cover(case, mcu_open, mcu_mag, usb, keycaps(B + 'mx/right/mx_right.kicad_pcb'))
     mag_boss, mag_cut = mcu_magnet_boss(case, cavity, cover, usb, sw, mcu_mag, side=-1)
     bat = None if LP else mirror_poly(L['bat'])
     cb = unary_union([Point(p).buffer(TB_CB_D / 2 + 1.5) for p in TB_SCREWS])

@@ -4,6 +4,7 @@ from shapely.geometry import LineString, Polygon, Point
 from shapely.ops import polygonize, unary_union
 from shapely import affinity
 B='/Users/daiki/Projects/sage60/pcb/'
+PLATE='/Users/daiki/Projects/sage60/production/plate/mx_%s_plate.dxf'
 def arcpts(s,m,e,n=16):
     (x1,y1),(x2,y2),(x3,y3)=s,m,e
     d=2*(x1*(y2-y3)+x2*(y3-y1)+x3*(y1-y2))
@@ -34,3 +35,13 @@ def outline(path):
     polys=list(polygonize(unary_union(ls)))+closed
     polys.sort(key=lambda p:-p.area)
     return Polygon(polys[0].exterior), polys
+def plate_outline(side):
+    """plate from production/plate/mx_<side>_plate.dxf (LINEs on the Edge.Cuts vertices) -> (outer, [outer, holes...]) like outline()"""
+    L=[l.strip() for l in open(PLATE%side)]; ls=[]; p={}
+    for k,v in zip(L[::2],L[1::2]):
+        if k=='0': p={}
+        elif k in ('10','20','11','21'):
+            p[k]=float(v)
+            if len(p)==4: ls.append(LineString([(p['10'],p['20']),(p['11'],p['21'])]))
+    polys=sorted(polygonize(unary_union(ls)),key=lambda g:-g.area)
+    return Polygon(polys[0].exterior),polys

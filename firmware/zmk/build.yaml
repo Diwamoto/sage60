@@ -7,7 +7,7 @@ include:
     snippet: studio-rpc-usb-uart
     cmake-args: -DCONFIG_ZMK_STUDIO=y
     artifact-name: sage60_left
-  # Right = mx_right_tb (XIAO nRF52840 Plus + PMW3610).
+  # Right = mx_right (XIAO nRF52840 Plus + PMW3610).
   - board: xiao_ble//zmk
     shield: sage60_right
     artifact-name: sage60_right

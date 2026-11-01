@@ -5,7 +5,7 @@ Exact-text replacements, so running it again fails (asserts) instead of moving t
 import sys, os; sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))   # case/ (casegeo, geo, ...)
 from geo import B
 
-PCB = B + 'mx/right_tb/mx_right_tb.kicad_pcb'
+PCB = B + 'mx/right/mx_right.kicad_pcb'
 EDGE_X, DX = 158.9, 0.32                      # edge to arm 0.36, trace to edge 0.44, trace to J1 pads 0.2 (GND class)
 XM = 158.3                                    # MOTION turns down here: its 45 deg run stays 1.4 from the fillet centre (EDGE_X-1, 105.775)
 XS = XM + 0.495                               # SDIO's 45 deg run keeps the 0.35 pitch (x - y offset 0.495)

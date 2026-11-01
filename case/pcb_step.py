@@ -7,7 +7,7 @@ from geo import B
 
 HERE = os.path.dirname(os.path.abspath(__file__)) + '/models/'
 KLIB = '/Applications/KiCad/KiCad.app/Contents/SharedSupport/3dmodels'
-PCBS = {'left': 'mx/left/mx.kicad_pcb', 'right': 'mx/right_tb/mx_right_tb.kicad_pcb'}
+PCBS = {'left': 'mx/left/mx.kicad_pcb', 'right': 'mx/right/mx_right.kicad_pcb'}
 LOCAL = {'XIAO-nRF52840 v15.step', 'Kailh-CherryMX-Socket.step'}
 # switch model (origin = PCB top), keycap model, keycap rim height above the PCB top (mm)
 # MX: plate top = PCB + 5.0, stem top = plate + 10.2, rim = plate + 6.0 (4 mm travel leaves 2.0 above the plate)

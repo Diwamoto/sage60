@@ -6,7 +6,7 @@ import re
 from geo import B
 
 D = 5.0
-PCBS = ['mx/left/mx.kicad_pcb', 'mx/right_tb/mx_right_tb.kicad_pcb']
+PCBS = ['mx/left/mx.kicad_pcb', 'mx/right/mx_right.kicad_pcb']
 PAD = re.compile(r'(\(pad "" np_thru_hole circle\s*\(at 0 0(?: [-\d.]+)?\)\s*\(size )4\.1 4\.1(\)\s*\(drill )4\.1\)')
 
 def main():

@@ -8,7 +8,7 @@ Then: kicad-cli pcb drc --refill-zones --save-board."""
 import sys, os; sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))   # case/ (casegeo, geo, ...)
 from geo import B
 
-PCB = B + 'mx/right_tb/mx_right_tb.kicad_pcb'
+PCB = B + 'mx/right/mx_right.kicad_pcb'
 X_M, X_S, VIA_Y = 162.45, 163.3, 124.0       # MOTION / SDIO verticals right of J1 (pads to x 161.845), MOTION's via
 GND_VIAS = [(166.43, 109.75), (89.0, 37.33)]  # inside both pours (0.6 in from the fill edges)
 P6, P7 = (160.995, 127.475), (160.995, 130.015)
