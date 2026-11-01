@@ -1,0 +1,4 @@
+# Generators (make_*.py, plate_3mf.py, site/build_models.py, ...). Compile: see README.md
+numpy
+shapely
+manifold3d  # trackball/tb_socket_cut.py

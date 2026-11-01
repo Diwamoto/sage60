@@ -5,7 +5,8 @@ Fusion の `sage60_left_bottom` / `sage60_right_bottom`（下ケース＋上ケ�
 
 ## 手順
 ```sh
-python3 -m venv venv && ./venv/bin/pip install shapely numpy matplotlib manifold3d   # 初回のみ
+python3.14 -m venv venv && ./venv/bin/python -m pip install --require-hashes --only-binary :all: -r requirements.txt   # 初回のみ
+./venv/bin/python -m pip install --require-hashes --only-binary :all: -r requirements-debug.txt   # 任意: *_geo.png が要るときだけ（matplotlib）
 ./venv/bin/python make_left.py      # left_spec.json  (+ left_geo.png で確認)
 ./venv/bin/python make_right.py     # right_spec.json, tb_placed.stl (+ right_geo.png)
 ./venv/bin/python make_checkpts.py  # 干渉チェック用の点
@@ -39,6 +40,16 @@ Fusion では exec の globals に `'LP': True` を足す（`{'SIDE': 'left', 'L
 ./venv/bin/python plate_3mf.py      # production/plate/sage60_{left,right}_plate.3mf（左右別プレート 1.2mm、MX / Choc v2 共通。`production/plate/mx_{left,right}_plate.dxf` を Python で押し出す）
 # ケース: Fusion で fusion/export_3mf.py を exec（globals SIDE / LP）→ production/case_print/sage60_<side>{,_lp}_{bottom,top,cover}.3mf（モデルの向きのまま。上ケースはスライサーで裏返す）
 ```
+
+## Python の依存
+直接依存は `requirements.in`（numpy / shapely / manifold3d）と `requirements-debug.in`（matplotlib）に書き、`requirements*.txt` に推移的依存までバージョンとハッシュを固定する。Python は 3.14（3.15 には固定版の shapely / manifold3d の wheel がない）。`fusion/` は Fusion 内蔵の Python、`oneshot/centre_reroute.py` は KiCad の Python で動くので対象外。
+
+上げるときは pip-tools（venv には入れない）で、この順に作り直す:
+```sh
+pip-compile --generate-hashes --strip-extras --upgrade-package <パッケージ> requirements.in
+pip-compile --generate-hashes --strip-extras requirements-debug.in
+```
+数値の丸めで形状が変わりうるので、上げたら `make_left.py` / `make_right.py` を通常版と `SAGE60_LP=1` で流し、`*_spec.json` の差分（`git diff`）を確認してから発注データに使う。
 
 ## 形を決めている数値
 `casegeo.py` の先頭（外形オフセット、角R、壁、磁石、ゴム足、USB、スライドスイッチ）と `make_right.py` の先頭（トラックボール）。

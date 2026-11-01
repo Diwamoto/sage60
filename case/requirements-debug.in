@@ -1,0 +1,3 @@
+# Optional: the *_geo.png debug images of make_left.py / make_right.py
+-c requirements.txt
+matplotlib

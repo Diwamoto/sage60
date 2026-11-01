@@ -204,7 +204,8 @@ if __name__ == '__main__':
     a = np.frombuffer(bytes(d[84:84 + 50 * n]), dtype=np.dtype([('n', '<3f4'), ('v', '<9f4'), ('a', '<u2')])).copy()
     v = a['v'].reshape(-1, 3); v += np.array([TBX, TBY, -TB_ZREL0], dtype=np.float32); a['v'] = v.reshape(-1, 9)
     open('tb_placed%s.stl' % SFX, 'wb').write(bytes(d[:84]) + a.tobytes())
-    import matplotlib; matplotlib.use('Agg'); import matplotlib.pyplot as plt
+    try: import matplotlib; matplotlib.use('Agg'); import matplotlib.pyplot as plt
+    except ImportError: print('no matplotlib (requirements-debug.txt): right%s_geo.png not written' % SFX); raise SystemExit
     fig, ax = plt.subplots(figsize=(18, 14))
     def pl(g, c, lw=1):
         for gg in getattr(g, 'geoms', [g]):

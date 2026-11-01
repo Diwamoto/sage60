@@ -86,7 +86,8 @@ if __name__ == '__main__':
     spec['_rings'] = {'case': list(case.exterior.coords), 'cav': list(G['cavity'].exterior.coords)}
     json.dump(spec, open('left%s_spec.json' % SFX, 'w'))
     pickle.dump(G, open('left%s_geo.pkl' % SFX, 'wb'))
-    import matplotlib; matplotlib.use('Agg'); import matplotlib.pyplot as plt
+    try: import matplotlib; matplotlib.use('Agg'); import matplotlib.pyplot as plt
+    except ImportError: print('no matplotlib (requirements-debug.txt): left%s_geo.png not written' % SFX); raise SystemExit
     fig, ax = plt.subplots(figsize=(18, 14))
     def pl(g, c, lw=1):
         for gg in getattr(g, 'geoms', [g]):
