@@ -77,6 +77,8 @@ MCU カバー（ウォルナット）の発注用 DXF を `production/mcu_cover/
 `oneshot/` は PCB・プレートを直接書き換えた一回限りのスクリプト（記録として残す）。いずれも（2026-10-03〜04 に適用済み。再実行すると二重に入る／tongue_edge は assert で止まる）。
 - `mag_notch.py`：左 PCB・左プレート・右プレート（鏡像）の右下の縁に、φ6 磁石の柱用の半円の切り欠きを入れる（中心は `casegeo.MAG_NOTCH`）。左 PCB の ROW4 は先に手で引き直してある。
 - `j1_stock.py`（2026-11-01 適用済み）：右 PCB の J1 のフットプリントとシンボルを、roBa のもの（GPL-3.0）から KiCad 標準へ。パッドの位置と結線は変えない。
+- `sclk_corners.py`（2026-11-01 適用済み）：右 PCB の SCLK の45°の折り返しと行き止まり、COL4 / Net-(D28-A) / ROW4 の鋭角と重なりをなくし、センサー配線の近くと舌に GND ビアを13個追加。適用後に `kicad-cli pcb drc --refill-zones --save-board`。
+- `tongue_golden.py`（2026-11-01 適用済み）：右 PCB の J1 の舌を J1 の軸（x 166.64）で左右対称に。幅 6.48、長さ = 幅×φ³、先端は半円、根元 R = 半幅/φ。新しい外形は元の内側。SDIO / MOTION は左の F.Cu、SCLK は左・CS / 3.3V は右の B.Cu で、舌の信号ビアは無し。適用後に `kicad-cli pcb drc --refill-zones --save-board`。
 - `xiao_own.py`（2026-11-01 適用済み）：`mx/right` と `ec/main` の XIAO のフットプリントとシンボルを、Seeed のもの（CC BY-SA 4.0）から自作（`pcb/modules/`）へ。銅箔・穴・切り抜きは同じで、シルクとシンボルの本体が変わる。
 - `j1_thin_pin.py`（2026-10-29）：右 PCB の J1 を細ピンのL字ヘッダ用に x 166.64 へ。丸ピンソケットの胴が当たる舌の左下を x 163.4 まで削り、SDIO / MOTION を引き直し。適用後に `kicad-cli pcb drc --refill-zones --save-board`。
 - `tongue_trim.py`（2026-10-06）：右 PCB の J1 の舌の左の辺を 158.9→159.9（センサー基板との隙間）。SDIO / MOTION を J1 の右側へ引き直し（MOTION はビアで裏面）、GND のステッチビアを2つ。適用後に `kicad-cli pcb drc --refill-zones --save-board`。
