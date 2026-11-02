@@ -5,6 +5,8 @@
 
 ![keyboard image](docs/images/kle.png)
 
+**[ギャラリーサイト](https://diwamoto.github.io/sage60/)**: 3D モデルと構造の解説（`case/site/`）
+
 ## ディレクトリ
 
 | パス | 中身 |

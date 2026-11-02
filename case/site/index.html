@@ -1,0 +1,555 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>sage60</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* layout: one live 3D model pinned behind a scrolling story; Docs reuses the same model beside the text. Single light look, a studio backdrop for a dark anodised case. */
+:root{
+ color-scheme:light;
+ --bg:#e4e6e8;--bg2:#f4f5f6;--ink:#17191c;--mute:#5d636b;--line:#c9cdd2;--walnut:#6a4228;--panel:#ffffff;
+ --sans:"Hanken Grotesk","Zen Kaku Gothic New",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+ --nav:52px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg2);color:var(--ink);font:400 16px/1.8 var(--sans);-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-weight:600;text-wrap:balance;margin:0;line-height:1.2}
+p{margin:0}
+a{color:inherit}
+code{font:400 .86em var(--mono)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--walnut);outline-offset:2px}
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;height:var(--nav);display:flex;align-items:center;gap:24px;background:rgba(244,245,246,.86);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg2)}
+nav .logo{font-weight:600;font-size:1.05rem;text-decoration:none;margin-right:auto;letter-spacing:-.01em}
+nav a:not(.logo){text-decoration:none;font-size:.88rem;color:var(--mute)}
+nav a[aria-current=page]{color:var(--ink);font-weight:500}
+
+#stage{position:relative;width:100%;height:100%;background:radial-gradient(90% 80% at 55% 42%,#f6f7f8 0,var(--bg) 72%);overflow:hidden;cursor:grab;touch-action:pan-y}
+#stage:active{cursor:grabbing}
+#stage canvas{display:block;width:100%;height:100%}
+.ctl{position:absolute;right:max(16px,env(safe-area-inset-right,0px));bottom:16px;display:flex;gap:2px;background:rgba(255,255,255,.75);backdrop-filter:blur(8px);border-radius:99px;padding:3px;z-index:2}
+.ctl button{border:0;background:none;border-radius:99px;padding:5px 14px;font-size:.8rem;cursor:pointer;color:var(--mute);min-height:30px}
+.ctl button[aria-pressed=true]{background:var(--ink);color:#fff}
+.hint{position:absolute;left:max(16px,env(safe-area-inset-left,0px));bottom:20px;font:400 .72rem var(--mono);color:var(--mute);z-index:2;pointer-events:none}
+#fail{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--mute)}
+
+.story{display:grid;grid-template-columns:minmax(0,1fr)}
+.pin{grid-area:1/1;position:sticky;top:calc(var(--nav) + env(safe-area-inset-top,0px));height:calc(100vh - var(--nav));height:calc(100dvh - var(--nav));min-height:420px}
+.pin::after{content:"";position:absolute;inset:0 auto 0 0;width:min(680px,52%);background:linear-gradient(90deg,var(--bg) 0,var(--bg) 62%,transparent);pointer-events:none;z-index:1}
+.steps{grid-area:1/1;z-index:1;pointer-events:none;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+.step{min-height:92vh;display:flex;flex-direction:column;justify-content:center;gap:14px;max-width:390px;margin-left:max(0px,calc((100vw - 1320px)/2))}
+.step>*{pointer-events:auto;width:fit-content}
+.step:first-child{min-height:calc(100vh - var(--nav));max-width:600px;justify-content:flex-start;padding-top:7vh}
+.step:last-child{min-height:80vh}
+.step h1{font-size:clamp(3.6rem,10vw,7.6rem);letter-spacing:-.045em;line-height:.95}
+.step h2{font-size:clamp(1.7rem,3vw,2.5rem);letter-spacing:-.015em}
+.lead{font-size:clamp(1.05rem,1.8vw,1.3rem);line-height:1.6;font-weight:500}
+.step p:not(.lead){color:#3e434a}
+.fig{display:flex;gap:26px;flex-wrap:wrap}
+.fig div{display:grid}
+.fig b{font-weight:500;font-size:1.65rem;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.3}
+.fig span{font-size:.76rem;color:var(--mute)}
+.btn{display:inline-block;padding:9px 20px;background:var(--ink);color:#fff;border-radius:99px;text-decoration:none;font-size:.9rem;font-weight:500}
+.tl{color:var(--walnut);text-decoration:none;font-size:.92rem;font-weight:500}
+
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));padding-block:96px}
+.spec{background:var(--bg2);position:relative;z-index:2}
+.spec h2{font-size:clamp(2rem,4vw,3.2rem);letter-spacing:-.02em;margin-bottom:36px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:.93rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:12px 18px 12px 0;border-bottom:1px solid var(--line);vertical-align:top;font-weight:400}
+thead th{font-weight:600;font-size:1.05rem;border-bottom:1px solid var(--ink)}
+tbody th{color:var(--mute);width:24%}
+footer{border-top:1px solid var(--line);font-size:.78rem;color:var(--mute);background:var(--bg2);position:relative;z-index:2}
+footer .wrap{padding-block:26px;display:flex;flex-wrap:wrap;gap:6px 24px;justify-content:space-between}
+
+#docs{display:grid;grid-template-columns:190px minmax(0,1fr) minmax(0,42%);align-items:start}
+.toc{position:sticky;top:calc(var(--nav) + env(safe-area-inset-top,0px));padding:28px 12px 28px max(20px,env(safe-area-inset-left,0px));display:grid;gap:2px;font-size:.84rem;max-height:calc(100vh - var(--nav));overflow:auto}
+.toc a{text-decoration:none;color:var(--mute);padding:3px 0;line-height:1.5}
+.toc a.on{color:var(--ink);font-weight:500}
+.toc b{font-size:.72rem;font-weight:500;color:var(--mute);margin-top:12px}
+article{padding:44px 40px 120px 24px;min-width:0;display:grid;gap:64px}
+article h1{font-size:2.6rem;letter-spacing:-.02em;margin-bottom:12px}
+article section{display:grid;gap:14px;scroll-margin-top:calc(var(--nav) + 24px)}
+article section>*{min-width:0;max-width:66ch}
+article h2{font-size:1.45rem}
+article h3{font-size:1rem;margin-top:8px}
+article ul{margin:0;padding-left:1.15em;display:grid;gap:7px}
+article .tbl{max-width:100%}
+article table{font-size:.86rem;min-width:430px}
+article td,article th{padding:9px 14px 9px 0}
+.docpin{position:sticky;top:calc(var(--nav) + env(safe-area-inset-top,0px));height:calc(100vh - var(--nav));height:calc(100dvh - var(--nav))}
+.note{font-size:.84rem;color:var(--mute)}
+pre{font:400 .78rem/1.7 var(--mono);background:#e9ebed;padding:14px;overflow-x:auto;margin:0;border-radius:6px;max-width:100%}
+.stack{width:100%;height:auto;display:block}
+.chk{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:.92rem}
+.chk b{font:500 .9rem var(--mono)}
+.tag{font-size:.72rem;font-weight:500;color:var(--walnut);margin-right:6px}
+
+@media (max-width:1040px){
+ #docs{grid-template-columns:minmax(0,1fr)}
+ .docpin{order:-1;height:34vh;z-index:5}
+ .toc{display:none}
+ article{padding:32px max(20px,env(safe-area-inset-right,0px)) 80px max(20px,env(safe-area-inset-left,0px))}
+}
+@media (max-width:760px){
+ .story{display:block}
+ .pin{height:44vh;min-height:0;z-index:3}
+ .pin::after{display:none}
+ .steps{position:relative;background:var(--bg2);padding-block:8px}
+ .step,.step:first-child,.step:last-child{min-height:0;padding-block:44px;padding-top:44px;max-width:none;margin:0}
+ .hint{display:none}
+}
+</style>
+
+<nav aria-label="メイン">
+ <a class="logo" href="#home" data-go="home">sage60</a>
+ <a href="#home" data-go="home" id="navHome">概要</a>
+ <a href="#docs" data-go="docs" id="navDocs">Docs</a>
+</nav>
+
+<div id="stage" aria-label="sage60 の 3D モデル。ドラッグで回転">
+ <div class="ctl" role="group" aria-label="モデルの切り替え">
+  <button type="button" data-v="mx">MX</button>
+  <button type="button" data-v="lp">ロープロ</button>
+ </div>
+ <span class="hint">ドラッグで回転</span>
+</div>
+
+<div id="home">
+ <div class="story">
+  <div class="pin" id="homePin"></div>
+  <div class="steps">
+   <section class="step" data-view="hero">
+    <h1>sage60</h1>
+    <p class="lead">トラックボールを抱えた、<br>金属削り出しの無線分割キーボード。</p>
+   </section>
+   <section class="step" data-view="split">
+    <h2>手の幅に、開いて置く。</h2>
+    <p>左右は完全に分かれ、ケーブルなしで Bluetooth 接続します。肩幅に合わせて好きな位置に置けます。</p>
+    <div class="fig"><div><b>58</b><span>キー</span></div><div><b>60%</b><span>配列</span></div><div><b>2</b><span>台の XIAO nRF52840</span></div></div>
+   </section>
+   <section class="step" data-view="ball">
+    <h2>ホームポジションのまま、ポインタを動かす。</h2>
+    <p>φ34 のボールは右手の親指の位置に。手前のケースを下げてカップを見せ、親指の通り道を空けました。カップは磁石 2 個で固定します。</p>
+   </section>
+   <section class="step" data-view="tilt">
+    <h2 id="tiltH">傾きは、机に当たる面だけで。</h2>
+    <p id="tiltP">内部はプレート面を基準に作り、底面だけを 7° で切っています。手前の高さは約 20 mm、奥は約 35 mm です。</p>
+   </section>
+   <section class="step" data-view="explode">
+    <h2>ネジを使わず、磁石で閉じる。</h2>
+    <p>プレートはガスケットで上下から挟むだけで、ケースに固定しません。上ケースは下ケースごと被さり、φ6 の磁石 4 個で留まります。</p>
+    <a class="tl" href="#docs-gasket" data-go="docs-gasket">構造を詳しく読む →</a>
+   </section>
+   <section class="step" data-view="cover">
+    <h2>アンテナの上は、ウォルナットで。</h2>
+    <p>金属で覆うと無線が届きにくくなるので、MCU の上だけ木にしました。カバーは磁石 1 個で留まり、工具なしで外せます。</p>
+   </section>
+   <section class="step" data-view="under">
+    <h2>削り出せる形だけで、できている。</h2>
+    <p>JLCCNC の加工ルールを Fusion のモデルから自動で検査しています。アンダーカットや鋭い内角、0.8 mm 未満の肉は、4 つの版すべてで 0 件です。</p>
+    <a class="btn" href="#docs" data-go="docs">Docs を読む</a>
+   </section>
+  </div>
+ </div>
+ <section class="spec">
+  <div class="wrap">
+   <h2>2 つの高さ。</h2>
+   <div class="tbl"><table>
+    <thead><tr><th></th><th>MX</th><th>ロープロ</th></tr></thead>
+    <tbody>
+     <tr><th>スイッチ</th><td>Cherry MX 互換</td><td>Kailh Choc v2</td></tr>
+     <tr><th>傾斜</th><td>7°</td><td>なし</td></tr>
+     <tr><th>ケースの高さ</th><td>手前 約 20 mm / 奥 約 35 mm</td><td>15.1 mm（MCU の台は 20.4 mm）</td></tr>
+     <tr><th>外形（左）</th><td>147.5 × 125.8 mm</td><td>145.3 × 123.4 mm</td></tr>
+     <tr><th>外形（右）</th><td>147.5 × 131.0 mm</td><td>145.3 × 129.7 mm</td></tr>
+     <tr><th>固定</th><td colspan="2">ガスケットマウント、φ6×3 磁石（左右各 4）</td></tr>
+     <tr><th>接続</th><td colspan="2">Bluetooth LE（ZMK）、充電は USB-C</td></tr>
+     <tr><th>ポインティング</th><td colspan="2">φ34 トラックボール、PMW3610（右手）</td></tr>
+     <tr><th>バッテリー</th><td colspan="2">EEMB 552036、360 mAh（左右に 1 個ずつ）</td></tr>
+    </tbody>
+   </table></div>
+  </div>
+ </section>
+</div>
+
+<div id="docs" hidden>
+ <div class="toc" id="toc"></div>
+ <article id="art">
+  <section data-view="hero" id="docs-overview" data-toc="概要">
+   <h1>Docs</h1>
+   <p>sage60 のケースが、なぜこの形なのかをまとめた設計資料です。右の 3D モデルは、読んでいる章に合わせて動きます。寸法は MX 版の値で、ロープロ版の値は「MX とロープロ」にまとめています。</p>
+   <p class="note">座標はプレート上面を z = 0 とし、単位は mm です。数値の正はリポジトリの <code>case/casegeo.py</code> と <code>case/fusion/stage0.py</code> です。キーキャップは形を確かめるための簡易形状です。</p>
+  </section>
+
+  <section data-view="explode" id="docs-structure" data-toc="全体の構造" data-group="構造">
+   <h2>全体の構造</h2>
+   <p>下から順に、下ケース、PCB、プレート、上ケース、キーキャップと重なります。上ケースは下ケースごと上から被さる形で、外から合わせ目が見えにくくなります。</p>
+   <p>右は左を x = 122.92 で反転し、トラックボールの分を足した形です。プレートは左右で別の部品です。</p>
+   <ul>
+    <li>天面のベゼルは約 5.3 mm</li>
+    <li>上ケースの外壁は 2 mm、外側の角は R2.5、天面の外周は 0.5 mm の面取り</li>
+    <li>奥の外形は、左右の奥の角を通る 1 本の円弧</li>
+   </ul>
+  </section>
+
+  <section data-view="stack" id="docs-gasket" data-toc="ガスケットマウント">
+   <h2>ガスケットマウント</h2>
+   <p>プレートのタブ（3.4 mm）を、下ケースの棚と上ケース外壁の内側の段差で上下から挟みます。プレートはケースに固定されず、ガスケットの上で浮きます。</p>
+   <figure style="margin:0"><svg class="stack" id="stack" viewBox="0 0 560 300" role="img" aria-label="MX とロープロの高さ方向の積層図"></svg></figure>
+   <p class="note">プレート上面を基準にした高さの積層図で、縮尺は実寸どおりです。</p>
+   <ul>
+    <li>段差は外壁と一体の肉厚部です。独立した突起にしないのは、強度と加工のためです。</li>
+    <li>溝の幅はタブの先端 + 0.6 mm（最低 17 mm）、角は R1 です。</li>
+    <li>ガスケットの厚さは MX が 1.5 mm（仮）、ロープロは 1 mm を 0.8 mm に潰します。</li>
+   </ul>
+  </section>
+
+  <section data-view="open" id="docs-magnet" data-toc="磁石で閉じる">
+   <h2>磁石で閉じる</h2>
+   <p>φ6×3 の磁石を上ケースのリング下面と下ケースの棚に向かい合わせ、左右各 4 か所で留めます。上下で極性を揃えるので、向きを間違えると閉まりません。穴の周りの壁は 0.8 mm です。</p>
+   <ul>
+    <li>左：奥に 2 個、親指の段差に 1 個、右下の切り欠きに 1 個</li>
+    <li>右：奥に 2 個、左の辺の切り欠きに 1 個、右手前に 1 個</li>
+   </ul>
+  </section>
+
+  <section data-view="floor" id="docs-floor" data-toc="床とバッテリー">
+   <h2>床とバッテリー</h2>
+   <p>MX の床は水平で、深さは 11 mm です。ソケットの下に吸音フォーム用の隙間が 2.6 mm 残ります。傾斜は机側の面だけなので、床の厚さは手前の 2 mm から奥へ増えていきます。</p>
+   <p>バッテリー EEMB 552036（5.5 × 20 × 36）は、JST コネクタの左に横向きで置きます。ここだけ深さ 14.4 mm まで掘り、ほかは埋めています。ロープロは空洞全体がバッテリーの深さ（11.6 mm）です。</p>
+  </section>
+
+  <section data-view="tilt" id="docs-tilt" data-toc="傾斜とゴム足">
+   <h2>傾斜とゴム足</h2>
+   <p>内部はすべてプレート面を基準に作り、底面だけを 7° で切ります。ロープロは傾斜なしです。φ10 のゴム足を机側の四隅の凹みに貼ります。</p>
+   <p>上ケースの外壁も机まで下ろし、下端を同じ傾斜で切っています。机の上から下ケースは見えません。</p>
+  </section>
+
+  <section data-view="cover" id="docs-mcu" data-toc="MCU カバーと USB" data-group="部位">
+   <h2>MCU カバーと USB</h2>
+   <p>XIAO のアンテナのため、MCU の上は金属で覆いません。ウォルナットのカバーが開口から外壁の外面までを覆い、内側の辺はキーキャップを避けます。厚さは MX が 3.0 mm、ロープロが 2.5 mm です。発注は DXF です。</p>
+   <p>固定は磁石 1 個です。M2 のタップはいずれ緩むのでやめました。上ケースの保持部に φ6×3 を入れ、カバー裏の φ8×0.5 の鉄の円板を吸い付けます。</p>
+   <p>USB はレセプタクルが面一になる形です。外から差込口の面まで上が開いた溝を掘り、上はカバーが閉じます。ケーブルの成形部は 12.5 × 7 まで通ります。</p>
+  </section>
+
+  <section data-view="switch" id="docs-switch" data-toc="スライドスイッチ">
+   <h2>スライドスイッチ</h2>
+   <p>3 ピン THT（2.54 mm）で、つまみは外壁側を向きます。指を入れる凹みとつまみまでの穴は、上から切る溝です。横穴にしないので、段取りが増えません。</p>
+  </section>
+
+  <section data-view="ball" id="docs-ball" data-toc="トラックボール">
+   <h2>トラックボール</h2>
+   <p>カップは roBa 由来の改造版 <code>trackballcase_low</code> で、回転はしません。耳に φ6×3 を埋め、下ケースの磁石と引き合わせます。横方向はポケットで決まります。<strong style="font-weight:500">支持球は非磁性（セラミックかジルコニア）にします。</strong></p>
+   <ul>
+    <li>ボールの奥は上ケースを削ります。PCB の縁が見えますが、覆うと 2〜4 mm の細い帯が残るため、この形にしました。</li>
+    <li>ボールの手前は枠を残し、天面だけ下げます（MX 7 mm、ロープロ 0.7 mm）。範囲の端は外壁に直角に切り、くさびを作りません。</li>
+    <li>親指とボールの間の凹みは直線で埋め、手前は 1 つの凸包にしています。</li>
+   </ul>
+  </section>
+
+  <section data-view="ballopen" id="docs-j1" data-toc="J1 コネクタ">
+   <h2>J1 コネクタ</h2>
+   <p>センサー基板と PCB をつなぐコネクタです。センサー基板の側面に丸ピンソケット 6604S を 7 本に切って付け、PCB に細ピンの L 字ヘッダ PHA-1x40RG を立てます。ピンを 2.5 mm に切り、ハウジングをソケットに突き当てるので、ピンは見えません。</p>
+   <h3>組み立て順</h3>
+   <p>下ケース、PCB とプレート、センサー基板を差す、上ケースとトラックボールケース、の順です。</p>
+  </section>
+
+  <section data-view="compare" id="docs-variants" data-toc="MX とロープロ" data-group="仕様">
+   <h2>MX とロープロ</h2>
+   <p>PCB とプレート（1.2 mm）は共通です。構造は同じで、数値だけが変わります。ロープロの方針は、余白と隙間を詰めて薄くすることです。右上のボタンでモデルを切り替えられます。</p>
+   <div class="tbl"><table>
+    <thead><tr><th></th><th>MX</th><th>ロープロ</th></tr></thead>
+    <tbody>
+     <tr><th>PCB 上面</th><td>−5.0</td><td>−2.2</td></tr>
+     <tr><th>天面</th><td>+7.0</td><td>+2.0</td></tr>
+     <tr><th>空洞の深さ</th><td>11（電池部 14.4）</td><td>11.6</td></tr>
+     <tr><th>MCU 部</th><td>外壁を +3.9 まで下げる</td><td>天面より高い台 +4.8</td></tr>
+     <tr><th>カバーの上面</th><td>+6.9</td><td>+7.3</td></tr>
+     <tr><th>磁石穴（上 / 下）</th><td>3.1 / 3.1</td><td>2.1 / 4.1（位置決めを兼ねる）</td></tr>
+     <tr><th>外壁 / 嵌め合い</th><td>2 / 0.3</td><td>1.5 / 0.2</td></tr>
+     <tr><th>トラックボール座面</th><td>−9.0</td><td>−6.2</td></tr>
+    </tbody>
+   </table></div>
+  </section>
+
+  <section data-view="under" id="docs-cnc" data-toc="CNC と検証">
+   <h2>CNC と検証</h2>
+   <p>本番は JLCCNC のアルミ削り出し、試作は 3D プリントです。形は Python が計算して Fusion で作り直すので、検査もスクリプトで繰り返せます。段取りは 2 回です。</p>
+   <h3>加工ルール</h3>
+   <div class="chk">
+    <b>0</b><span>アンダーカット</span>
+    <b>0</b><span>鋭い内角、深さに足りない内角 R（R ≥ H/10 + 0.5）</span>
+    <b>0</b><span>深すぎる穴（深さ &gt; 径 × 4）</span>
+    <b>0</b><span>0.8 mm 未満の肉</span>
+   </div>
+   <p class="note"><code>case/cnc_*.json</code> の 4 版すべて、上下ケースとも 0 件です。</p>
+   <h3>干渉チェック</h3>
+   <p><code>fusion/check.py</code> と <code>check_parts.py</code> で、PCB、部品、キーキャップの押し込み、USB プラグの通り道、トラックボールケースなどとケースの重なりを調べます。形を変えたら全部 0 にします。</p>
+  </section>
+
+  <section data-view="hero" id="docs-build" data-toc="作り直し方と製造データ">
+   <h2>作り直し方と製造データ</h2>
+   <pre>cd case
+./venv/bin/python make_left.py &amp;&amp; ./venv/bin/python make_right.py
+SAGE60_LP=1 ./venv/bin/python make_left.py &amp;&amp; SAGE60_LP=1 ./venv/bin/python make_right.py
+# Fusion: fusion/stage0〜3（右は stage4）、stage5、右は最後に stage6
+# 検証: fusion/check.py, check_parts.py, machinability.py
+./venv/bin/python site/build_models.py   # このサイトの 3D モデル</pre>
+   <ul>
+    <li><code>production/case_cnc/</code>：ケースの STEP（JLCCNC）</li>
+    <li><code>production/case_print/</code>：試作用の 3MF</li>
+    <li><code>production/plate/</code>：プレートの DXF、STEP、3MF</li>
+    <li><code>production/mcu_cover/</code>：カバーの DXF</li>
+   </ul>
+  </section>
+
+  <section data-view="hero" id="docs-open" data-toc="未決事項">
+   <h2>未決事項</h2>
+   <ul>
+    <li>ガスケット厚（MX は仮の 1.5 mm）とクリアランスの確定値は、実物で決めます。</li>
+    <li>Choc v2 の取付高さ 2.2 mm は v1 と同じと仮定しています（未実測）。</li>
+    <li>スライドスイッチの開口の高さは、部品が決まってからつまみに合わせます。</li>
+    <li>MCU カバーは外壁側をひねると回ります。気になればピンを足します。</li>
+   </ul>
+  </section>
+ </article>
+ <div class="docpin" id="docPin"></div>
+</div>
+
+<footer><div class="wrap">
+ <span>sage60 は個人製作のプロトタイプです。販売はしていません。</span>
+ <span>Trackball case: Keyball Trackball Case © kepeo (<a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>), modified by <a href="https://github.com/kumamuk-git/roBa">roBa</a> and <a href="https://github.com/Diwamoto/roBa/tree/sage60/sage60">this fork</a> (GPL-3.0), which the page loads it from</span>
+</div></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/utils/BufferGeometryUtils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/environments/RoomEnvironment.js"></script>
+<script>
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const CX = 122.92, CY = -75, RAD = Math.PI / 180;
+// how far each part lifts when exploded, mm
+const LIFT = {bottom:0, tb:32, ball:70, pcb:26, plate:52, sw:52, top:90, cover:124, caps:150};
+// views: focus half (both / L / R), target (production coords of that half, or scene coords for both), azimuth, elevation, distance, explode, hidden parts
+const VIEWS = {
+ hero:   {f:'both', t:[0,-4,0],      az:-12, el:46, d:620},
+ split:  {f:'both', t:[0,-4,0],      az:14,  el:26, d:640},
+ ball:   {f:'R', t:[128,-110,8],      az:-24, el:40, d:205},
+ tilt:   {f:'R', t:[105,-78,0],       az:-90, el:4,  d:400},
+ explode:{f:'L', t:[98,-75,70],       az:22,  el:18, d:560, ex:1},
+ cover:  {f:'L', t:[140,-30,2],       az:205, el:32, d:300},
+ under:  {f:'L', t:[122,-75,-8],      az:18,  el:-48, d:640},
+ stack:  {f:'L', t:[122,-75,0],       az:-30, el:32, d:330, hide:['caps','top','cover','sw']},
+ open:   {f:'R', t:[122,-75,-5],      az:-16, el:58, d:340, hide:['caps','top','cover','plate','sw','pcb','tb','ball']},
+ floor:  {f:'L', t:[122,-75,-8],      az:12,  el:62, d:320, hide:['caps','top','cover','plate','sw','pcb']},
+ switch: {f:'L', t:[190,-52,-2],      az:68,  el:20, d:170},
+ ballopen:{f:'R',t:[150,-118,0],      az:40,  el:42, d:240, hide:['top','caps','cover','plate','sw','ball']},
+ compare:{f:'R', t:[105,-78,0],       az:-62, el:16, d:420},
+};
+const S = {variant:'mx', view:'hero', tx:0,ty:0,tz:0, az:0,el:40,d:560, ex:0, lx:-84,rx:84, rot:1, ua:0,ue:0, first:true};
+const halves = {}; let man, renderer, scene, cam, dirty = true, last = 0;
+
+function woodTexture(){
+ const c = document.createElement('canvas'); c.width = c.height = 1024; const g = c.getContext('2d');
+ g.fillStyle = '#44291a'; g.fillRect(0,0,1024,1024);
+ for (let i = 0; i < 420; i++){
+  const y0 = Math.random()*1024, a = Math.random()*14+4, f = Math.random()*.006+.002, p = Math.random()*9;
+  g.strokeStyle = `rgba(${Math.random()<.55?'24,12,6':'142,98,62'},${Math.random()*.28+.04})`; g.lineWidth = Math.random()*2.6+.4;
+  g.beginPath(); for (let x = 0; x <= 1024; x += 16) g.lineTo(x, y0 + Math.sin(x*f+p)*a); g.stroke();
+ }
+ const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.encoding = THREE.sRGBEncoding; return t;
+}
+function initGL(){
+ renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+ renderer.outputEncoding = THREE.sRGBEncoding; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = .95;
+ renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+ $('#stage').prepend(renderer.domElement);
+ scene = new THREE.Scene(); scene.up = new THREE.Vector3(0,0,1);
+ cam = new THREE.PerspectiveCamera(24, 1, 10, 4000); cam.up.set(0,0,1);
+ scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new THREE.RoomEnvironment(), .04).texture;
+ const sun = new THREE.DirectionalLight(0xffffff, 1.15); sun.position.set(-160,-120,520); sun.castShadow = true;
+ sun.shadow.mapSize.set(2048,2048); Object.assign(sun.shadow.camera, {left:-340,right:340,top:340,bottom:-340,near:50,far:1100}); sun.shadow.bias = -.0006; sun.shadow.radius = 7;
+ scene.add(sun);
+ scene.add(new THREE.HemisphereLight(0xffffff, 0x9a9a9a, .55));
+ const fill = new THREE.DirectionalLight(0xffffff, .7); fill.position.set(100,-200,-300); scene.add(fill);
+ const g = new THREE.Mesh(new THREE.PlaneGeometry(4000,4000), new THREE.ShadowMaterial({opacity:.2})); g.receiveShadow = true; g.name = 'ground'; scene.add(g);
+ const wood = woodTexture();
+ scene.userData.M = {
+  bottom:new THREE.MeshStandardMaterial({color:0x1d1f22, metalness:.45, roughness:.44, envMapIntensity:.2, side:THREE.DoubleSide}),
+  top:new THREE.MeshStandardMaterial({color:0x1d1f22, metalness:.45, roughness:.44, envMapIntensity:.2, side:THREE.DoubleSide}),
+  cover:new THREE.MeshStandardMaterial({map:wood, roughness:.6, envMapIntensity:.14, side:THREE.DoubleSide}),
+  plate:new THREE.MeshStandardMaterial({color:0xd4a437, metalness:.9, roughness:.32, envMapIntensity:.7, side:THREE.DoubleSide}),
+  pcb:new THREE.MeshStandardMaterial({color:0x0b0c0d, roughness:.55, envMapIntensity:.06}),
+  sw:new THREE.MeshStandardMaterial({color:0x101113, roughness:.5, envMapIntensity:.25}),
+  caps:new THREE.MeshStandardMaterial({color:0x121315, roughness:.58, envMapIntensity:.35}),
+  tb:new THREE.MeshStandardMaterial({color:0x1b1c1f, roughness:.55, envMapIntensity:.2, side:THREE.DoubleSide}),
+  ball:new THREE.MeshPhysicalMaterial({color:0x0b3fb0, roughness:.2, clearcoat:1, clearcoatRoughness:.08, envMapIntensity:.5}),
+ };
+ new ResizeObserver(resize).observe($('#stage'));
+ resize();
+ requestAnimationFrame(frame);
+}
+function resize(){
+ const b = $('#stage').getBoundingClientRect(); if (!b.width || !b.height) return;
+ renderer.setSize(b.width, b.height, false); cam.aspect = b.width/b.height;
+ // on the home page text sits on the left, so the model moves right of centre
+ if (b.width > 760 && !$('#home').hidden) cam.setViewOffset(b.width, b.height, -b.width*.15, 0, b.width, b.height); else cam.clearViewOffset();
+ cam.updateProjectionMatrix(); dirty = true;
+}
+async function stlPositions({url, at}){
+ const r = await fetch(url); if (!r.ok) throw new Error(url+': '+r.status);
+ const d = new DataView(await r.arrayBuffer()), p = new Float32Array(d.getUint32(80, true)*9);
+ for (let i=0;i<p.length;i++) p[i] = d.getFloat32(84 + 50*Math.floor(i/9) + 12 + 4*(i%9), true) + at[i%3];   // binary STL: 50 bytes a face, normal first
+ return p;
+}
+async function loadVariant(v){
+ const out = {};
+ for (const [side, k] of [['left','L'],['right','R']]){
+  const info = man.parts[v+k], H = new THREE.Group(), T = new THREE.Group(), meshes = {};
+  // tilt so the desk face lies flat, centred on the half
+  T.quaternion.setFromUnitVectors(new THREE.Vector3(...info.n), new THREE.Vector3(0,0,-1));
+  H.add(T);
+  const add = (part, pos) => {
+   let g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+   g = THREE.BufferGeometryUtils.toCreasedNormals(g, 32*RAD);
+   if (part === 'cover'){ const p = g.attributes.position, uv = new Float32Array(p.count*2); for (let i=0;i<p.count;i++){uv[2*i]=p.getY(i)/70; uv[2*i+1]=p.getX(i)/70;} g.setAttribute('uv', new THREE.BufferAttribute(uv,2)); }
+   meshes[part] = new THREE.Mesh(g, scene.userData.M[part]);
+  };
+  await Promise.all([
+   ...Object.entries(info.parts).map(async ([part, f]) => add(part, new Float32Array(Uint8Array.from(atob(await (await fetch('models/'+f)).text()), c => c.charCodeAt(0)).buffer))),
+   // the cup lives in the GPL fork; without it the rest of the model still shows
+   info.tb && stlPositions(info.tb).then(p => add('tb', p)).catch(console.error),
+  ]);
+  if (info.ball){ const [x,y,z,r] = info.ball, b = new THREE.Mesh(new THREE.SphereGeometry(r,64,48), scene.userData.M.ball); b.position.set(x,y,z); b.userData.z0 = z; meshes.ball = b; }
+  for (const m of Object.values(meshes)){ m.castShadow = m.receiveShadow = true; T.add(m); }
+  // desk height: lowest point of the bottom case after the tilt
+  const box = new THREE.Box3(); H.updateMatrixWorld(true);
+  for (const part of ['bottom','top']) box.expandByObject(meshes[part]);
+  H.userData = {T, meshes, z0:-box.min.z};
+  H.position.z = -box.min.z; H.visible = false; scene.add(H);
+  out[k] = H;
+ }
+ halves[v] = out;
+}
+// local production coords -> offset from the half's centre
+const CENTER = new THREE.Vector3(CX, CY, 0);
+function layout(){
+ const hs = halves[S.variant]; if (!hs) return;
+ for (const v in halves) for (const k in halves[v]) halves[v][k].visible = v === S.variant;
+ const place = (H, x, rot) => {
+  H.rotation.z = rot; H.position.x = x; H.position.y = 0;
+  H.updateMatrix(); const c = CENTER.clone().applyQuaternion(H.userData.T.quaternion).applyAxisAngle(new THREE.Vector3(0,0,1), rot);
+  H.position.x -= c.x; H.position.y -= c.y;
+ };
+ place(hs.L, S.lx, -S.rot*9*RAD); place(hs.R, S.rx, S.rot*9*RAD);
+ const V = VIEWS[S.view], hide = V.hide || [];
+ for (const k of ['L','R']) for (const [part, m] of Object.entries(hs[k].userData.meshes)){
+  const lift = LIFT[part]*S.ex; m.visible = !hide.includes(part);
+  if (part === 'ball') m.position.z = m.userData.z0 + lift; else m.position.z = lift;
+ }
+}
+function targetOf(V){
+ const hs = halves[S.variant];
+ if (V.f === 'both' || !hs) return new THREE.Vector3(...V.t);
+ const H = hs[V.f]; H.updateMatrixWorld(true);
+ return H.userData.T.localToWorld(new THREE.Vector3(...V.t));
+}
+function frame(){
+ requestAnimationFrame(frame);
+ const now = performance.now(), dt = Math.min(.2, (now-last)/1000); last = now;
+ const V = VIEWS[S.view], k = S.first || matchMedia('(prefers-reduced-motion:reduce)').matches ? 1 : 1-Math.exp(-dt*6);
+ const go = (n, to) => { const d = to - S[n]; if (Math.abs(d) > 1e-3){ S[n] += d*k; dirty = true; } else S[n] = to; };
+ go('lx', V.f==='R' ? -520 : V.f==='L' ? 0 : -84); go('rx', V.f==='L' ? 520 : V.f==='R' ? 0 : 84); go('rot', V.f==='both'?1:0);
+ go('ex', V.ex||0); go('az', V.az); go('el', V.el); go('d', V.d);
+ if (!dirty || !halves[S.variant]) return;
+ layout();
+ const t = targetOf(V); go('tx', t.x); go('ty', t.y); go('tz', t.z);
+ if (S.first){ S.tx=t.x; S.ty=t.y; S.tz=t.z; S.first=false; }
+ const d = S.d*Math.min(2.2, Math.max(1, 1.75/cam.aspect));
+ const a = (S.az+S.ua)*RAD, e = Math.max(-80*RAD, Math.min(82*RAD, (S.el+S.ue)*RAD));
+ cam.position.set(S.tx + d*Math.sin(a)*Math.cos(e), S.ty - d*Math.cos(a)*Math.cos(e), S.tz + d*Math.sin(e));
+ cam.lookAt(S.tx,S.ty,S.tz);
+ scene.getObjectByName('ground').visible = cam.position.z > 0;
+ renderer.render(scene, cam);
+ dirty = false;
+}
+function setView(n){ if (S.view===n || !VIEWS[n]) return; S.view = n; S.ua = S.ue = 0; dirty = true; }
+
+// drag to look around; the next view resets it
+let drag = null;
+const st = $('#stage');
+st.addEventListener('pointerdown', e => { if (e.target.closest('.ctl')) return; drag = [e.clientX, e.clientY]; st.setPointerCapture(e.pointerId); });
+st.addEventListener('pointermove', e => { if (!drag) return; S.ua -= (e.clientX-drag[0])*.35; S.ue += (e.clientY-drag[1])*.25; drag = [e.clientX,e.clientY]; dirty = true; });
+for (const n of ['pointerup','pointercancel']) st.addEventListener(n, () => drag = null);
+
+// variant
+async function setVariant(v){
+ S.variant = v; for (const b of $$('.ctl button')) b.setAttribute('aria-pressed', b.dataset.v===v);
+ $('#tiltH').textContent = v==='mx' ? '傾きは、机に当たる面だけで。' : 'ロープロは、水平で薄く。';
+ $('#tiltP').textContent = v==='mx' ? '内部はプレート面を基準に作り、底面だけを 7° で切っています。手前の高さは約 20 mm、奥は約 35 mm です。'
+  : 'ロープロは傾斜なしで、ケースの高さは 15.1 mm です。XIAO のカバーをケーブルの成形部の上に通すため、MCU の部分だけ 20.4 mm の台になっています。';
+ if (renderer && !halves[v]) await loadVariant(v);
+ dirty = true;
+}
+$('.ctl').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setVariant(b.dataset.v); });
+
+// pages
+function route(hash){
+ const h = hash || 'home', docs = h.startsWith('docs');
+ $('#home').hidden = docs; $('#docs').hidden = !docs;
+ $(docs ? '#docPin' : '#homePin').append(st);
+ $('#navHome').toggleAttribute('aria-current', false); $('#navDocs').toggleAttribute('aria-current', false);
+ $(docs ? '#navDocs' : '#navHome').setAttribute('aria-current','page');
+ const el = docs && h !== 'docs' ? document.getElementById(h) : null;
+ if (el) el.scrollIntoView(); else scrollTo(0,0);
+ if (renderer) resize();
+}
+document.addEventListener('click', e => {
+ const a = e.target.closest('[data-go]'); if (!a) return;
+ e.preventDefault(); history.replaceState(null,'','#'+a.dataset.go); route(a.dataset.go);
+});
+// docs contents
+$('#toc').innerHTML = $$('#art section').map(s => (s.dataset.group ? `<b>${s.dataset.group}</b>` : '') + `<a href="#${s.id}" data-go="${s.id}" data-t="${s.id}">${s.dataset.toc}</a>`).join('');
+// scrolling picks the view
+const io = new IntersectionObserver(es => { for (const e of es) if (e.isIntersecting){
+ setView(e.target.dataset.view);
+ for (const a of $$('.toc a')) a.classList.toggle('on', a.dataset.t === e.target.id);
+}}, {rootMargin:'-46% 0px -46% 0px'});
+$$('[data-view]').forEach(s => io.observe(s));
+
+// section stack, drawn to scale from the Z values in stage0.py
+(function(){
+ const R = (a,b,n,f,fg='#fff') => ({a,b,n,f,fg});
+ const col = [
+  {x:120, n:'MX', r:[R(6,13.5,'キーキャップ','#cfcfca','#17191c'),R(0,7,'上ケース','#303236'),R(-1.2,0,'','#d4a437'),R(-6.6,-5,'PCB','#0b0c0d'),R(-8.4,-6.6,'ソケット','#9aa0a6','#17191c'),R(-13,-11,'床','#303236')], lab:[['+7 天面',7],['0 プレート上面',0],['−5 PCB 上面',-5],['−11 床',-11]]},
+  {x:350, n:'ロープロ', r:[R(3.3,6.8,'キーキャップ','#cfcfca','#17191c'),R(0,2,'上ケース','#303236'),R(-1.2,0,'','#d4a437'),R(-3.8,-2.2,'PCB','#0b0c0d'),R(-5.6,-3.8,'ソケット','#9aa0a6','#17191c'),R(-11.1,-5.6,'バッテリー','#b6a98f','#17191c'),R(-13.1,-11.6,'床','#303236')], lab:[['+2 天面',2],['0 プレート上面',0],['−2.2 PCB 上面',-2.2],['−11.6 床',-11.6]]},
+ ];
+ const s = 10, y = z => 172 - z*s; let o = '';
+ for (const c of col){
+  o += `<text x="${c.x}" y="20" font-size="14" font-weight="600" fill="#17191c">${c.n}</text>`;
+  for (const r of c.r){
+   o += `<rect x="${c.x}" y="${y(r.b)}" width="86" height="${(r.b-r.a)*s}" fill="${r.f}"/>`;
+   if (r.n) o += `<text x="${c.x+43}" y="${y((r.a+r.b)/2)+4}" font-size="10.5" text-anchor="middle" fill="${r.fg}">${r.n}</text>`;
+  }
+  for (const [t,z] of c.lab) o += `<line x1="${c.x+86}" x2="${c.x+96}" y1="${y(z)}" y2="${y(z)}" stroke="#5d636b"/><text x="${c.x+100}" y="${y(z)+4}" font-size="11" fill="#5d636b" font-family="JetBrains Mono,monospace">${t}</text>`;
+ }
+ $('#stack').innerHTML = o; $('#stack').setAttribute('viewBox','110 2 450 310');
+})();
+
+// start
+route(location.hash.slice(1));
+for (const b of $$('.ctl button')) b.setAttribute('aria-pressed', b.dataset.v===S.variant);
+(async () => {
+ try {
+  initGL();
+  man = await (await fetch('models/manifest.json')).json();
+  await loadVariant('mx'); S.first = true; dirty = true;
+ } catch (e) {
+  console.error(e);
+  st.insertAdjacentHTML('beforeend','<div id="fail">3D モデルを表示できませんでした。このブラウザで WebGL が使えるか確認してください。</div>');
+ }
+})();
+</script>

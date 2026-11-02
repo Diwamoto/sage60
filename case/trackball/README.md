@@ -12,4 +12,4 @@ curl -fsSL $R/trackballcase_low.3mf -o production/case_print/trackballcase_low.3
 | --- | --- |
 | `trackballcase_low.stl`（取得） | `trackballcase_low.3mf` を z+2 して STL にしたもの。`tb.py` / `make_right.py` が読む |
 | `production/case_print/trackballcase_low.3mf`（取得） | プリント用 |
-| `tb_socket_cut.py` | `production/case_print/trackballcase_low.3mf` を加工する：J1 ソケット用の切り欠き（2026-10-28）、ネジの耳を磁石 φ6×3 の保持部にする（2026-10-29）。`trackballcase_low.stl` も書き直す。結果を変えたら fork にも入れて、上の URL のコミットを更新する |
+| `tb_socket_cut.py` | `production/case_print/trackballcase_low.3mf` を加工する：J1 ソケット用の切り欠き（2026-10-28）、ネジの耳を磁石 φ6×3 の保持部にする（2026-10-29）。`trackballcase_low.stl` も書き直す。結果を変えたら fork にも入れて、上の URL のコミットを更新し、`site/build_models.py` を流し直す（サイトはこの URL から読む） |

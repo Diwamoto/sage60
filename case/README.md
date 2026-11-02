@@ -32,7 +32,7 @@ SAGE60_LP=1 ./venv/bin/python make_left.py    # left_lp_spec.json, left_lp_geo.p
 SAGE60_LP=1 ./venv/bin/python make_right.py   # right_lp_spec.json, tb_placed_lp.stl
 ```
 Fusion では exec の globals に `'LP': True` を足す（`{'SIDE': 'left', 'LP': True}`）。check.py も `{'LP': True}`（片側だけなら `'SIDES': ('left',)`）。
-ギャラリー用の画像は `fusion/shots.py`（globals に `SIDE` / `LP` / `OUT`、1ドキュメントずつ実行）。
+サイト（`site/`）の 3D モデルは `./venv/bin/python site/build_models.py` で `production/` と KiCad から作る。形を変えたら 3MF を書き出し直してから流す。トラックボールケース（GPL-3.0）は `site/models/` に置かず、ページが fork から取得する。`main` に push すると GitHub Pages に公開される（`.github/workflows/pages.yml`）。
 平面の差分は `casegeo.py` の `LP` 分岐（CASE_OFF 3.5 / clr 0.2 / wall 1.5 / open_clr 0.5 / Zスタック）、高さ方向は `fusion/stage0.py` の `LP_PARAMS`。
 
 ## プレートの3MF（試作プリント用）
