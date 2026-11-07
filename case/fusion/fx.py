@@ -2,7 +2,7 @@ import adsk.core, adsk.fusion, json, math
 SCR = '/Users/daiki/Projects/sage60/case/'
 LP = globals().get('LP', False)          # low-profile variant: its own documents and *_lp_spec.json
 SFX = '_lp' if LP else ''
-DOC = ('sage60_lp_%s' if LP else 'sage60_%s_bottom') % globals().get('SIDE', '')
+DOC = 'sage60_case'                      # one document for every variant (Fusion personal: 10 editable docs); stage0 rebuilds it
 app = adsk.core.Application.get()
 VI = adsk.core.ValueInput
 FO = adsk.fusion.FeatureOperations

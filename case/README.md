@@ -1,6 +1,6 @@
 # sage60 ケース生成スクリプト（左右）
 
-Fusion の `sage60_left_bottom` / `sage60_right_bottom`（下ケース＋上ケース MOCK_A。A案で確定）をKiCadから作り直す。
+Fusion の `sage60_case`（左右・MX/ロープロ共用、切り替えは stage0 から作り直し。下ケース＋上ケース MOCK_A。A案で確定）をKiCadから作り直す。
 設計の前提とルールは `.claude/skills/sage60-case/SKILL.md`。
 
 ## 手順
@@ -26,7 +26,7 @@ def run(c):
 - CNC の加工性は `fusion/machinability.py`（globals に `SIDE`、ロープロは `LP`）。アンダーカット・鋭い内角・R と深さ（R ≥ H/10+0.5）・穴の深さ・肉厚 0.8 を B-Rep で調べ、`cnc_<side><sfx>.json` に書く。全部0になること（2026-10-05〜）
 
 ## ロープロファイル版（Choc、2026-10-03〜）
-同じPCB（フットプリントが MX/Choc 両対応）に Choc を載せる薄型ケース。Fusion のドキュメントは `sage60_lp_left` / `sage60_lp_right`（stage0 が無ければ Admin Project に作る）。
+同じPCB（フットプリントが MX/Choc 両対応）に Choc を載せる薄型ケース。Fusion のドキュメントは MX と同じ `sage60_case`（`LP=True` で stage0 から作り直す）。
 ```sh
 SAGE60_LP=1 ./venv/bin/python make_left.py    # left_lp_spec.json, left_lp_geo.png
 SAGE60_LP=1 ./venv/bin/python make_right.py   # right_lp_spec.json, tb_placed_lp.stl

@@ -1,7 +1,7 @@
 # interference checks for both sides (run after stage3/4; needs checkpts.json from make_checkpts.py)
 import adsk.core, adsk.fusion, json, struct
 LP = globals().get('LP', False)                 # set LP=True in the exec globals for the low-profile documents
-DOCN = 'sage60_lp_%s' if LP else 'sage60_%s_bottom'
+DOCN = 'sage60_case'
 def zs(r):
     """z stack from the document's parameters (mm): plate_t, pcb top, USB receptacle centre, trackball seat"""
     v = lambda n: r.parentDesign.userParameters.itemByName(n).value * 10
@@ -13,8 +13,8 @@ def run(_c):
     app = adsk.core.Application.get()
     P = json.load(open('/Users/daiki/Projects/sage60/case/checkpts.json'))
     IN = adsk.fusion.PointContainment.PointInsidePointContainment
-    for side in globals().get('SIDES', ('left', 'right')):
-        doc = [d for d in app.documents if d.name.startswith(DOCN % side)][0]
+    for side in globals().get('SIDES', (globals().get('SIDE', 'left'),)):
+        doc = [d for d in app.documents if d.name.startswith(DOCN)][0]
         r = adsk.fusion.Design.cast(doc.products.itemByProductType('DesignProductType')).rootComponent
         bodies = [r.bRepBodies.itemByName(n) for n in ('%s_bottom' % side, 'MOCK_A')]
         pt, top, zc, seat, _, _ = zs(r)
@@ -69,8 +69,8 @@ def run(_c):
 def run_openings(_c):
     """USB flush wall + receptacle opening, slide-switch window"""
     app = adsk.core.Application.get(); IN = adsk.fusion.PointContainment.PointInsidePointContainment
-    for side in globals().get('SIDES', ('left', 'right')):
-        doc = [d for d in app.documents if d.name.startswith(DOCN % side)][0]
+    for side in globals().get('SIDES', (globals().get('SIDE', 'left'),)):
+        doc = [d for d in app.documents if d.name.startswith(DOCN)][0]
         r = adsk.fusion.Design.cast(doc.products.itemByProductType('DesignProductType')).rootComponent
         bodies = [r.bRepBodies.itemByName(n) for n in ('%s_bottom' % side, 'MOCK_A')]
         _, top, zc, _, mcz, uh = zs(r); dz = top + 5.0       # the numbers below are for the MX stack (PCB top -5.0)

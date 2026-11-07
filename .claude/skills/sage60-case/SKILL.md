@@ -1,6 +1,6 @@
 ---
 name: sage60-case
-description: sage60分割キーボードのケース（sage60_left_bottom / left_top / right_bottom / right_top）をFusionで設計する作業の前提・ルール・進め方。sage60のケース、上ケース、下ケース、ガスケット、傾斜、磁石、USB-C開口、Fusionでケース設計、に言及したら必ず使う。
+description: sage60分割キーボードのケース（Fusion ドキュメント sage60_case）をFusionで設計する作業の前提・ルール・進め方。sage60のケース、上ケース、下ケース、ガスケット、傾斜、磁石、USB-C開口、Fusionでケース設計、に言及したら必ず使う。
 ---
 
 # sage60 ケース設計
@@ -15,7 +15,7 @@ description: sage60分割キーボードのケース（sage60_left_bottom / left
 | トラックボールケース | `case/trackball/README.md` |
 | ギャラリー・検証結果・宿題 | https://claude.ai/artifact/83ajHmoQUSwifZzPSDxWLz |
 
-Fusion 操作は `fusion-mcp` スキル。ドキュメントは Admin Project の `sage60_{left,right}_bottom`（MX）と `sage60_lp_{left,right}`。1ドキュメントに下ケース＋上ケース `MOCK_A`（A案で確定。スカートを机まで下ろし、下端も傾斜で切る）＋カバーが入る。
+Fusion 操作は `fusion-mcp` スキル。ドキュメントは Admin Project の `sage60_case` 1つだけ（Fusion 個人版の編集可能ドキュメント上限10のため。2026-11-08 ユーザー決定）。左右・MX/ロープロを切り替えるたびに stage0 から作り直す。古い4つは 2026-11-08 に削除済み。1ドキュメントに下ケース＋上ケース `MOCK_A`（A案で確定。スカートを机まで下ろし、下端も傾斜で切る）＋カバーが入る。
 
 ## ルール
 - **CNC が最優先**（ユーザー「CNC の指摘は徹底的に直す」）。試作は3Dプリント、本番は JLCCNC。[ガイドライン](https://jlccnc.com/help/article/CNC-Machining-Design-Guideline)
