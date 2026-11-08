@@ -20,6 +20,7 @@ TB_CB_D = 3.6                       # (feet keep-out round them)
 FRONT_LOW_R = 2.0                   # lowered frame in front of the trackball: corner R
 TB_FRONT_LIP = 4.0      # TB_FRONT_LOW under the thumb keys: this far outside their opening's front edge
 TB_FRONT_X0 = 88.0      # ... from the trackball side to this x, then out square to the wall
+TB_FRONT_LOW_GAP = 3.0  # ... or until this far from the wall, if that comes first
 THUMB_FRONT = (0.966, 0.259)   # direction of the thumb keys' front edge
 FRONT_N = ((-0.431, -0.902), (0.888, -0.459))   # outward normals of the outline's left / right edges beside the trackball
 
@@ -140,9 +141,16 @@ def build_right():
     near = kp[(kp[:, 0] > a[0] - 20) & (kp[:, 0] < a[0] + 2) & (kp[:, 1] < a[1] + 2)]
     k0 = near[np.argmax(near @ m)] + m * TB_FRONT_LIP
     on = lambda x: k0 + e * (x - k0[0]) / e[0]
-    Q, Ql = on(T[0]), on(TB_FRONT_X0)
+    # stop TB_FRONT_LOW_GAP short of the wall: the wall is ~30 deg off the thumb keys, and running on to TB_FRONT_X0 crossed it at
+    # x~90 -> a wedge of lowered top that broke TOP_FILLET (2026-11-08); then out along the wall's normal
+    wo = top_outer(case).exterior
+    gap = lambda x: Point(*on(x)).distance(wo) if top_outer(case).contains(Point(*on(x))) else -1.0
+    x = T[0]
+    while x - 0.1 >= TB_FRONT_X0 and gap(x - 0.1) >= TB_FRONT_LOW_GAP: x -= 0.1
+    Q, Ql = on(T[0]), on(x)
     (r0, r1) = ends[1]
-    front_low = opening_rounded(Polygon([tuple(T), tuple(Q), tuple(Ql), tuple(Ql + 40 * m), (Ql[0] + 40 * m[0], -250), (r1[0], -250), r1, r0]), FRONT_LOW_R)
+    w = np.array(wo.interpolate(wo.project(Point(*Ql))).coords[0]); o = (w - Ql) / np.linalg.norm(w - Ql)
+    front_low = opening_rounded(Polygon([tuple(T), tuple(Q), tuple(Ql), tuple(Ql + 40 * o), (Ql[0] + 40 * o[0], -250), (r1[0], -250), r1, r0]), FRONT_LOW_R)
     # J1 header + round-pin socket (fusion/stage6.py: socket on the sensor board's +x face 158.94, header leads into J1 at x 166.64,
     # pins y -122.395 +- 8.89) stand 2.27 above the PCB: in LP that is above the top ring's underside -> a pocket there (stage4 J1_RELIEF)
     j1_relief = box(158.94 - CLR, -122.395 - 8.89 - CLR, 166.64 + 0.25 + CLR, -122.395 + 8.89 + CLR).buffer(-1.0).buffer(1.0, quad_segs=16)
@@ -170,8 +178,8 @@ if __name__ == '__main__':
     print('in front of the ball centre: bottom wall %.2f, top case (ring + skirt) %.2f' % (G['case'].exterior.distance(G['pocket'].intersection(front)), G['case'].exterior.distance(G['tbhole'].intersection(front)) + CLR + WALL))
     spec = {}
     spec['PLATE_SURFACE'] = check('PLATE_SURFACE', G['plate'], curves_of(G['plate'].simplify(0.01), short=0.0))
-    spec['CASE_OUTER'] = check('CASE_OUTER', G['case'], curves_of(G['case']))
-    to = top_outer(G['case']); spec['TOP_WALL_OUTER'] = check('TOP_WALL_OUTER', to, curves_of(to))
+    spec['CASE_OUTER'] = check('CASE_OUTER', G['case'], tangent_joins(curves_of(G['case'])))
+    to = top_outer(G['case']); spec['TOP_WALL_OUTER'] = check('TOP_WALL_OUTER', to, tangent_joins(curves_of(to)))
     print('top wall min thickness %.2f' % to.exterior.distance(G['case'].buffer(CLR, quad_segs=32).exterior))
     spec['CAVITY'] = fit('CAVITY', G['cavity'])
     spec['TOP_RING_INNER'] = sum([fit('TOP_RING_INNER', g) for g in getattr(G['opening'], 'geoms', [G['opening']])], [])

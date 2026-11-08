@@ -520,6 +520,66 @@ def fit(name, poly, tol=0.08):
         if poly.exterior.hausdorff_distance(LineString(pts)) < tol: return check(name, poly, c, tol)
     raise AssertionError('no fit for %s' % name)
 
+def _arc_info(c):
+    ux, uy, r = _circ(c[1], c[2], c[3])
+    s = 1 if (c[2][0] - c[1][0]) * (c[3][1] - c[1][1]) - (c[2][1] - c[1][1]) * (c[3][0] - c[1][0]) > 0 else -1
+    return (ux, uy), r, s
+
+def _end_dirs(c):
+    """unit tangent at the start and the end of a line / arc (in its direction of travel)"""
+    if c[0] == 'line':
+        d = np.subtract(c[2], c[1]); d = d / np.linalg.norm(d); return d, d
+    (ux, uy), r, s = _arc_info(c)
+    t = lambda p: s * np.array((-(p[1] - uy), p[0] - ux)) / r
+    return t(c[1]), t(c[3])
+
+def tangent_joins(curves, max_deg=15.0):
+    """make the joins that are almost tangent (< max_deg, the fit's few-degree kinks) exactly tangent: line-line joins under 1 deg
+    become one line, an arc between two lines becomes their exact fillet.
+    Fusion fillets failed on the kinks (ASM_BL_MITRE_NEAR_TANGENT, 2026-11-08: the R1 TOP_FILLET on the right)"""
+    cs = [('line', c[1], c[3]) if c[0] == 'arc' and (_circ(c[1], c[2], c[3]) is None or _circ(c[1], c[2], c[3])[2] > 1e4) else c for c in curves]
+    if len(cs) < 3 or any(c[0] not in ('line', 'arc', 'spline') for c in cs): return curves
+    def kink(a, b):
+        da, db = _end_dirs(a)[1], _end_dirs(b)[0]
+        return abs(math.degrees(math.atan2(da[0] * db[1] - da[1] * db[0], da @ db)))
+    near = lambda a, b: a[0] != 'spline' and b[0] != 'spline' and kink(a, b) < max_deg     # splines stay as they are
+    i = 0
+    while i < len(cs) and len(cs) > 3:                         # almost straight line-line -> one line
+        a, b = cs[i], cs[(i + 1) % len(cs)]
+        if a[0] == b[0] == 'line' and kink(a, b) < 1.0:
+            cs[i] = ('line', a[1], b[2]); del cs[(i + 1) % len(cs)]
+            if i >= len(cs): i = 0
+        else: i += 1
+    n = len(cs)
+    out = list(cs)
+    for k, c in enumerate(cs):          # line-arc-line: the arc becomes the exact fillet of the two lines (same radius); the lines
+        if c[0] != 'arc': continue      # keep their direction (other sketches share them) and only slide their ends
+        a, b = (k - 1) % n, (k + 1) % n
+        if not (cs[a][0] == cs[b][0] == 'line' and near(cs[a], c) and near(c, cs[b])): continue
+        _, r, s = _arc_info(c)
+        p1, p2 = np.array(out[a][1]), np.array(out[a][2]); q1, q2 = np.array(out[b][1]), np.array(out[b][2])
+        u, w = (p2 - p1) / np.linalg.norm(p2 - p1), (q2 - q1) / np.linalg.norm(q2 - q1)
+        nu, nw = s * np.array((-u[1], u[0])), s * np.array((-w[1], w[0]))     # toward the arc's centre
+        den = u[0] * w[1] - u[1] * w[0]
+        if abs(den) < 1e-6: continue
+        o1, o2 = p1 + r * nu, q1 + r * nw                        # the lines offset by r meet at the centre
+        t = ((o2[0] - o1[0]) * w[1] - (o2[1] - o1[1]) * w[0]) / den
+        cen = o1 + t * u
+        ta, tb = cen - r * nu, cen - r * nw
+        if (ta - p1) @ u <= 0 or (q2 - tb) @ w <= 0: continue    # the fillet would eat a whole line
+        a0, a1 = math.atan2(*(ta - cen)[::-1]), math.atan2(*(tb - cen)[::-1])
+        d = (a1 - a0) % (2 * math.pi) if s > 0 else -((a0 - a1) % (2 * math.pi))
+        mid = cen + r * np.array((math.cos(a0 + d / 2), math.sin(a0 + d / 2)))
+        out[a] = ('line', out[a][1], tuple(ta)); out[b] = ('line', tuple(tb), out[b][2])
+        out[k] = ('arc', tuple(ta), tuple(mid), tuple(tb))
+    res = []                                            # drop ~zero lines (Fusion refuses them), joining their neighbours
+    for c in out:
+        if c[0] == 'line' and math.dist(c[1], c[2]) < 0.01:
+            if res: res[-1] = res[-1][:-1] + (c[2],) if res[-1][0] != 'spline' else res[-1]
+            continue
+        res.append(c)
+    return res
+
 def fix_cuts(cuts, base, r=0.0):
     """grow each cut (plan region) over the real fins (< THIN) it leaves in `base` (material) -> no thin walls between the cut and
     nearby features; cuts: {name: poly}"""

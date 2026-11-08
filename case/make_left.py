@@ -56,8 +56,8 @@ if __name__ == '__main__':
     print('feet', [tuple(round(v, 2) for v in s) for s in G['feet']])
     spec = {}
     spec['PLATE_SURFACE'] = check('PLATE_SURFACE', G['plate'], curves_of(G['plate'].simplify(0.01), short=0.0), 0.08)
-    spec['CASE_OUTER'] = check('CASE_OUTER', case, curves_of(case))
-    to = top_outer(case); spec['TOP_WALL_OUTER'] = check('TOP_WALL_OUTER', to, curves_of(to))
+    spec['CASE_OUTER'] = check('CASE_OUTER', case, tangent_joins(curves_of(case)))
+    to = top_outer(case); spec['TOP_WALL_OUTER'] = check('TOP_WALL_OUTER', to, tangent_joins(curves_of(to)))
     print('top wall min thickness %.2f' % to.exterior.distance(case.buffer(CLR, quad_segs=32).exterior))
     inner = G['inner']      # top ring opening; the cavity = the same + hidden CNC reliefs -> flush inner wall
     spec['TOP_RING_INNER'] = check('TOP_RING_INNER', inner, curves_of(inner.simplify(0.005), short=0.6))
