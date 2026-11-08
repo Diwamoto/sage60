@@ -197,9 +197,9 @@ def _dist(xy, lines):
             best = min(best, math.hypot(a[0] + u * dx - xy[0], a[1] + u * dy - xy[1]))
     return best
 
-def top_chamfer(r, spec, name='TOP_CHAMFER'):
-    """2026-10-14: top_chamfer on the top case's top outer edge (top faces x the outer wall face TOP_WALL_OUTER), not under the
-    MCU cover.  Last feature on MOCK_A (the right side runs it after stage4's cuts)"""
+def top_fillet(r, spec, name='TOP_FILLET'):
+    """top_fillet on the top case's top outer edge (2026-11-07: R1 like sage60-top-case, was a 0.5 chamfer that read as a sharp edge) (top faces x the outer wall face TOP_WALL_OUTER), not under the
+    MCU cover.  stage3, before stage4's cuts (after them the right side failed, ASM_BAD_BOUNDARY_COEDGE, 2026-11-08)"""
     m = r.bRepBodies.itemByName('MOCK_A')
     ring = _polylines(spec['TOP_WALL_OUTER'])
     bx = [p for c in spec['TOP_MCU_OPEN'] if c[0] == 'line' for p in c[1:3]]
@@ -214,8 +214,8 @@ def top_chamfer(r, spec, name='TOP_CHAMFER'):
         xy = (q.x * 10, q.y * 10)
         if x0 - 0.01 <= xy[0] <= x1 + 0.01 and y0 - 0.01 <= xy[1] <= y1 + 0.01: continue    # under the walnut cover
         if _dist(xy, ring) < 0.05: es.append(e)
-    cf = r.features.chamferFeatures
-    i = cf.createInput2(); i.chamferEdgeSets.addEqualDistanceChamferEdgeSet(oc(es), VI.createByString('top_chamfer'), False)
-    f = cf.add(i); f.name = name
+    ff = r.features.filletFeatures
+    i = ff.createInput(); i.addConstantRadiusEdgeSet(oc(es), VI.createByString('top_fillet'), False)
+    f = ff.add(i); f.name = name
     print(name, 'edges', len(es), 'health', f.healthState)
     return f

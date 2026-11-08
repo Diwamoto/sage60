@@ -43,6 +43,7 @@ def run(_c):
             sk.sketchCurves.sketchCircles.addByCenterRadius(sk.modelToSketchSpace(adsk.core.Point3D.create(x, y, z)), c[2] / 10)
         dims(sk, expr)
     desk_circles('FEET', spec['FEET'], 'foot_d')
+    if 'TENT_MAG' in spec: desk_circles('TENT_MAG', spec['TENT_MAG'], 'mag_d')     # tent / stacking magnets (MX, 2026-11-07)
     if SIDE == 'right':
         SEAT = off_plane('TB_SEAT', XY, '-( plate_t + pcb_gap + tb_gap + tb_leg_h )')
         new_sketch(r, 'TB_POCKET', XY, spec['TB_POCKET'])

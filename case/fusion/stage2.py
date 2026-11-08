@@ -49,6 +49,8 @@ def run(_c):
     v0 = get().volume
     up_into_body = pl('DESK_PLANE').geometry.normal.z > 0
     extrude('FEET_CUT', allp('FEET'), FO.CutFeatureOperation, dist='foot_t' if up_into_body else '-foot_t', bodies=[get()])
+    if sk('TENT_MAG'):
+        extrude('TENT_MAG_CUT', allp('TENT_MAG'), FO.CutFeatureOperation, dist='mag_h' if up_into_body else '-mag_h', bodies=[get()])
     log.append(('feet removed cm3', round(v0 - get().volume, 4)))
     if SIDE == 'right':
         extrude('TB_POCKET_CUT', sk('TB_POCKET').profiles.item(0), FO.CutFeatureOperation, start=fromE('SHELF_TOP'), to=pl('TB_SEAT'))

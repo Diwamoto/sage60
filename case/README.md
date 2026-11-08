@@ -38,6 +38,7 @@ Fusion では exec の globals に `'LP': True` を足す（`{'SIDE': 'left', 'L
 ## プレートの3MF（試作プリント用）
 ```sh
 ./venv/bin/python plate_3mf.py      # production/plate/sage60_{left,right}_plate.3mf（左右別プレート 1.2mm、MX / Choc v2 共通。`production/plate/mx_{left,right}_plate.dxf` を Python で押し出す）
+./venv/bin/python mcu_cover_3mf.py  # production/case_print/sage60_{left,right}{,_lp}_cover.3mf（MCU カバーの3Dプリント代替。DXF と同じ spec から押し出し＋裏の φ8.2×0.6 凹み）
 # ケース: Fusion で fusion/export_3mf.py を exec（globals SIDE / LP）→ production/case_print/sage60_<side>{,_lp}_{bottom,top,cover}.3mf（モデルの向きのまま。上ケースはスライサーで裏返す）
 ```
 

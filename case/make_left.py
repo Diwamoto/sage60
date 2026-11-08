@@ -73,6 +73,7 @@ if __name__ == '__main__':
     spec['MCU_MAG_CUT'] = fit('MCU_MAG_CUT', G['mag_cut'])
     if G['bat'] is not None: spec['BAT_POCKET'] = fit('BAT_POCKET', G['bat'])
     spec['FEET'] = [('circle', f, FOOT_D / 2) for f in G['feet']]
+    if not LP: spec['TENT_MAG'] = [('circle', m, MAG_D / 2) for m in TENT_MAG]
     # USB / slide switch: plan slots cut from z_bottom up through both cases (CNC: no side machining, 2026-10-05)
     for k, (poly, z0) in G['slots'].items():
         spec[k] = check(k, poly, curves_of(poly.simplify(0.005), short=0.3))

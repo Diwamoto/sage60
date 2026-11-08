@@ -75,7 +75,7 @@ def run(_c):
         extrude('MCU_MAG_' + X, allp('MCU_MAG'), FO.CutFeatureOperation, 'mcu_cover_z', '-( mcu_mag_h + 1 mm )' if thru else '-mcu_mag_h', bodies=[m])
         m = r.bRepBodies.itemByName('MOCK_' + X)
         slot_cuts(r, spec, [m], '_' + X, ('USB_RECESS', 'SW_SCOOP'))      # USB / switch: notches open at the top through the skirt
-        if SIDE == 'left': top_chamfer(r, spec)                          # right: after stage4's cuts
+        top_fillet(r, spec)                                             # right too: before stage4's cuts, which leave its lowered front sharp
     # MCU cover (walnut, cut from mcu_cover_dxf.py's DXF): on the MCU wall and the lowered skirt
     cs = new_sketch(r, 'MCU_COVER', pl('MCU_RING_TOP'), spec['MCU_COVER'])
     f = extrude('MCU_COVER', oc([max(profiles(cs), key=lambda p: p.areaProperties().area)]), FO.NewBodyFeatureOperation, '0 mm', 'cover_t')   # the sketch plane is already at mcu_cover_z

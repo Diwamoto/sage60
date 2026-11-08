@@ -104,7 +104,7 @@ def build_right():
         return unary_union([q.buffer(0.05) for q in getattr(t, 'geoms', [t]) if q.area > 0.5])
     acc_r = lambda p: RING_R if case.buffer(-0.5).contains(p) else cnc_r(TOP_H - desk_z(p.y))    # inside the skirt only the ring (8.2) is cut
     for it in range(10):
-        sl = unary_union([slivers(top_outer(case).difference(opening).difference(access_cut), THIN_TOP), slivers(case.difference(cavity).difference(pocket).difference(access_cut), THIN_BOT)])
+        sl =unary_union([slivers(top_outer(case).difference(opening).difference(access_cut), THIN_TOP), slivers(case.difference(cavity).difference(pocket).difference(access_cut), THIN_BOT)])
         sp = slivers(case.difference(cavity).difference(pocket), THIN_BOT)
         u = unary_union([cavity, pocket])
         rp = relieve(Polygon(u.exterior) if u.geom_type == 'Polygon' else u, RING_R, forbid=post).difference(u)
@@ -117,6 +117,11 @@ def build_right():
         pocket = Polygon(max(getattr(pocket, 'geoms', [pocket]), key=lambda g: g.area).exterior) if pocket.geom_type == 'MultiPolygon' and min(g.area for g in pocket.geoms) < 0.01 else pocket
     else:
         raise AssertionError('slivers did not converge')
+    # where the pocket's edge runs along the cavity wall (163.1, -108.4) a 0.02 skin was left between them (2026-11-07): the pocket
+    # takes 0.5 of the cavity next to it (the cavity is deeper than the pocket, so nothing more is cut)
+    touch = pocket.exterior.buffer(0.06).intersection(cavity.exterior.buffer(0.06)).buffer(0.6)   # only where the two edges run together
+    touch = unary_union([g for g in getattr(touch, 'geoms', [touch]) if pocket.exterior.intersection(cavity.exterior.buffer(0.06)).intersection(g).length > 1.0])   # not where they merely cross (J1 corner)
+    pocket = unary_union([pocket, cavity.intersection(pocket.buffer(0.5, quad_segs=16)).intersection(touch)]).buffer(0)
     # small detached access pieces (the rim's tip at the key opening) overlap the opening a little: no hairline material between
     access_cut = unary_union([g if g.area > 5.0 else g.buffer(0.15) for g in getattr(access_cut, 'geoms', [access_cut])]).buffer(0)
     ua = unary_union([access_cut, opening]).buffer(0)
@@ -194,6 +199,7 @@ if __name__ == '__main__':
     spec['MAGNETS'] = [('circle', m, MAG_D / 2) for m in G['mags']]
     spec['TOP_MAG'] = spec['MAGNETS']
     spec['FEET'] = [('circle', f, FOOT_D / 2) for f in G['feet']]
+    if not LP: spec['TENT_MAG'] = [('circle', (C2 - x, y), MAG_D / 2) for x, y in TENT_MAG]
     spec['MCU_COVER'] = fit('MCU_COVER', G['cover'])
     spec['MCU_MAG'] = [('circle', G['mcu_mag'], MAG_D / 2)]
     spec['MCU_DISC'] = [('circle', G['mcu_mag'], DISC_D / 2)]

@@ -50,14 +50,15 @@ def write_3mf(tris, path):
     vol = np.einsum('ij,ij->i', t[:, 0], np.cross(t[:, 1], t[:, 2])).sum() / 6
     return vol, verts.min(0), verts.max(0)
 
-for side in T:
-    t = T[side]
-    _, polys = plate_outline(side)
-    outer = polys[0]; holes = unary_union([p for p in polys[1:] if outer.contains(p.representative_point())])
-    plate = outer.difference(holes)                  # outer already carries the switch cutouts; holes = inner loops, if any
-    assert plate.geom_type == 'Polygon', plate.geom_type
-    vol, lo, hi = write_3mf(extrude(plate, t), OUT + 'sage60_%s_plate.3mf' % side)
-    want = plate.area * t
-    print('%-5s size %.1f x %.1f x %.2f mm  holes %d  volume %.1f mm3 (outline %.1f, %+.3f%%)' % (side, *(hi - lo), len(plate.interiors), vol, want, 100 * (vol / want - 1)))
-    assert abs(hi[2] - lo[2] - t) < 0.01 and abs(vol / want - 1) < 0.001
-    assert len(plate.interiors) == len(polys) - 1, (len(plate.interiors), len(polys) - 1)    # every Edge.Cuts loop is a hole
+if __name__ == '__main__':
+    for side in T:
+        t = T[side]
+        _, polys = plate_outline(side)
+        outer = polys[0]; holes = unary_union([p for p in polys[1:] if outer.contains(p.representative_point())])
+        plate = outer.difference(holes)                  # outer already carries the switch cutouts; holes = inner loops, if any
+        assert plate.geom_type == 'Polygon', plate.geom_type
+        vol, lo, hi = write_3mf(extrude(plate, t), OUT + 'sage60_%s_plate.3mf' % side)
+        want = plate.area * t
+        print('%-5s size %.1f x %.1f x %.2f mm  holes %d  volume %.1f mm3 (outline %.1f, %+.3f%%)' % (side, *(hi - lo), len(plate.interiors), vol, want, 100 * (vol / want - 1)))
+        assert abs(hi[2] - lo[2] - t) < 0.01 and abs(vol / want - 1) < 0.001
+        assert len(plate.interiors) == len(polys) - 1, (len(plate.interiors), len(polys) - 1)    # every Edge.Cuts loop is a hole

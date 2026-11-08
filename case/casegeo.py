@@ -13,7 +13,7 @@ SFX = '_lp' if LP else ''                     # output file suffix (left_lp_spec
 CASE_OFF = 3.5 if LP else 4.0   # case outline = PCB/plate body + this (bezel ~ CASE_OFF - open_clr + clr + wall)
 OUTER_R = 2.1 if LP else 3.8   # LP 2.1: the raised MCU block (2026-10-06); plan-view corner radius of the case outline (top wall gets OUTER_R + clr + wall); MX 3.8 (7 deg, 2026-10-07; 3.3 at 5 deg): the skirt's inner corners (OUTER_R + clr) run the full ~35 mm where the ring is open over the MCU -> JLCCNC R >= H/10 + 0.5
 CLR, WALL, OPEN_CLR = (0.2, 1.5, 0.5) if LP else (0.3, 2.0, 1.0)
-WALL_OUT_R = 2.5   # top wall's outer convex corners, MX and LP (2026-10-14: published aluminium cases are R2.0-2.25 (Keychron Q60/Q11, Bakeneko60, JP01), Lily58 Pro R3.0; was 4.0; outside corners have no CNC limit). The top edge gets a top_chamfer (fx.top_chamfer)
+WALL_OUT_R = 2.5   # top wall's outer convex corners, MX and LP (2026-10-14: published aluminium cases are R2.0-2.25 (Keychron Q60/Q11, Bakeneko60, JP01), Lily58 Pro R3.0; was 4.0; outside corners have no CNC limit). The top edge gets a top_fillet R1 (fx.top_fillet)
 # z stack (plate top = 0); must match the Fusion parameters plate_t / pcb_gap / xiao_t
 PLATE_T, PCB_GAP = (1.2, 1.0) if LP else (1.2, 3.8)   # MX also uses the 1.2 mm shared plate (2026-10-04); PCB top stays at -5.0
 XIAO_T = 1.4         # XIAO board 1.2 + 0.17 lifted by solder (Seeed STEP on the PCB, 2026-10-03; 1.0 put the receptacle 0.05 into the wall)
@@ -23,6 +23,7 @@ STEP_FILL = (84.0, -125.0, 106.0, -100.0)   # left: region whose convex hull fil
 MAG_STEP = (91.4, -109.4)        # left: magnet at the thumb step (front left), the outline grows round it if needed (2026-10-05)
 MAG_NOTCH = (187.06, -105.78)    # left: PCB/plate edge notch for a magnet post between the right column and the outermost thumb key (mag_notch.py)
 FOOT_D = 10.5
+TENT_MAG = [(66, -45), (145, -30), (70, -95), (165, -110)]   # left, desk face (2026-11-07, MX only): tent + left/right stacking; right = mirrored so the halves meet bottom to bottom.  Floor >= mag_h + 0.8 there, clear of feet / battery
 MCU_MAG = (190.34, -33.5)      # left: the MCU cover's phi6 magnet (2026-10-24, user): in a top case boss over the XIAO's USB end, a steel disc in the cover
 POCKET_W, POCKET_IN, POCKET_OUT = 17.0, -2.0, CASE_OFF + 0.2   # gasket pocket: width along edge, extent along the tab normal
 POCKET_R = 1.0      # its corners (the top case slot ends inside the ring: ~3.7 deep -> R >= 0.9)
@@ -39,8 +40,9 @@ USB_ZC = PCB_TOP + XIAO_T + 3.26 / 2    # receptacle centre z = XIAO top + usb_h
 # Both are cut along x through the bottom AND the top case, so their front/back faces are single planes.
 SW_Y, SW_ZC = -54.86, PCB_TOP + 0.7   # knob travel centre = SW32 middle pin (3-pin THT, 2.54 pitch; KiCad y 54.864)
 SW_OPEN = (11.0, 6.0, 1.5)      # y-width, z-height, corner R of the opening at the knob (fingernail + knob travel 2.0); 12 -> 11 (2026-10-05): its side ran into a cavity relief (0.7 mm wedge)
-SW_SCOOP = (16.0, 10.0, 4.0)    # finger scoop in the outer wall
-SW_SCOOP_Y = SW_Y + 1.0         # scoop centre 1 mm off the knob toward +y (2026-10-14): centred, its end left a 0.25 mm sliver at the MCU wall corner (y -62.7)
+SW_SCOOP = (14.0, 10.0, 4.0)    # finger scoop in the outer wall; 16 -> 14 (2026-11-07): centred on the switch, its end stays 0.84 short of the MCU wall corner (y -62.7)
+SW_OPEN_Y = SW_Y - 1.0          # opening centre 1 mm toward -y (2026-11-06, print): the real switch body ran into the wall at y -60.5
+SW_SCOOP_Y = SW_Y               # scoop centred on the switch (2026-11-07, user); was +1.0 for a 0.25 mm sliver at the MCU wall corner (y -62.7)
 SW_X_IN, SW_X_FLOOR = 190.5, 193.0   # opening starts inside the cavity (cavity wall x 191.39); scoop floor leaves 1.6 mm of wall
 MCU_RING = (166.0, -63.0, 210.0, -3.0)
 TOP_MCU_OPEN = (166.0, -63.0, 212.0, 0.0)
@@ -440,7 +442,7 @@ def port_slots(case):
         'USB_RECESS': (plan_slot(XIAO_X - usb_w / 2, USB_FACE_Y, XIAO_X + usb_w / 2, y_out, r_usb, 'y0'), z_usb),
         'USB_RCPT': (box(XIAO_X - USB_RCPT_W / 2, USB_FACE_Y - 3.0, XIAO_X + USB_RCPT_W / 2, USB_FACE_Y + 0.5), z_rcpt),
         'SW_SCOOP': (plan_slot(SW_X_FLOOR, SW_SCOOP_Y - SW_SCOOP[0] / 2, x_out, SW_SCOOP_Y + SW_SCOOP[0] / 2, r_sw, 'x0'), z_scoop),
-        'SW_OPEN': (box(SW_X_IN, SW_Y - SW_OPEN[0] / 2, SW_X_FLOOR + 1.0, SW_Y + SW_OPEN[0] / 2), z_open),
+        'SW_OPEN': (box(SW_X_IN, SW_OPEN_Y - SW_OPEN[0] / 2, SW_X_FLOOR + 1.0, SW_OPEN_Y + SW_OPEN[0] / 2), z_open),
     }
 
 def guard_fill(hole, g, r=None):
