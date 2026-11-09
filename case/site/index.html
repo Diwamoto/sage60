@@ -474,7 +474,7 @@ function frame(){
  layout();
  const t = targetOf(V); go('tx', t.x); go('ty', t.y); go('tz', t.z);
  if (S.first){ S.tx=t.x; S.ty=t.y; S.tz=t.z; S.first=false; }
- const d = S.d*Math.min(2.2, Math.max(1, 1.75/cam.aspect));
+ const d = (S.uz||1)*S.d*Math.min(2.2, Math.max(1, 1.75/cam.aspect));
  const a = (S.az+S.ua)*RAD, e = Math.max(-80*RAD, Math.min(82*RAD, (S.el+S.ue)*RAD));
  cam.position.set(S.tx + d*Math.sin(a)*Math.cos(e), S.ty - d*Math.cos(a)*Math.cos(e), S.tz + d*Math.sin(e));
  cam.lookAt(S.tx,S.ty,S.tz);
@@ -482,14 +482,25 @@ function frame(){
  renderer.render(scene, cam);
  dirty = false;
 }
-function setView(n){ if (S.view===n || !VIEWS[n]) return; S.view = n; S.ua = S.ue = 0; dirty = true; }
+function setView(n){ if (S.view===n || !VIEWS[n]) return; S.view = n; S.ua = S.ue = 0; S.uz = 1; dirty = true; }
 
 // drag to look around; the next view resets it
 let drag = null;
 const st = $('#stage');
 st.addEventListener('pointerdown', e => { if (e.target.closest('.ctl,.tov')) return; drag = [e.clientX, e.clientY]; st.setPointerCapture(e.pointerId); });
 st.addEventListener('pointermove', e => { if (!drag) return; S.ua -= (e.clientX-drag[0])*.35; S.ue += (e.clientY-drag[1])*.25; if (!$('#viewer').contains(st)) $('.tov').hidden = false; drag = [e.clientX,e.clientY]; dirty = true; });
-for (const n of ['pointerup','pointercancel']) st.addEventListener(n, () => drag = null);
+for (const n of ['pointerup','pointercancel']) st.addEventListener(n, e => { drag = null; pts.delete(e.pointerId); pinch = 0; });
+// zoom in the viewer only, so the gallery keeps scrolling: wheel, or pinch with two fingers
+const zoom = f => { S.uz = Math.max(.3, Math.min(3, (S.uz||1)*f)); dirty = true; };
+const pts = new Map(); let pinch = 0;
+st.addEventListener('wheel', e => { if (!$('#viewer').contains(st)) return; e.preventDefault(); zoom(Math.exp(e.deltaY*.0015)); }, {passive:false});
+st.addEventListener('pointerdown', e => pts.set(e.pointerId, [e.clientX, e.clientY]));
+st.addEventListener('pointermove', e => {
+ if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, [e.clientX, e.clientY]);
+ if (pts.size !== 2 || !$('#viewer').contains(st)) return;
+ const [a, b] = [...pts.values()], dd = Math.hypot(a[0]-b[0], a[1]-b[1]);
+ if (pinch) zoom(pinch/dd); pinch = dd; drag = null;
+});
 
 // variant
 async function setVariant(v){
