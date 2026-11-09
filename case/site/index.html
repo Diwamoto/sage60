@@ -32,6 +32,10 @@ nav a[aria-current=page]{color:var(--ink);font-weight:500}
 .ctl button{border:0;background:none;border-radius:99px;padding:5px 14px;font-size:.8rem;cursor:pointer;color:var(--mute);min-height:30px}
 .ctl button[aria-pressed=true]{background:var(--ink);color:#fff}
 .hint{position:absolute;left:max(16px,env(safe-area-inset-left,0px));bottom:20px;font:400 .72rem var(--mono);color:var(--mute);z-index:2;pointer-events:none}
+.tov{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:3;padding:7px 18px;background:var(--ink);color:#fff;border-radius:99px;text-decoration:none;font-size:.82rem;font-weight:500}
+#viewer{position:fixed;inset:0;z-index:20;background:var(--bg)}
+#viewer #stage{touch-action:none}
+.back{position:absolute;z-index:3;top:max(14px,env(safe-area-inset-top,0px));left:max(16px,env(safe-area-inset-left,0px));padding:6px 16px;background:rgba(255,255,255,.8);backdrop-filter:blur(8px);border-radius:99px;text-decoration:none;font-size:.85rem}
 #fail{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--mute)}
 
 .story{display:grid;grid-template-columns:minmax(0,1fr)}
@@ -115,7 +119,9 @@ pre{font:400 .78rem/1.7 var(--mono);background:#e9ebed;padding:14px;overflow-x:a
   <button type="button" data-v="lp">ロープロ</button>
  </div>
  <span class="hint">ドラッグで回転</span>
+ <a class="tov" href="#viewer" data-go="viewer" hidden>ビュアーで見る</a>
 </div>
+<div id="viewer" hidden><a class="back" href="#home" data-go="home">← ギャラリーに戻る</a></div>
 
 <div id="home">
  <div class="story">
@@ -481,8 +487,8 @@ function setView(n){ if (S.view===n || !VIEWS[n]) return; S.view = n; S.ua = S.u
 // drag to look around; the next view resets it
 let drag = null;
 const st = $('#stage');
-st.addEventListener('pointerdown', e => { if (e.target.closest('.ctl')) return; drag = [e.clientX, e.clientY]; st.setPointerCapture(e.pointerId); });
-st.addEventListener('pointermove', e => { if (!drag) return; S.ua -= (e.clientX-drag[0])*.35; S.ue += (e.clientY-drag[1])*.25; drag = [e.clientX,e.clientY]; dirty = true; });
+st.addEventListener('pointerdown', e => { if (e.target.closest('.ctl,.tov')) return; drag = [e.clientX, e.clientY]; st.setPointerCapture(e.pointerId); });
+st.addEventListener('pointermove', e => { if (!drag) return; S.ua -= (e.clientX-drag[0])*.35; S.ue += (e.clientY-drag[1])*.25; if (!$('#viewer').contains(st)) $('.tov').hidden = false; drag = [e.clientX,e.clientY]; dirty = true; });
 for (const n of ['pointerup','pointercancel']) st.addEventListener(n, () => drag = null);
 
 // variant
@@ -498,13 +504,15 @@ $('.ctl').addEventListener('click', e => { const b = e.target.closest('button');
 
 // pages
 function route(hash){
- const h = hash || 'home', docs = h.startsWith('docs');
+ const h = hash || 'home', docs = h.startsWith('docs'), viewer = h === 'viewer';
+ if (!viewer) $('.back').dataset.go = h; // back returns to the page the viewer was opened from
+ $('#viewer').hidden = !viewer; $('.tov').hidden = true;
  $('#home').hidden = docs; $('#docs').hidden = !docs;
- $(docs ? '#docPin' : '#homePin').append(st);
+ $(viewer ? '#viewer' : docs ? '#docPin' : '#homePin').append(st);
  $('#navHome').toggleAttribute('aria-current', false); $('#navDocs').toggleAttribute('aria-current', false);
  $(docs ? '#navDocs' : '#navHome').setAttribute('aria-current','page');
  const el = docs && h !== 'docs' ? document.getElementById(h) : null;
- if (el) el.scrollIntoView(); else scrollTo(0,0);
+ if (el) el.scrollIntoView(); else if (!viewer) scrollTo(0,0);
  if (renderer) resize();
 }
 document.addEventListener('click', e => {
