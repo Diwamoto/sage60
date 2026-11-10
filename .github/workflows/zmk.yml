@@ -49,3 +49,18 @@ jobs:
         with:
           name: artifact-${{ matrix.artifact-name }}
           path: ${{ env.ws }}/out
+
+  # One zip with every UF2, so a single download covers both halves.
+  bundle:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: artifact-*
+          path: firmware
+          merge-multiple: true
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sage60-firmware
+          path: firmware
