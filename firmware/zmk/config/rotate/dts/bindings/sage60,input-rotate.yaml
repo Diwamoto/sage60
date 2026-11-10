@@ -11,4 +11,19 @@ properties:
   angle:
     type: int
     required: true
-    description: Degrees.
+    description: Degrees. Tilt applied to sideways (X) rolls.
+  angle-y:
+    type: int
+    description: Degrees. Tilt applied to up/down (Y) rolls. Defaults to angle.
+  scale-pct:
+    type: int
+    default: 100
+    description: Speed in percent (100 = unchanged).
+  wake-threshold:
+    type: int
+    default: 0
+    description: Counts of motion swallowed after the ball has been idle.
+  idle-ms:
+    type: int
+    default: 200
+    description: Stillness after which wake-threshold applies again.

@@ -18,6 +18,7 @@
 
 #include "sage60.dtsi"
 #include <input/processors.dtsi>
+#include <dt-bindings/zmk/input_transform.h>
 
 &kscan0 {
     row-gpios
@@ -45,24 +46,40 @@
 
 /* Moving the ball turns on MOUSE until 500 ms after it stops. Pressing any
  * key other than the clicks (L ; ') and the scroll keys above and below '
- * turns it off at once, and typing blocks it for 300 ms so a nudged ball
+ * turns it off at once, and typing blocks it for 500 ms so a nudged ball
  * doesn't hijack the home row. */
 &zip_temp_layer {
-    require-prior-idle-ms = <300>;
+    require-prior-idle-ms = <500>;
     excluded-positions = <23 35 36 37 51>;
 };
 
 / {
+    /* The hand rolls the ball at a slant, so a "straight" sideways roll
+     * drifts vertically. Positive angle turns motion clockwise on screen.
+     * These are defaults: case/site/tune.html changes them over BLE and the
+     * values are kept in flash (settings_reset clears them). */
+    trackball_rot: trackball_rot {
+        compatible = "sage60,input-rotate";
+        device = <&trackball_split>;
+        angle = <15>;   /* sideways rolls */
+        angle-y = <15>; /* up/down rolls */
+        scale-pct = <100>;
+        /* Ignore the first few counts after the ball rests, so typing
+         * vibration doesn't nudge the cursor. Raise if it still does. */
+        wake-threshold = <6>;
+    };
+
     trackball_listener {
         compatible = "zmk,input-listener";
-        device = <&trackball_split>;
+        device = <&trackball_rot>;
         input-processors = <&zip_temp_layer MOUSE 500>;
 
         /* While Lower or a MOUSE scroll key is held, the ball scrolls.
          * Raise the divisor for slower scrolling. */
         scroller {
             layers = <LOWER SCROLL>;
-            input-processors = <&zip_xy_scaler 1 12>, <&zip_xy_to_scroll_mapper>;
+            input-processors = <&zip_xy_scaler 1 12>, <&zip_xy_to_scroll_mapper>,
+                               <&zip_scroll_transform INPUT_TRANSFORM_Y_INVERT>;
         };
     };
 };

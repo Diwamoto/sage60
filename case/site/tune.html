@@ -1,0 +1,111 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>sage60 tune</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{color-scheme:light;--bg:#f4f5f6;--ink:#17191c;--mute:#5d636b;--line:#c9cdd2;--walnut:#6a4228;--panel:#fff;
+ --sans:"Hanken Grotesk","Zen Kaku Gothic New",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.7 var(--sans);-webkit-font-smoothing:antialiased}
+main{max-width:560px;margin:0 auto;padding:40px 16px}
+h1{font-weight:600;font-size:1.6rem;margin:0 0 4px}
+p{margin:0 0 16px;color:var(--mute);font-size:.92rem}
+a{color:inherit}
+button{font:inherit;border:0;border-radius:99px;padding:8px 20px;background:var(--ink);color:#fff;cursor:pointer;min-height:40px}
+button:disabled{opacity:.4;cursor:default}
+:focus-visible{outline:2px solid var(--walnut);outline-offset:2px}
+section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px 20px;margin-top:20px}
+section[hidden]{display:none}
+label{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:14px 0;border-bottom:1px solid var(--line)}
+label:last-of-type{border-bottom:0}
+label span{font-weight:500}
+label output{font:500 .9rem var(--mono)}
+label small{grid-column:1/-1;color:var(--mute);font-size:.8rem}
+input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--walnut)}
+#status{font:400 .8rem var(--mono);color:var(--mute);margin-top:12px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row .ghost{background:none;color:var(--ink);border:1px solid var(--line)}
+</style>
+
+<main>
+ <h1>Trackball tune</h1>
+ <p>左半分(PCとつながっている側)にBluetoothで接続し、トラックボールの補正をその場で変更します。値はキーボードに保存されます。Chrome / Edge が必要です。</p>
+ <div class="row">
+  <button id="connect">接続</button>
+  <button id="reset" class="ghost" hidden>初期値に戻す</button>
+ </div>
+ <div id="status"></div>
+
+ <section id="form" hidden>
+  <label><span>横の傾き補正</span><output id="o-angle"></output>
+   <input id="angle" type="range" min="-60" max="60" step="1">
+   <small>真横に転がしたとき右下へ流れるなら小さく、右上なら大きく</small></label>
+  <label><span>縦の傾き補正</span><output id="o-angle_y"></output>
+   <input id="angle_y" type="range" min="-60" max="60" step="1">
+   <small>真上に転がしたとき右へ流れるなら小さく、左なら大きく</small></label>
+  <label><span>速度</span><output id="o-scale_pct"></output>
+   <input id="scale_pct" type="range" min="25" max="300" step="5"></label>
+  <label><span>動き出しのしきい値</span><output id="o-wake_threshold"></output>
+   <input id="wake_threshold" type="range" min="0" max="40" step="1">
+   <small>打鍵の振動でカーソルが動くなら上げる</small></label>
+ </section>
+</main>
+
+<script>
+// Must match firmware/zmk/config/rotate/input_rotate.c
+const SVC = '5a6e6060-7f1c-4b8e-9d2a-3c51e0a10000';
+const CHR = '5a6e6060-7f1c-4b8e-9d2a-3c51e0a10001';
+const FIELDS = ['angle', 'angle_y', 'wake_threshold', 'scale_pct']; // int16 LE, in this order
+const DEFAULTS = {angle: 15, angle_y: 15, wake_threshold: 6, scale_pct: 100}; // sage60_left.overlay
+const UNIT = {angle: '°', angle_y: '°', wake_threshold: '', scale_pct: '%'};
+
+const $ = id => document.getElementById(id);
+const status = t => $('status').textContent = t;
+let chr = null;
+
+function show(v) {
+  for (const f of FIELDS) { $(f).value = v[f]; $('o-' + f).textContent = v[f] + UNIT[f]; }
+}
+function read() {
+  return Object.fromEntries(FIELDS.map(f => [f, +$(f).value]));
+}
+async function write(v) {
+  const dv = new DataView(new ArrayBuffer(8));
+  FIELDS.forEach((f, i) => dv.setInt16(i * 2, v[f], true));
+  try { await chr.writeValueWithResponse(dv.buffer); status('保存しました'); }
+  catch (e) { status('書き込み失敗: ' + e.message); }
+}
+
+if (!navigator.bluetooth) {
+  $('connect').disabled = true;
+  status('このブラウザは Web Bluetooth に対応していません(Chrome / Edge を使ってください)');
+}
+
+$('connect').onclick = async () => {
+  try {
+    const dev = await navigator.bluetooth.requestDevice({
+      filters: [{services: [SVC]}, {namePrefix: 'Sage60'}],
+      optionalServices: [SVC],
+    });
+    status('接続中…');
+    const gatt = await dev.gatt.connect();
+    chr = await (await gatt.getPrimaryService(SVC)).getCharacteristic(CHR);
+    const dv = await chr.readValue();
+    show(Object.fromEntries(FIELDS.map((f, i) => [f, dv.getInt16(i * 2, true)])));
+    dev.addEventListener('gattserverdisconnected', () => {
+      $('form').hidden = $('reset').hidden = true; status('切断されました');
+    });
+    $('form').hidden = $('reset').hidden = false;
+    status('接続: ' + (dev.name || 'Sage60'));
+  } catch (e) {
+    status('接続失敗: ' + e.message + '(ファームが古い場合はこの機能がありません)');
+  }
+};
+
+for (const f of FIELDS) {
+  $(f).oninput = () => $('o-' + f).textContent = $(f).value + UNIT[f];
+  $(f).onchange = () => write(read()); // on release only: each write is a flash save
+}
+$('reset').onclick = () => { show(DEFAULTS); write(DEFAULTS); };
+</script>
