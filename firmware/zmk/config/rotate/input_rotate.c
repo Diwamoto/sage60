@@ -10,8 +10,8 @@
  * adds up to wake-threshold counts, so keystroke vibration doesn't move the
  * cursor (or wake the auto mouse layer).
  *
- * The tunables can be changed at runtime over a BLE GATT characteristic
- * (case/site/tune.html uses it via Web Bluetooth) and are kept in settings.
+ * The tunables can be changed at runtime over a USB serial port
+ * (case/site/tune.html uses it via Web Serial) and are kept in settings.
  * Only one instance is supported.
  */
 
@@ -24,10 +24,8 @@
 #include <zephyr/kernel.h>
 #include <zephyr/input/input.h>
 #include <zephyr/settings/settings.h>
-#include <zephyr/bluetooth/gatt.h>
-#include <zephyr/bluetooth/uuid.h>
 
-/* Wire/storage format: little-endian int16 fields. */
+/* Storage format: little-endian int16 fields. */
 struct rotate_params {
     int16_t angle;          /* degrees, sideways rolls */
     int16_t angle_y;        /* degrees, up/down rolls */
@@ -52,7 +50,7 @@ struct rotate_data {
 
 static struct rotate_data *inst;
 
-/* ponytail: params change from the BT thread without a lock; worst case one
+/* ponytail: params change from the work queue without a lock; worst case one
  * frame uses half-updated coefficients. Add a spinlock if that ever shows. */
 static void apply(struct rotate_data *d) {
     float s = d->p.scale_pct / 100.0f;
@@ -134,44 +132,91 @@ static int rot_settings_set(const char *name, size_t len, settings_read_cb read_
 SETTINGS_STATIC_HANDLER_DEFINE(sage60_rot, "sage60/rot", NULL, rot_settings_set, NULL, NULL);
 #endif
 
-/* ---- BLE GATT: one 8-byte read/write characteristic, bonded links only ---- */
+/* ---- USB serial: line protocol on the sage60_tune_uart CDC ACM port ----
+ *   "get"          -> "rot <angle> <angle_y> <wake_threshold> <scale_pct>"
+ *   "set a b c d"  -> same reply after applying and saving, or "err"
+ * case/site/tune.html talks to it via Web Serial. */
 
-#if IS_ENABLED(CONFIG_BT)
-#define ROT_SVC_UUID BT_UUID_128_ENCODE(0x5a6e6060, 0x7f1c, 0x4b8e, 0x9d2a, 0x3c51e0a10000)
-#define ROT_CHR_UUID BT_UUID_128_ENCODE(0x5a6e6060, 0x7f1c, 0x4b8e, 0x9d2a, 0x3c51e0a10001)
+#if DT_NODE_EXISTS(DT_NODELABEL(sage60_tune_uart))
+#include <stdio.h>
+#include <zephyr/drivers/uart.h>
 
-static ssize_t rot_read(struct bt_conn *conn, const struct bt_gatt_attr *attr, void *buf,
-                        uint16_t len, uint16_t offset) {
-    struct rotate_params p = inst ? inst->p : (struct rotate_params){0};
+static const struct device *const tune_uart = DEVICE_DT_GET(DT_NODELABEL(sage60_tune_uart));
+static char line[48], cmd[48];
+static size_t line_len;
 
-    return bt_gatt_attr_read(conn, attr, buf, len, offset, &p, sizeof(p));
+static void tune_puts(const char *s) {
+    while (*s) {
+        uart_poll_out(tune_uart, *s++);
+    }
 }
 
-static ssize_t rot_write(struct bt_conn *conn, const struct bt_gatt_attr *attr, const void *buf,
-                         uint16_t len, uint16_t offset, uint8_t flags) {
+static void tune_work_fn(struct k_work *work) {
     struct rotate_params p;
+    int a, b, c, d;
+    char out[48];
 
-    if (offset || len != sizeof(p)) {
-        return BT_GATT_ERR(BT_ATT_ERR_INVALID_ATTRIBUTE_LEN);
+    if (!inst) {
+        return;
     }
-    memcpy(&p, buf, sizeof(p));
-    if (!inst || !valid(&p)) {
-        return BT_GATT_ERR(BT_ATT_ERR_VALUE_NOT_ALLOWED);
-    }
-    inst->p = p;
-    apply(inst);
+    if (sscanf(cmd, "set %d %d %d %d", &a, &b, &c, &d) == 4) {
+        p = (struct rotate_params){a, b, c, d};
+        if (a != p.angle || b != p.angle_y || c != p.wake_threshold || d != p.scale_pct ||
+            !valid(&p)) {
+            tune_puts("err\n");
+            return;
+        }
+        inst->p = p;
+        apply(inst);
 #if IS_ENABLED(CONFIG_SETTINGS)
-    settings_save_one("sage60/rot", &p, sizeof(p));
+        settings_save_one("sage60/rot", &p, sizeof(p));
 #endif
-    return len;
+    } else if (strcmp(cmd, "get") != 0) {
+        tune_puts("err\n");
+        return;
+    }
+    snprintf(out, sizeof(out), "rot %d %d %d %d\n", inst->p.angle, inst->p.angle_y,
+             inst->p.wake_threshold, inst->p.scale_pct);
+    tune_puts(out);
 }
 
-BT_GATT_SERVICE_DEFINE(rot_svc, BT_GATT_PRIMARY_SERVICE(BT_UUID_DECLARE_128(ROT_SVC_UUID)),
-                       BT_GATT_CHARACTERISTIC(BT_UUID_DECLARE_128(ROT_CHR_UUID),
-                                              BT_GATT_CHRC_READ | BT_GATT_CHRC_WRITE,
-                                              BT_GATT_PERM_READ_ENCRYPT |
-                                                  BT_GATT_PERM_WRITE_ENCRYPT,
-                                              rot_read, rot_write, NULL), );
+static K_WORK_DEFINE(tune_work, tune_work_fn);
+
+static void tune_isr(const struct device *dev, void *user_data) {
+    uint8_t c;
+
+    while (uart_irq_update(dev) && uart_irq_rx_ready(dev)) {
+        while (uart_fifo_read(dev, &c, 1) == 1) {
+            if (c == '\r') {
+                continue;
+            }
+            if (c != '\n') {
+                if (line_len < sizeof(line) - 1) {
+                    line[line_len++] = c;
+                }
+                continue;
+            }
+            /* ponytail: one pending command; a line arriving mid-work is dropped. */
+            if (!k_work_is_pending(&tune_work)) {
+                line[line_len] = 0;
+                memcpy(cmd, line, line_len + 1);
+                k_work_submit(&tune_work);
+            }
+            line_len = 0;
+        }
+    }
+}
+
+static int tune_init(void) {
+    if (!device_is_ready(tune_uart)) {
+        return 0;
+    }
+    uart_irq_callback_set(tune_uart, tune_isr);
+    uart_irq_rx_enable(tune_uart);
+    return 0;
+}
+
+SYS_INIT(tune_init, APPLICATION, CONFIG_APPLICATION_INIT_PRIORITY);
 #endif
 
 static int rotate_init(const struct device *dev) {

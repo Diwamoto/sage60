@@ -56,7 +56,7 @@
 / {
     /* The hand rolls the ball at a slant, so a "straight" sideways roll
      * drifts vertically. Positive angle turns motion clockwise on screen.
-     * These are defaults: case/site/tune.html changes them over BLE and the
+     * These are defaults: case/site/tune.html changes them over USB and the
      * values are kept in flash (settings_reset clears them). */
     trackball_rot: trackball_rot {
         compatible = "sage60,input-rotate";
@@ -81,5 +81,12 @@
             input-processors = <&zip_xy_scaler 1 12>, <&zip_xy_to_scroll_mapper>,
                                <&zip_scroll_transform INPUT_TRANSFORM_Y_INVERT>;
         };
+    };
+};
+
+/* Second USB serial port (separate from ZMK Studio's) for case/site/tune.html. */
+&zephyr_udc0 {
+    sage60_tune_uart: sage60_tune_uart {
+        compatible = "zephyr,cdc-acm-uart";
     };
 };
