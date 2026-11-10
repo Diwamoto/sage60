@@ -1,0 +1,4 @@
+config SAGE60_INPUT_ROTATE
+    bool "Rotate relative X/Y input by a fixed angle"
+    default y
+    depends on DT_HAS_SAGE60_INPUT_ROTATE_ENABLED && INPUT

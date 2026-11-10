@@ -1,0 +1,14 @@
+description: |
+  Re-reports REL_X/REL_Y from another input device rotated by a fixed angle.
+  Positive angle turns motion clockwise on screen (rightward roll goes down).
+
+compatible: "sage60,input-rotate"
+
+properties:
+  device:
+    type: phandle
+    required: true
+  angle:
+    type: int
+    required: true
+    description: Degrees.

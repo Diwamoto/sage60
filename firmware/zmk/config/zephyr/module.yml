@@ -1,0 +1,6 @@
+# config/ doubles as a Zephyr module for the small local drivers below.
+build:
+  cmake: rotate
+  kconfig: rotate/Kconfig
+  settings:
+    dts_root: rotate

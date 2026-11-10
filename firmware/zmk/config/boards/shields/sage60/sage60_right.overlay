@@ -86,7 +86,7 @@
         /* Tune to the sensor's mounting orientation on the real board. */
         // swap-xy;
         // invert-x;
-        // invert-y;
+        invert-y;
         evt-type = <INPUT_EV_REL>;
         x-input-code = <INPUT_REL_X>;
         y-input-code = <INPUT_REL_Y>;
@@ -94,6 +94,16 @@
     };
 };
 
+/ {
+    /* The hand rolls the ball at a slant, so a "straight" sideways roll
+     * drifts vertically. Positive angle turns motion clockwise on screen. */
+    trackball_rot: trackball_rot {
+        compatible = "sage60,input-rotate";
+        device = <&trackball>;
+        angle = <15>;
+    };
+};
+
 &trackball_split {
-    device = <&trackball>;
+    device = <&trackball_rot>;
 };
