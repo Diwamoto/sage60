@@ -17,6 +17,7 @@
  */
 
 #include "sage60.dtsi"
+#include <input/processors.dtsi>
 
 &kscan0 {
     row-gpios
@@ -37,9 +38,31 @@
         ;
 };
 
+/* Layer numbers from sage60.keymap. */
+#define LOWER  1
+#define MOUSE  4
+#define SCROLL 5
+
+/* Moving the ball turns on MOUSE until 500 ms after it stops. Pressing any
+ * key other than the clicks (L ; ') and the scroll keys above and below '
+ * turns it off at once, and typing blocks it for 300 ms so a nudged ball
+ * doesn't hijack the home row. */
+&zip_temp_layer {
+    require-prior-idle-ms = <300>;
+    excluded-positions = <23 35 36 37 51>;
+};
+
 / {
     trackball_listener {
         compatible = "zmk,input-listener";
         device = <&trackball_split>;
+        input-processors = <&zip_temp_layer MOUSE 500>;
+
+        /* While Lower or a MOUSE scroll key is held, the ball scrolls.
+         * Raise the divisor for slower scrolling. */
+        scroller {
+            layers = <LOWER SCROLL>;
+            input-processors = <&zip_xy_scaler 1 12>, <&zip_xy_to_scroll_mapper>;
+        };
     };
 };

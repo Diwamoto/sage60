@@ -19,6 +19,8 @@
 #define LOWER   1
 #define RAISE   2
 #define ADJUST  3
+#define MOUSE   4   /* MOUSE and SCROLL are also used in sage60_left.overlay */
+#define SCROLL  5
 
 / {
     conditional_layers {
@@ -72,6 +74,28 @@
 &bt BT_CLR &out OUT_TOG &trans  &trans    &trans    &trans                         &trans    &trans    &trans    &trans    &trans     &studio_unlock
 &trans     &trans    &trans    &trans    &trans    &trans    &trans      &trans    &trans    &trans    &trans    &trans    &trans     &studio_unlock
 &trans     &trans    &trans    &trans    &trans    &trans    &trans      &trans    &trans    &trans    &trans    &trans    &trans     &studio_unlock
+                     &trans    &trans    &trans    &trans                          &trans    &trans
+            >;
+        };
+
+        mouse_layer {
+            display-name = "Mouse";
+            bindings = <
+&trans     &trans    &trans    &trans    &trans    &trans                          &trans    &trans    &trans    &trans    &trans     &trans
+&trans     &trans    &trans    &trans    &trans    &trans                          &trans    &trans    &trans    &trans    &trans     &mo SCROLL
+&trans     &trans    &trans    &trans    &trans    &trans    &trans      &trans    &trans    &trans    &trans    &mkp RCLK &mkp LCLK  &mkp MCLK
+&trans     &trans    &trans    &trans    &trans    &trans    &trans      &trans    &trans    &trans    &trans    &trans    &trans     &mo SCROLL
+                     &trans    &trans    &trans    &trans                          &trans    &trans
+            >;
+        };
+
+        scroll_layer {
+            display-name = "Scroll";
+            bindings = <
+&trans     &trans    &trans    &trans    &trans    &trans                          &trans    &trans    &trans    &trans    &trans     &trans
+&trans     &trans    &trans    &trans    &trans    &trans                          &trans    &trans    &trans    &trans    &trans     &trans
+&trans     &trans    &trans    &trans    &trans    &trans    &trans      &trans    &trans    &trans    &trans    &trans    &trans     &trans
+&trans     &trans    &trans    &trans    &trans    &trans    &trans      &trans    &trans    &trans    &trans    &trans    &trans     &trans
                      &trans    &trans    &trans    &trans                          &trans    &trans
             >;
         };
