@@ -1,0 +1,10 @@
+description: |
+  Sits in front of a UART and lets sage60's trackball tuning share it with
+  ZMK Studio (see rotate/input_rotate.c). Point zmk,studio-rpc-uart here.
+
+compatible: "sage60,uart-tap"
+
+properties:
+  uart:
+    type: phandle
+    required: true

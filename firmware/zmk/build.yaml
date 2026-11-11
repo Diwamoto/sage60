@@ -1,11 +1,12 @@
 # GitHub Actions build matrix (see .github/workflows/zmk.yml).
 ---
 include:
-  # Left is the split central; ZMK Studio over USB.
+  # Left is the split central; ZMK Studio over USB. No studio-rpc-usb-uart
+  # snippet: the shield routes Studio through its own shared serial port
+  # (the snippet's chosen would override it), so only its cpp flag is kept.
   - board: xiao_ble//zmk
     shield: sage60_left
-    snippet: studio-rpc-usb-uart
-    cmake-args: -DCONFIG_ZMK_STUDIO=y
+    cmake-args: -DCONFIG_ZMK_STUDIO=y -DDTS_EXTRA_CPPFLAGS=-DZMK_BEHAVIORS_KEEP_ALL
     artifact-name: sage60_left
   # Right = mx_right (XIAO nRF52840 Plus + PMW3610).
   - board: xiao_ble//zmk

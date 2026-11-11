@@ -132,22 +132,37 @@ static int rot_settings_set(const char *name, size_t len, settings_read_cb read_
 SETTINGS_STATIC_HANDLER_DEFINE(sage60_rot, "sage60/rot", NULL, rot_settings_set, NULL, NULL);
 #endif
 
-/* ---- USB serial: line protocol on the sage60_tune_uart CDC ACM port ----
+/* ---- USB serial, shared with ZMK Studio ----
+ * One CDC ACM port carries both ZMK Studio and the tuning lines. The
+ * sage60,uart-tap device sits in front of the real port (zmk,studio-rpc-uart
+ * points at the tap): bytes inside Studio frames (SOF 0xAB .. EOF 0xAD, ESC
+ * 0xAC) pass through to Studio, plain text lines outside frames are ours:
  *   "get"          -> "rot <angle> <angle_y> <wake_threshold> <scale_pct>"
  *   "set a b c d"  -> same reply after applying and saving, or "err"
- * case/site/tune.html talks to it via Web Serial. */
+ * A stray 0xAD outside a frame is dropped, so a client can send one first to
+ * resync if Studio left a frame half-sent. case/site/tune.html uses this. */
 
-#if DT_NODE_EXISTS(DT_NODELABEL(sage60_tune_uart))
+#if DT_HAS_COMPAT_STATUS_OKAY(sage60_uart_tap)
 #include <stdio.h>
 #include <zephyr/drivers/uart.h>
+#include <zephyr/sys/ring_buffer.h>
 
-static const struct device *const tune_uart = DEVICE_DT_GET(DT_NODELABEL(sage60_tune_uart));
+#define TAP_NODE DT_COMPAT_GET_ANY_STATUS_OKAY(sage60_uart_tap)
+#define SOF 0xAB
+#define ESC 0xAC
+#define EOF_ 0xAD
+
+static const struct device *const real = DEVICE_DT_GET(DT_PHANDLE(TAP_NODE, uart));
+RING_BUF_DECLARE(studio_rx, 256);
+static uart_irq_callback_user_data_t studio_cb;
+static void *studio_ud;
+static bool studio_rx_en, in_frame, escaped;
 static char line[48], cmd[48];
 static size_t line_len;
 
 static void tune_puts(const char *s) {
     while (*s) {
-        uart_poll_out(tune_uart, *s++);
+        uart_poll_out(real, *s++);
     }
 }
 
@@ -182,41 +197,111 @@ static void tune_work_fn(struct k_work *work) {
 
 static K_WORK_DEFINE(tune_work, tune_work_fn);
 
-static void tune_isr(const struct device *dev, void *user_data) {
-    uint8_t c;
-
-    while (uart_irq_update(dev) && uart_irq_rx_ready(dev)) {
-        while (uart_fifo_read(dev, &c, 1) == 1) {
-            if (c == '\r') {
-                continue;
-            }
-            if (c != '\n') {
-                if (line_len < sizeof(line) - 1) {
-                    line[line_len++] = c;
-                }
-                continue;
-            }
-            /* ponytail: one pending command; a line arriving mid-work is dropped. */
-            if (!k_work_is_pending(&tune_work)) {
-                line[line_len] = 0;
-                memcpy(cmd, line, line_len + 1);
-                k_work_submit(&tune_work);
-            }
-            line_len = 0;
+static void tune_byte(uint8_t c) {
+    if (c == '\r' || c == EOF_) {
+        return;
+    }
+    if (c != '\n') {
+        if (line_len < sizeof(line) - 1) {
+            line[line_len++] = c;
         }
+        return;
+    }
+    /* ponytail: one pending command; a line arriving mid-work is dropped. */
+    if (!k_work_is_pending(&tune_work)) {
+        line[line_len] = 0;
+        memcpy(cmd, line, line_len + 1);
+        k_work_submit(&tune_work);
+    }
+    line_len = 0;
+}
+
+/* Split incoming bytes between Studio's frames and our text lines. */
+static void route(uint8_t c) {
+    if (!in_frame && c != SOF) {
+        tune_byte(c);
+        return;
+    }
+    if (escaped) {
+        escaped = false;
+    } else if (c == ESC) {
+        escaped = true;
+    } else if (c == SOF) {
+        in_frame = true;
+    } else if (c == EOF_) {
+        in_frame = false;
+    }
+    /* ponytail: overflow drops Studio bytes; Studio resyncs on the next SOF. */
+    ring_buf_put(&studio_rx, &c, 1);
+}
+
+static void real_isr(const struct device *dev, void *user_data) {
+    const struct device *tap = user_data;
+    uint8_t buf[32];
+    int n;
+
+    while (uart_irq_update(real) && uart_irq_rx_ready(real) &&
+           (n = uart_fifo_read(real, buf, sizeof(buf))) > 0) {
+        for (int i = 0; i < n; i++) {
+            route(buf[i]);
+        }
+    }
+    if (studio_cb) {
+        studio_cb(tap, studio_ud);
     }
 }
 
-static int tune_init(void) {
-    if (!device_is_ready(tune_uart)) {
-        return 0;
+/* The tap's UART API: what Studio's transport sees. */
+static int tap_update(const struct device *dev) { return 1; }
+static int tap_rx_ready(const struct device *dev) {
+    return studio_rx_en && !ring_buf_is_empty(&studio_rx);
+}
+static int tap_fifo_read(const struct device *dev, uint8_t *data, int size) {
+    return ring_buf_get(&studio_rx, data, size);
+}
+static int tap_tx_ready(const struct device *dev) { return uart_irq_tx_ready(real); }
+static int tap_fifo_fill(const struct device *dev, const uint8_t *data, int size) {
+    return uart_fifo_fill(real, data, size);
+}
+static void tap_tx_enable(const struct device *dev) { uart_irq_tx_enable(real); }
+static void tap_tx_disable(const struct device *dev) { uart_irq_tx_disable(real); }
+static void tap_rx_enable(const struct device *dev) { studio_rx_en = true; }
+static void tap_rx_disable(const struct device *dev) { studio_rx_en = false; }
+static void tap_poll_out(const struct device *dev, unsigned char c) { uart_poll_out(real, c); }
+static int tap_poll_in(const struct device *dev, unsigned char *c) { return -1; }
+static void tap_callback_set(const struct device *dev, uart_irq_callback_user_data_t cb,
+                             void *ud) {
+    studio_cb = cb;
+    studio_ud = ud;
+}
+
+static DEVICE_API(uart, tap_api) = {
+    .poll_in = tap_poll_in,
+    .poll_out = tap_poll_out,
+    .fifo_fill = tap_fifo_fill,
+    .fifo_read = tap_fifo_read,
+    .irq_tx_enable = tap_tx_enable,
+    .irq_tx_disable = tap_tx_disable,
+    .irq_tx_ready = tap_tx_ready,
+    .irq_rx_enable = tap_rx_enable,
+    .irq_rx_disable = tap_rx_disable,
+    .irq_rx_ready = tap_rx_ready,
+    .irq_update = tap_update,
+    .irq_callback_set = tap_callback_set,
+};
+
+static int tap_init(const struct device *dev) {
+    if (!device_is_ready(real)) {
+        return -ENODEV;
     }
-    uart_irq_callback_set(tune_uart, tune_isr);
-    uart_irq_rx_enable(tune_uart);
+    uart_irq_callback_user_data_set(real, real_isr, (void *)dev);
+    uart_irq_rx_enable(real);
     return 0;
 }
 
-SYS_INIT(tune_init, APPLICATION, CONFIG_APPLICATION_INIT_PRIORITY);
+/* After the CDC ACM port (PRE_KERNEL_1), before Studio's transport (POST_KERNEL). */
+DEVICE_DT_DEFINE(TAP_NODE, tap_init, NULL, NULL, NULL, PRE_KERNEL_2, CONFIG_SERIAL_INIT_PRIORITY,
+                 &tap_api);
 #endif
 
 static int rotate_init(const struct device *dev) {

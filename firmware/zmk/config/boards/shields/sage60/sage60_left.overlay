@@ -84,9 +84,15 @@
     };
 };
 
-/* Second USB serial port (separate from ZMK Studio's) for case/site/tune.html. */
-&zephyr_udc0 {
-    sage60_tune_uart: sage60_tune_uart {
-        compatible = "zephyr,cdc-acm-uart";
+/* One USB serial port (the board's own CDC ACM) shared by ZMK Studio and
+ * case/site/tune.html through the tap in rotate/input_rotate.c. */
+/ {
+    chosen {
+        zmk,studio-rpc-uart = &sage60_uart_tap;
+    };
+
+    sage60_uart_tap: sage60_uart_tap {
+        compatible = "sage60,uart-tap";
+        uart = <&board_cdc_acm_uart>;
     };
 };
