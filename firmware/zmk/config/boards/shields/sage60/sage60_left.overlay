@@ -45,12 +45,12 @@
 #define SCROLL 5
 
 /* Moving the ball turns on MOUSE and it stays on (1 h timeout, i.e. never in
- * practice) until any key other than the clicks (L ; ') and the scroll keys
- * above and below ' is pressed. Typing blocks it for 500 ms so a nudged ball
- * doesn't hijack the home row. */
+ * practice) until any key other than the clicks (L ; ' = left, middle,
+ * right) and the scroll keys above and below ; is pressed. Typing blocks it
+ * for 500 ms so a nudged ball doesn't hijack the home row. */
 &zip_temp_layer {
     require-prior-idle-ms = <500>;
-    excluded-positions = <23 35 36 37 51>;
+    excluded-positions = <22 35 36 37 50>;
 };
 
 / {
