@@ -34,7 +34,7 @@ button:disabled{opacity:.4;pointer-events:none}
 
 header{display:flex;align-items:center;gap:16px;height:56px;padding:0 24px;background:var(--deep);border-bottom:1px solid var(--line)}
 header h1 span{color:var(--mute);font-weight:400}
-#status{margin-left:auto;display:flex;align-items:center;gap:8px;font:400 12px/16px var(--mono);color:var(--ink2);min-width:0}
+#status{margin-left:auto;display:flex;align-items:center;gap:8px;font:400 12px/16px var(--mono);color:var(--ink2);min-width:0;max-width:60ch}
 #status::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;background:var(--mute)}
 body:has(:is(#km,#form,#lock):not([hidden])) #status::before{background:var(--ok)}
 
@@ -253,9 +253,11 @@ $('connect').onclick = async () => {
     if (v) { show(v); $('form').hidden = false; }
 
     // Keymap: the Studio RPC client is loaded on demand so tuning works offline.
-    let studio = false;
+    let studio = false, why = 'Studio のライブラリを読み込めません(オフライン?)';
     try {
       lib ??= await import(STUDIO_CLIENT);
+      // The firmware answers Studio on USB only while USB is the selected output (zmk/app/src/studio/rpc.c).
+      why = 'キーボードの出力が Bluetooth になっています。Lower + Raise を押しながら Q の位置(出力切替)を押して USB にし、もう一度「接続」を押してください';
       const w = writer;
       conn = lib.create_rpc_connection({label: 'sage60', abortController: new AbortController(), readable: frames,
                                         writable: new WritableStream({write: c => w.write(c)})});
@@ -265,7 +267,7 @@ $('connect').onclick = async () => {
     } catch (e) { console.warn('studio', e); }
 
     if (!v && !studio) { await close(); status('応答がありません(ファームが古い可能性があります)'); return; }
-    status(studio ? '接続しました' : '接続しました(キーマップ編集は使えません: Studio 非対応ファームかオフライン)');
+    status(studio ? '接続しました' : v ? 'キーマップ編集は使えません: ' + why : '接続しました');
   } catch (e) {
     await close();
     status('接続失敗: ' + e.message);
