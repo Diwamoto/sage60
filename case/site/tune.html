@@ -2,42 +2,145 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>sage60 tune</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap">
 <style>
-:root{color-scheme:light;--bg:#f4f5f6;--ink:#17191c;--mute:#5d636b;--line:#c9cdd2;--walnut:#6a4228;--panel:#fff;
- --sans:"Hanken Grotesk","Zen Kaku Gothic New",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace}
+/* Design pass follows unslop by Damir Sokolovsky (@heydamir), CC BY 4.0.
+   Direction: exact, tactile, a little warm. Graphite surfaces stay quiet; the keycaps on the
+   plate are the one rich moment, and the walnut-amber accent marks only the selected key. */
+:root{color-scheme:dark;
+ --deep:#0f0f10;--bg:#141415;--card:#19191b;--raised:#232325;--line:rgba(237,237,237,.08);
+ --ink:#ededed;--ink2:#a1a1a6;--mute:#85858b;--accent:#d8a26a;--accent-ink:#1d1409;--ok:#4cc38a;
+ --ease:cubic-bezier(.22,1,.36,1);
+ --sans:"Geist","Zen Kaku Gothic New",system-ui,sans-serif;--mono:"Geist Mono",ui-monospace,Menlo,monospace}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.7 var(--sans);-webkit-font-smoothing:antialiased}
-main{max-width:560px;margin:0 auto;padding:40px 16px}
-h1{font-weight:600;font-size:1.6rem;margin:0 0 4px}
-p{margin:0 0 16px;color:var(--mute);font-size:.92rem}
-a{color:inherit}
-button{font:inherit;border:0;border-radius:99px;padding:8px 20px;background:var(--ink);color:#fff;cursor:pointer;min-height:40px}
-button:disabled{opacity:.4;cursor:default}
-:focus-visible{outline:2px solid var(--walnut);outline-offset:2px}
-section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px 20px;margin-top:20px}
-section[hidden]{display:none}
-label{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:14px 0;border-bottom:1px solid var(--line)}
-label:last-of-type{border-bottom:0}
-label span{font-weight:500}
-label output{font:500 .9rem var(--mono)}
-label small{grid-column:1/-1;color:var(--mute);font-size:.8rem}
-input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--walnut)}
-#status{font:400 .8rem var(--mono);color:var(--mute);margin-top:12px}
+[hidden]{display:none!important}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font:400 14px/20px var(--sans);-webkit-font-smoothing:antialiased}
+p{margin:0;color:var(--ink2)}
+h1{font:500 16px/1 var(--sans);margin:0}
+h2{font:500 14px/20px var(--sans);margin:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+button{font:500 13px/20px var(--sans);height:36px;padding:0 16px;border:0;border-radius:8px;background:var(--ink);color:#141415;cursor:pointer;
+ transition:background-color 140ms var(--ease),color 140ms var(--ease),transform 140ms var(--ease)}
+button:hover{background:#fff}
+button:active{transform:scale(.98)}
+button:disabled{opacity:.4;pointer-events:none}
+.ghost{background:var(--raised);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.ghost:hover{background:#2b2b2e}
+.quiet{background:none;color:var(--ink2);padding:0 8px}
+.quiet:hover{background:var(--raised);color:var(--ink)}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.row .ghost{background:none;color:var(--ink);border:1px solid var(--line)}
+.grow{margin-right:auto}
+
+header{display:flex;align-items:center;gap:16px;height:56px;padding:0 24px;background:var(--deep);border-bottom:1px solid var(--line)}
+header h1 span{color:var(--mute);font-weight:400}
+#status{margin-left:auto;display:flex;align-items:center;gap:8px;font:400 12px/16px var(--mono);color:var(--ink2);min-width:0}
+#status::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;background:var(--mute)}
+body:has(:is(#km,#form,#lock):not([hidden])) #status::before{background:var(--ok)}
+
+.shell{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;align-items:start;max-width:1440px;margin:0 auto;padding:24px}
+main,aside{display:grid;gap:24px;min-width:0}
+section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}
+.shell:has(#km[hidden]) #insp,
+.shell:has(:is(#km,#form,#lock):not([hidden])) #empty{display:none}
+#empty{grid-column:1/-1;min-height:calc(100vh - 104px);display:grid;place-content:center;padding:24px 24px 96px;text-align:center}
+#empty h2{font:400 28px/1.15 var(--sans);margin-bottom:12px}
+#empty p{max-width:36rem;margin:0 auto}
+#lock h2{margin-bottom:8px}
+kbd{display:inline-block;font:400 12px/20px var(--mono);padding:0 6px;border-radius:5px;color:var(--ink);
+ background:linear-gradient(#2b2b2d,#222224);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 1px 0 #0a0a0b}
+
+/* keymap */
+#dirty{font:400 12px/16px var(--mono);color:var(--accent);margin-right:4px}
+#layers{gap:4px;margin:16px 0}
+#layers button{height:32px;padding:0 12px;font-weight:400;background:none;color:var(--ink2)}
+#layers button:hover{color:var(--ink);background:var(--raised)}
+#layers button[aria-selected=true]{color:var(--ink);background:linear-gradient(#2b2b2d,#222224);box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+.plate{background:var(--deep);border-radius:12px;padding:16px;box-shadow:inset 0 0 0 1px var(--line),inset 0 2px 8px rgba(0,0,0,.5)}
+#board{position:relative;container-type:inline-size}
+.key{position:absolute;height:auto;padding:0;border-radius:0;background:none;color:var(--ink);font:500 clamp(10px,1.45cqw,14px)/1.15 var(--sans)}
+.key:hover,.key:active{background:none;transform:none}
+.cap{position:absolute;inset:4%;border-radius:min(8px,.9cqw);overflow:hidden;padding:0 2px;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+ background:linear-gradient(#2c2c2f,#222224);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 0 1px #09090a,0 3px 0 #0b0b0c;
+ transition:background 140ms var(--ease),transform 140ms var(--ease),box-shadow 140ms var(--ease)}
+.cap:has(small){font-size:.8em;line-height:1.1}
+.cap small{font:400 .82em/1.1 var(--sans);color:var(--mute)}
+.key:hover .cap{background:linear-gradient(#343437,#28282a)}
+.key:active .cap{transform:translateY(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 0 1px #09090a,0 1px 0 #0b0b0c}
+.key:focus-visible{outline:0}
+.key:focus-visible .cap{outline:2px solid var(--accent);outline-offset:1px}
+/* keys that only pass through read as blanks, so a layer's real bindings stand out */
+.key:is([data-b=Transparent],[data-b=None]) .cap{background:#1b1b1d;color:var(--mute);font-weight:400}
+.key[aria-pressed=true] .cap{background:linear-gradient(#e0ad78,#cf9659);color:var(--accent-ink);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 1px #09090a,0 3px 0 #6f4b25}
+.key[aria-pressed=true] .cap small{color:#5a3d1c}
+
+/* inspector */
+#insp h2,#form h2{margin-bottom:0}
+#editor{display:grid;gap:12px;margin-top:16px}
+#editor>label{display:grid;gap:4px;font-size:12px;line-height:16px;color:var(--mute)}
+select{font:400 14px/20px var(--sans);height:36px;width:100%;padding:0 8px;border:0;border-radius:8px;background:var(--raised);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+#editor .mods{gap:4px}
+#editor label.mods{position:relative;display:grid;place-items:center;height:32px;padding:0 10px;border-radius:6px;cursor:pointer;
+ font:400 12px/16px var(--mono);color:var(--ink2);background:linear-gradient(#2c2c2f,#222224);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 0 1px #09090a,0 2px 0 #0b0b0c;transition:background 140ms var(--ease),color 140ms var(--ease)}
+#editor label.mods input{position:absolute;inset:0;margin:0;opacity:0;cursor:pointer}
+#editor label.mods:has(:checked){background:linear-gradient(#e0ad78,#cf9659);color:var(--accent-ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 1px #09090a,0 2px 0 #6f4b25}
+#editor label.mods:has(:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+#stock{width:100%;margin-top:20px;justify-content:center}
+
+/* trackball */
+#form label{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:16px 0;border-bottom:1px solid var(--line)}
+#form label:first-of-type{margin-top:4px}
+#form label:last-of-type{border-bottom:0;padding-bottom:0}
+#form output{font:400 13px/20px var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
+#form small{grid-column:1/-1;font-size:12px;line-height:16px;color:var(--mute)}
+input[type=range]{grid-column:1/-1;width:100%;height:20px;margin:0;accent-color:var(--accent)}
+
+@media(max-width:900px){.shell{grid-template-columns:minmax(0,1fr);padding:16px;gap:16px}main,aside{gap:16px}header{padding:0 16px}}
 </style>
 
-<main>
- <h1>Trackball tune</h1>
- <p>左半分をUSBでつなぎ、トラックボールの補正をその場で変更します。値はキーボードに保存されます。Chrome / Edge が必要です。ZMK Studio と同じポートを使うので、Studio を開いているタブは先に閉じてください。</p>
- <div class="row">
-  <button id="connect">接続</button>
-  <button id="reset" class="ghost" hidden>初期値に戻す</button>
- </div>
- <div id="status"></div>
+<header>
+ <h1>sage60 <span>tune</span></h1>
+ <div id="status" role="status">未接続</div>
+ <button id="connect">接続</button>
+</header>
 
- <section id="form" hidden>
+<div class="shell">
+ <section id="empty">
+  <h2>左半分を USB でつなぐ</h2>
+  <p>キーマップとトラックボールの補正をその場で変更します。Chrome か Edge で開き、ZMK Studio のタブは同じポートを使うので先に閉じてください。</p>
+ </section>
+
+ <main>
+  <section id="lock" hidden>
+   <h2>ロック中</h2>
+   <p>キーボードの <kbd>&amp;studio_unlock</kbd> を押すとキーマップを編集できます。MX は <kbd>Lower</kbd> <kbd>Raise</kbd> を押しながら、右端の列の <kbd>P</kbd> <kbd>;</kbd> <kbd>/</kbd> の右どれか。押すとこの表示は消えます。</p>
+  </section>
+
+  <section id="km" hidden>
+   <div class="row">
+    <h2 class="grow">キーマップ</h2>
+    <span id="dirty" hidden>未保存 電源を切ると消えます</span>
+    <button id="discard" class="ghost" disabled>破棄</button>
+    <button id="save" disabled>保存</button>
+   </div>
+   <div id="layers" class="row" role="tablist" aria-label="レイヤー"></div>
+   <div class="plate"><div id="board"></div></div>
+  </section>
+ </main>
+
+ <aside>
+  <section id="insp">
+   <h2>割り当て</h2>
+   <div id="editor"><p>キーを選ぶと割り当てを変更できます。変更はすぐキーボードに反映され、保存で書き込まれます。</p></div>
+   <button id="stock" class="ghost" title="キーボードに保存した変更を消し、ファームウェアの .keymap の内容に戻します">ファームの初期配列に戻す</button>
+  </section>
+
+  <section id="form" hidden>
+   <div class="row"><h2 class="grow">トラックボール</h2><button id="reset" class="quiet">初期値に戻す</button></div>
   <label><span>横の傾き補正</span><output id="o-angle"></output>
    <input id="angle" type="range" min="-60" max="60" step="1">
    <small>真横に転がしたとき右下へ流れるなら小さく、右上なら大きく</small></label>
@@ -52,13 +155,18 @@ input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--walnut)}
   <label><span>スクロールの重さ</span><output id="o-scroll_div"></output>
    <input id="scroll_div" type="range" min="2" max="40" step="1">
    <small>1段スクロールするのに必要なボールの量。小さいほど速く、大きいほどゆっくり</small></label>
- </section>
-</main>
+ 
+ 
+  </section>
+ </aside>
+</div>
 
 <script>
-// Line protocol of firmware/zmk/config/rotate/input_rotate.c (USB serial):
-//   "get" / "set a b c d e"  ->  "rot <angle> <angle_y> <wake_threshold> <scale_pct> <scroll_div>" | "err"
-// The port is shared with ZMK Studio; a leading 0xAD ends any half-sent Studio frame.
+// One USB serial port carries two protocols (firmware/zmk/config/rotate/input_rotate.c):
+//  - ZMK Studio RPC frames (SOF 0xAB .. EOF 0xAD, ESC 0xAC) -> keymap editing
+//  - text lines outside frames: "get" / "set a b c d e" -> "rot <angle> <angle_y> <wake_threshold> <scale_pct> <scroll_div>" | "err"
+// A leading 0xAD ends any half-sent Studio frame.
+const STUDIO_CLIENT = 'https://esm.sh/@zmkfirmware/zmk-studio-ts-client@0.0.18';
 const FIELDS = ['angle', 'angle_y', 'wake_threshold', 'scale_pct', 'scroll_div'];
 const DEFAULTS = {angle: 15, angle_y: 15, wake_threshold: 6, scale_pct: 100, scroll_div: 12}; // sage60_left.overlay
 const UNIT = {angle: '°', angle_y: '°', wake_threshold: '', scale_pct: '%', scroll_div: ''};
@@ -66,47 +174,64 @@ const ZMK_VID = 0x1d50;
 
 const $ = id => document.getElementById(id);
 const status = t => $('status').textContent = t;
-let port = null, reader = null, writer = null, buf = '';
+const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 
-function show(v) {
-  for (const f of FIELDS) { $(f).value = v[f]; $('o-' + f).textContent = v[f] + UNIT[f]; }
-}
-function read() {
-  return Object.fromEntries(FIELDS.map(f => [f, +$(f).value]));
-}
-// Send one line, return the reply line (or null after timeout).
-async function ask(line, ms = 800) {
-  await writer.write(new TextEncoder().encode(line + '\n'));
-  const timer = new Promise(r => setTimeout(() => r(null), ms));
-  const reply = (async () => {
-    while (!buf.includes('\n')) {
-      const {value, done} = await reader.read();
-      if (done) return null;
-      buf += new TextDecoder().decode(value);
+// demux:start
+// Split incoming bytes: Studio frames -> onFrame(Uint8Array), text lines -> onLine(string).
+function makeDemux(onFrame, onLine) {
+  let inFrame = false, esc = false, text = '';
+  return chunk => {
+    const out = [];
+    for (const c of chunk) {
+      if (!inFrame && c !== 0xAB) {
+        if (c === 10) { onLine(text.trim()); text = ''; }
+        else if (c < 0x80 && text.length < 200) text += String.fromCharCode(c); // a stray frame byte is not text
+        continue;
+      }
+      out.push(c);
+      if (esc) esc = false;
+      else if (c === 0xAC) esc = true;
+      else if (c === 0xAB) inFrame = true;
+      else if (c === 0xAD) inFrame = false;
     }
-    const i = buf.indexOf('\n'), l = buf.slice(0, i).trim();
-    buf = buf.slice(i + 1);
-    return l;
-  })();
-  return Promise.race([reply, timer]);
+    if (out.length) onFrame(new Uint8Array(out));
+  };
 }
-function parse(l) {
-  const m = /^rot (-?\d+) (-?\d+) (-?\d+) (-?\d+) (-?\d+)$/.exec(l || '');
-  return m && Object.fromEntries(FIELDS.map((f, i) => [f, +m[i + 1]]));
-}
-async function write(v) {
-  const r = parse(await ask('set ' + FIELDS.map(f => v[f]).join(' ')));
-  if (r) { show(r); status('保存しました'); } else status('書き込み失敗');
-}
+// demux:end
+
+// ---- connection: one read loop, one request at a time ----
+let port = null, reader = null, writer = null, rpcCtl = null, lineWaiter = null;
+let lib = null, conn = null, chain = Promise.resolve();
+
+// Requests never overlap: the firmware's text reply is written straight to the
+// port and would land inside a Studio frame otherwise.
+const enqueue = fn => { const p = chain.then(fn); chain = p.catch(() => {}); return p; };
+const within = (p, ms) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error('応答がありません')), ms))]);
+
+const ask = line => enqueue(async () => {
+  const reply = new Promise(r => lineWaiter = r);
+  await writer.write(new TextEncoder().encode(line + '\n'));
+  return Promise.race([reply, new Promise(r => setTimeout(() => r(null), 800))]);
+});
+// A lost reply leaves the client's stream out of step, so by default it ends the connection.
+const rpc = (req, fatal = true) => enqueue(async () => {
+  const c = conn;
+  try { return await within(lib.call_rpc(c, req), 3000); }
+  catch (e) { if (fatal && c === conn && !e?.condition) await fail('キーボードが応答しません'); throw e; }
+});
+async function fail(msg) { await close(); status(msg + '。「接続」を押し直してください'); }
+
 async function close() {
-  try { reader?.cancel(); reader?.releaseLock(); writer?.releaseLock(); await port?.close(); } catch {}
-  port = reader = writer = null; buf = '';
-  $('form').hidden = $('reset').hidden = true;
+  try { rpcCtl?.close(); } catch {}
+  try { await reader?.cancel(); reader?.releaseLock(); writer?.releaseLock(); await port?.close(); } catch {}
+  port = reader = writer = rpcCtl = conn = null;
+  km = null; sel = -1; behaviors.clear();
+  $('form').hidden = $('km').hidden = $('lock').hidden = true;
 }
 
 if (!navigator.serial) {
   $('connect').disabled = true;
-  status('このブラウザは Web Serial に対応していません(Chrome / Edge を使ってください)');
+  status('このブラウザは Web Serial 非対応です。Chrome か Edge で開いてください');
 }
 
 $('connect').onclick = async () => {
@@ -116,16 +241,31 @@ $('connect').onclick = async () => {
     await port.open({baudRate: 115200});
     reader = port.readable.getReader();
     writer = port.writable.getWriter();
+    const frames = new ReadableStream({start: c => { rpcCtl = c; }});
+    const feed = makeDemux(b => rpcCtl?.enqueue(b), l => { lineWaiter?.(l); lineWaiter = null; });
+    const r = reader;
+    (async () => { for (;;) { const {value, done} = await r.read(); if (done) break; feed(value); } })()
+      .catch(() => { if (r === reader) fail('通信エラー'); }); // e.g. a malformed frame broke the RPC stream
     await writer.write(new Uint8Array([0xAD]));
+
+    // Trackball tuning: only firmware with the serial tap answers.
     const v = parse(await ask('get'));
-    if (!v) {
-      await close();
-      status('応答がありません(ファームが古い可能性があります)');
-      return;
-    }
-    show(v);
-    $('form').hidden = $('reset').hidden = false;
-    status('接続しました');
+    if (v) { show(v); $('form').hidden = false; }
+
+    // Keymap: the Studio RPC client is loaded on demand so tuning works offline.
+    let studio = false;
+    try {
+      lib ??= await import(STUDIO_CLIENT);
+      const w = writer;
+      conn = lib.create_rpc_connection({label: 'sage60', abortController: new AbortController(), readable: frames,
+                                        writable: new WritableStream({write: c => w.write(c)})});
+      notifications(conn);
+      setLocked((await rpc({core: {getLockState: true}}, false)).core.getLockState === 0); // not fatal: tuning still works
+      studio = true;
+    } catch (e) { console.warn('studio', e); }
+
+    if (!v && !studio) { await close(); status('応答がありません(ファームが古い可能性があります)'); return; }
+    status(studio ? '接続しました' : '接続しました(キーマップ編集は使えません: Studio 非対応ファームかオフライン)');
   } catch (e) {
     await close();
     status('接続失敗: ' + e.message);
@@ -133,9 +273,214 @@ $('connect').onclick = async () => {
 };
 navigator.serial?.addEventListener('disconnect', e => { if (e.target === port) { close(); status('切断されました'); } });
 
+// ---- trackball ----
+function show(v) {
+  for (const f of FIELDS) { $(f).value = v[f]; $('o-' + f).textContent = v[f] + UNIT[f]; }
+}
+function parse(l) {
+  const m = /^rot (-?\d+) (-?\d+) (-?\d+) (-?\d+) (-?\d+)$/.exec(l || '');
+  return m && Object.fromEntries(FIELDS.map((f, i) => [f, +m[i + 1]]));
+}
+async function write(v) {
+  const r = parse(await ask('set ' + FIELDS.map(f => v[f]).join(' ')));
+  if (r) { show(r); status('保存しました'); } else status('書き込み失敗');
+}
 for (const f of FIELDS) {
   $(f).oninput = () => $('o-' + f).textContent = $(f).value + UNIT[f];
-  $(f).onchange = () => write(read()); // on release only: each write is a flash save
+  $(f).onchange = () => write(Object.fromEntries(FIELDS.map(f => [f, +$(f).value]))); // on release only: each write is a flash save
 }
 $('reset').onclick = () => write(DEFAULTS);
+
+// ---- keymap ----
+// HID usages as ZMK encodes them: mods << 24 | page << 16 | id. [usage, label, KeyboardEvent.code]
+const KB = 0x070000, CC = 0x0C0000;
+const KEYS = [
+  ...[...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].map((c, i) => [KB | 4 + i, c, 'Key' + c]),
+  ...[...'1234567890'].map((c, i) => [KB | 30 + i, c, 'Digit' + c]),
+  ...[[40, 'Enter', 'Enter'], [41, 'Esc', 'Escape'], [42, 'Bksp', 'Backspace'], [43, 'Tab', 'Tab'], [44, 'Space', 'Space'],
+      [45, '-', 'Minus'], [46, '=', 'Equal'], [47, '[', 'BracketLeft'], [48, ']', 'BracketRight'], [49, '\\', 'Backslash'],
+      [51, ';', 'Semicolon'], [52, "'", 'Quote'], [53, '`', 'Backquote'], [54, ',', 'Comma'], [55, '.', 'Period'], [56, '/', 'Slash'],
+      [79, '→', 'ArrowRight'], [80, '←', 'ArrowLeft'], [81, '↓', 'ArrowDown'], [82, '↑', 'ArrowUp'],
+      [74, 'Home', 'Home'], [77, 'End', 'End'], [75, 'PgUp', 'PageUp'], [78, 'PgDn', 'PageDown'], [76, 'Del', 'Delete'], [73, 'Ins', 'Insert'],
+      [0xE0, 'Ctrl', 'ControlLeft'], [0xE1, 'Shift', 'ShiftLeft'], [0xE2, 'Alt', 'AltLeft'], [0xE3, 'Cmd', 'MetaLeft'],
+      [0xE4, 'RCtrl', 'ControlRight'], [0xE5, 'RShift', 'ShiftRight'], [0xE6, 'RAlt', 'AltRight'], [0xE7, 'RCmd', 'MetaRight'],
+      [0x90, 'かな', 'Lang1'], [0x91, '英数', 'Lang2'], [0x87, 'ろ', 'IntlRo'], [0x89, '¥', 'IntlYen'], [57, 'Caps', 'CapsLock'],
+      [0x7A, 'Undo'], [0x7B, 'Cut'], [0x7C, 'Copy'], [0x7D, 'Paste'], [70, 'PrtSc', 'PrintScreen']].map(([id, l, c]) => [KB | id, l, c]),
+  ...Array.from({length: 12}, (_, i) => [KB | 58 + i, 'F' + (i + 1), 'F' + (i + 1)]),
+  ...[[0xE9, 'Vol+'], [0xEA, 'Vol−'], [0xE2, 'Mute'], [0xCD, 'Play'], [0xB5, 'Next'], [0xB6, 'Prev'], [0x6F, 'Bri+'], [0x70, 'Bri−']].map(([id, l]) => [CC | id, l]),
+];
+const KEY_LABEL = new Map(KEYS.map(k => [k[0], k[1]]));
+const CODE_USAGE = new Map(KEYS.filter(k => k[2]).map(k => [k[2], k[0]]));
+const MODS = [[1, '⌃', 'Ctrl'], [2, '⇧', 'Shift'], [4, '⌥', 'Alt'], [8, '⌘', 'Cmd']];
+const hidLabel = v => {
+  const base = v & 0xFFFFFF, m = v >>> 24;
+  // ponytail: right-hand implicit mods (bits 4-7) show as left ones; they survive edits untouched.
+  return MODS.filter(([b]) => m & (b | b << 4)).map(x => x[1]).join('') +
+         (KEY_LABEL.get(base) ?? KEY_LABEL.get(base | KB) ?? '0x' + base.toString(16));
+};
+
+let km = null, keys = [], cur = 0, sel = -1;
+const behaviors = new Map();
+const layerName = (l, i) => l.name || 'Layer ' + i;
+
+// Run a UI action; an "unlock required" error from the firmware flips the lock banner.
+const guard = fn => async (...a) => {
+  try { await fn(...a); } catch (e) {
+    if (e?.condition === 1) setLocked(true); else if (port) status('エラー: ' + (e?.message ?? e));
+  }
+};
+
+function setLocked(locked) {
+  $('lock').hidden = !locked;
+  if (locked) { $('km').hidden = true; km = null; } else guard(loadKeymap)();
+}
+function setDirty(d) {
+  $('dirty').hidden = !d;
+  $('save').disabled = $('discard').disabled = !d;
+}
+async function notifications(c) {
+  const r = c.notification_readable.getReader();
+  for (;;) {
+    const {value, done} = await r.read().catch(() => ({done: true}));
+    if (done) return;
+    if (value.core?.lockStateChanged !== undefined) setLocked(value.core.lockStateChanged === 0);
+    if (value.keymap?.unsavedChangesStatusChanged !== undefined) setDirty(value.keymap.unsavedChangesStatusChanged);
+  }
+}
+
+async function loadKeymap() {
+  if (!behaviors.size) {
+    status('キーマップを読み込み中…');
+    for (const id of (await rpc({behaviors: {listAllBehaviors: true}})).behaviors.listAllBehaviors.behaviors)
+      behaviors.set(id, (await rpc({behaviors: {getBehaviorDetails: {behaviorId: id}}})).behaviors.getBehaviorDetails);
+    status('接続しました');
+  }
+  const pl = (await rpc({keymap: {getPhysicalLayouts: true}})).keymap.getPhysicalLayouts;
+  keys = pl.layouts[pl.activeLayoutIndex].keys;
+  km = (await rpc({keymap: {getKeymap: true}})).keymap.getKeymap;
+  setDirty((await rpc({keymap: {checkUnsavedChanges: true}})).keymap.checkUnsavedChanges);
+  cur = Math.min(cur, km.layers.length - 1);
+  $('km').hidden = false;
+  render();
+}
+
+// Behavior parameter metadata: each set lists what param1 may be and, given that, param2.
+const match = (d, v) => d.constant !== undefined ? d.constant === v : d.range ? v >= d.range.min && v <= d.range.max :
+                        d.layerId ? km.layers.some(l => l.id === v) : d.hidUsage ? v > 0 : v === 0;
+const descs1 = beh => beh.metadata.flatMap(s => s.param1);
+const descs2 = (beh, p1) => beh.metadata.filter(s => !s.param1.length || s.param1.some(d => match(d, p1))).flatMap(s => s.param2);
+// Choices for a param: [value, label, isHidUsage]
+function options(descs) {
+  const o = new Map();
+  for (const d of descs) {
+    if (d.constant !== undefined) o.set(d.constant, [d.constant, d.name]);
+    else if (d.layerId) km.layers.forEach((l, i) => o.set(l.id, [l.id, layerName(l, i)]));
+    // ponytail: ranges list at most 64 values; wider ones need a number input.
+    else if (d.range) for (let v = d.range.min; v <= Math.min(d.range.max, d.range.min + 63); v++) o.set(v, [v, d.name + ' ' + v]);
+    else if (d.hidUsage) for (const [u, l] of KEYS) o.set(u, [u, l, true]);
+  }
+  return [...o.values()];
+}
+const isHid = (descs, v) => descs.some(d => d.hidUsage) && !descs.some(d => !d.hidUsage && !d.nil && match(d, v));
+function paramLabel(descs, v) {
+  if (!descs.length || descs.every(d => d.nil)) return '';
+  if (isHid(descs, v)) return hidLabel(v);
+  return options(descs).find(o => o[0] === v)?.[1] ?? String(v);
+}
+// Make a binding's params valid for its behavior (after switching behavior or param1).
+function fix(b) {
+  const beh = behaviors.get(b.behaviorId);
+  const ok = (ds, v) => ds.length ? ds.some(d => match(d, v)) : v === 0;
+  const d1 = descs1(beh);
+  if (!ok(d1, b.param1)) b.param1 = options(d1)[0]?.[0] ?? 0;
+  const d2 = descs2(beh, b.param1);
+  if (!ok(d2, b.param2)) b.param2 = options(d2)[0]?.[0] ?? 0;
+  return b;
+}
+
+const SHORT = {'Key Press': '', 'Transparent': '▽', 'None': '✕'};
+function render() {
+  $('layers').replaceChildren(...km.layers.map((l, i) => el('button', {
+    textContent: layerName(l, i), role: 'tab', ariaSelected: i === cur,
+    onclick: () => { cur = i; render(); },
+  })));
+  const W = Math.max(...keys.map(k => k.x + k.width)), H = Math.max(...keys.map(k => k.y + k.height)) + 30;
+  const board = $('board');
+  board.style.aspectRatio = W + '/' + H;
+  board.replaceChildren(...km.layers[cur].bindings.map((b, i) => {
+    const k = keys[i], beh = behaviors.get(b.behaviorId);
+    const name = beh ? SHORT[beh.displayName] ?? beh.displayName : '?';
+    const p = beh ? [paramLabel(descs1(beh), b.param1), paramLabel(descs2(beh, b.param1), b.param2)].filter(Boolean).join(' ') : '';
+    const key = el('button', {className: 'key', ariaPressed: i === sel, onclick: () => { sel = i; render(); }},
+                   el('span', {className: 'cap'}, ...(name && p ? [el('small', {textContent: name})] : []), p || name));
+    key.dataset.b = beh?.displayName ?? '';
+    key.setAttribute('aria-label', `キー ${i}: ${beh?.displayName ?? ''} ${p}`);
+    Object.assign(key.style, {left: k.x / W * 100 + '%', top: k.y / H * 100 + '%', width: k.width / W * 100 + '%', height: k.height / H * 100 + '%'});
+    if (k.r) Object.assign(key.style, {transform: `rotate(${k.r / 100}deg)`,
+                                       transformOrigin: `${(k.rx - k.x) / k.width * 100}% ${(k.ry - k.y) / k.height * 100}%`});
+    return key;
+  }));
+  renderEditor();
+}
+
+function renderEditor() {
+  const b = km.layers[cur].bindings[sel], beh = b && behaviors.get(b.behaviorId);
+  if (!beh) return;
+  const pick = (label, opts, value, onpick) => el('label', {}, label, el('select', {
+    onchange: e => onpick(+e.target.value),
+  }, ...opts.map(([v, l]) => el('option', {value: v, textContent: l, selected: v === value}))));
+  const param = (n, descs) => {
+    if (!descs.length || descs.every(d => d.nil)) return [];
+    const v = b['param' + n], hid = isHid(descs, v), base = hid ? v & 0xFFFFFF : v;
+    const opts = options(descs);
+    if (!opts.some(o => o[0] === base)) opts.unshift([base, hid ? hidLabel(base) : String(base), hid]);
+    const set = nv => apply({...b, ['param' + n]: nv});
+    const out = [pick(descs.find(d => d.constant === undefined && d.name)?.name || '値', opts, base,
+                      nv => set(opts.find(o => o[0] === nv)[2] ? (nv | (hid ? v & 0xFF000000 : 0)) >>> 0 : nv))];
+    if (hid) {
+      out.push(el('span', {className: 'row mods'}, ...MODS.flatMap(([bit, , name]) => [el('label', {className: 'mods'}, el('input', {
+        type: 'checkbox', checked: !!(v >>> 24 & (bit | bit << 4)),
+        onchange: e => set(((v & ~((bit | bit << 4) << 24)) | (e.target.checked ? bit << 24 : 0)) >>> 0),
+      }), name)])));
+      // One-shot: the next physical key pressed becomes the binding.
+      out.push(el('button', {className: 'ghost', textContent: '押して指定', onclick: e => {
+        e.target.textContent = 'キーを押す…';
+        addEventListener('keydown', ev => {
+          ev.preventDefault();
+          const u = CODE_USAGE.get(ev.code);
+          if (u) set(u); else { status('このキーは一覧から選んでください: ' + ev.code); renderEditor(); }
+        }, {once: true, capture: true});
+      }}));
+    }
+    return out;
+  };
+  $('editor').replaceChildren(
+    pick('動作', [...behaviors.values()].map(x => [x.id, x.displayName]).sort((a, c) => a[1].localeCompare(c[1])), b.behaviorId,
+         id => apply({behaviorId: id, param1: b.param1, param2: b.param2})),
+    ...param(1, descs1(beh)), ...param(2, descs2(beh, b.param1)));
+}
+
+const apply = guard(async nb => {
+  const L = km.layers[cur], pos = sel;
+  fix(nb);
+  const r = (await rpc({keymap: {setLayerBinding: {layerId: L.id, keyPosition: pos, binding: nb}}})).keymap.setLayerBinding;
+  if (r === 0) { L.bindings[pos] = nb; setDirty(true); status('反映しました(未保存)'); }
+  else status('キーボードが拒否しました (' + r + ')');
+  render();
+});
+$('save').onclick = guard(async () => {
+  const r = (await rpc({keymap: {saveChanges: true}})).keymap.saveChanges;
+  if (r.ok) { setDirty(false); status('キーボードに保存しました'); } else status('保存失敗 (' + r.err + ')');
+});
+$('discard').onclick = guard(async () => {
+  await rpc({keymap: {discardChanges: true}});
+  await loadKeymap();
+  status('変更を破棄しました');
+});
+$('stock').onclick = guard(async () => {
+  if (!confirm('キーボードに保存したキーマップの変更をすべて消して、ファームウェアの配列に戻します(Bluetooth のペアリングやトラックボールの補正は消えません)。よろしいですか?')) return;
+  const ok = (await rpc({core: {resetSettings: true}})).core.resetSettings;
+  await loadKeymap();
+  status(ok ? 'ファームウェアの配列に戻しました' : '初期化に失敗しました');
+});
 </script>
