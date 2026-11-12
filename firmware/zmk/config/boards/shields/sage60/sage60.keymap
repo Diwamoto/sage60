@@ -85,7 +85,7 @@
 &trans     &trans    &trans    &trans    &trans    &trans                          &trans    &trans    &trans    &trans    &trans     &trans
 &trans     &trans    &trans    &trans    &trans    &trans                          &trans    &trans    &trans    &trans    &mkp MB5   &mkp RCLK
 &trans     &trans    &trans    &trans    &trans    &trans    &trans      &trans    &trans    &trans    &trans    &mkp MB4  &mkp LCLK  &mo SCROLL
-&trans     &trans    &trans    &trans    &trans    &trans    &trans      &trans    &trans    &trans    &trans    &trans    &mo GESTURE &trans
+&trans     &trans    &trans    &trans    &trans    &trans    &trans      &trans    &trans    &trans    &trans    &trans    &mo GESTURE &mo GESTURE
                      &trans    &trans    &trans    &trans                          &trans    &trans
             >;
         };

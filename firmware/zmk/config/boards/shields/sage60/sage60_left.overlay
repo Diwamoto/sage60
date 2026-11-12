@@ -49,13 +49,13 @@
 
 /* Moving the ball turns on MOUSE and it stays on (1 h timeout, i.e. never in
  * practice) until a key outside the mouse keys (L back, P forward, ; left,
- * | right, ' scroll, / gesture) and the modifiers (Ctrl, both
- * Shifts, Alt, Cmd, for Cmd-click etc.) is pressed. Typing blocks it for
- * 500 ms so a nudged ball doesn't hijack the home row. */
+ * | right, ' scroll, / and the key right of it gesture) and the modifiers
+ * (Ctrl, both Shifts, Alt, Cmd, for Cmd-click etc.) is pressed. Typing blocks
+ * it for 500 ms so a nudged ball doesn't hijack the home row. */
 &zip_temp_layer {
     require-prior-idle-ms = <500>;
     excluded-positions = <22 23 35 36 37 50 /* mouse keys */
-                          24 38 51 52 53>; /* LCTRL LSHFT RSHFT LALT LGUI */
+                          24 38 51 52 53>; /* LCTRL LSHFT RSHFT(gesture here) LALT LGUI */
 };
 
 / {
@@ -80,7 +80,7 @@
         #input-processor-cells = <0>;
     };
 
-    /* Hold / and roll up for Mission Control, down for Esc. */
+    /* Hold / (or the key right of it) and roll up for Mission Control, down for Esc. */
     sage60_gesture: sage60_gesture {
         compatible = "sage60,input-gesture";
         #input-processor-cells = <0>;
