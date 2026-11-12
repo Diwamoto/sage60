@@ -49,7 +49,7 @@
 
 /* Moving the ball turns on MOUSE and it stays on (1 h timeout, i.e. never in
  * practice) until a key outside the mouse keys (L back, P forward, ; left,
- * | right, ' scroll, the scroll key below ;) and the modifiers (Ctrl, both
+ * | right, ' scroll, / gesture) and the modifiers (Ctrl, both
  * Shifts, Alt, Cmd, for Cmd-click etc.) is pressed. Typing blocks it for
  * 500 ms so a nudged ball doesn't hijack the home row. */
 &zip_temp_layer {
@@ -80,7 +80,7 @@
         #input-processor-cells = <0>;
     };
 
-    /* Hold the key above ; and roll up for Mission Control, down for Esc. */
+    /* Hold / and roll up for Mission Control, down for Esc. */
     sage60_gesture: sage60_gesture {
         compatible = "sage60,input-gesture";
         #input-processor-cells = <0>;
