@@ -24,17 +24,6 @@
 #define GESTURE 6   /* held: ball up = Mission Control, down = Esc (sage60_left.overlay) */
 
 / {
-    behaviors {
-        /* Middle click on tap, scroll while held (sage60 mouse layer). */
-        mclk_scroll: mclk_scroll {
-            compatible = "zmk,behavior-hold-tap";
-            #binding-cells = <2>;
-            flavor = "hold-preferred";
-            tapping-term-ms = <200>;
-            bindings = <&mo>, <&mkp>;
-        };
-    };
-
     conditional_layers {
         compatible = "zmk,conditional-layers";
         adjust {
@@ -94,8 +83,8 @@
             display-name = "Mouse";
             bindings = <
 &trans     &trans    &trans    &trans    &trans    &trans                          &trans    &trans    &trans    &trans    &trans     &trans
-&trans     &trans    &trans    &trans    &trans    &trans                          &trans    &trans    &trans    &trans    &mo GESTURE &trans
-&trans     &trans    &trans    &trans    &trans    &trans    &trans      &trans    &trans    &trans    &trans    &mkp LCLK &mclk_scroll SCROLL MCLK &mkp RCLK
+&trans     &trans    &trans    &trans    &trans    &trans                          &trans    &trans    &trans    &trans    &mkp MB5   &mkp RCLK
+&trans     &trans    &trans    &trans    &trans    &trans    &trans      &trans    &trans    &trans    &trans    &mkp MB4  &mkp LCLK  &mo SCROLL
 &trans     &trans    &trans    &trans    &trans    &trans    &trans      &trans    &trans    &trans    &trans    &trans    &mo SCROLL &trans
                      &trans    &trans    &trans    &trans                          &trans    &trans
             >;
