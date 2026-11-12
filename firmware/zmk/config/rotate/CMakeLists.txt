@@ -1,4 +1,6 @@
 if(CONFIG_SAGE60_INPUT_ROTATE)
   zephyr_library()
+  zephyr_include_directories(${APPLICATION_SOURCE_DIR}/include)
   zephyr_library_sources(input_rotate.c)
+  zephyr_library_sources_ifdef(CONFIG_SAGE60_INPUT_GESTURE gesture.c)
 endif()

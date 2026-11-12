@@ -19,8 +19,9 @@
 #define LOWER   1
 #define RAISE   2
 #define ADJUST  3
-#define MOUSE   4   /* MOUSE and SCROLL are also used in sage60_left.overlay */
+#define MOUSE   4   /* MOUSE, SCROLL and GESTURE are also used in sage60_left.overlay */
 #define SCROLL  5
+#define GESTURE 6   /* held: ball up = Mission Control, down = Esc (sage60_left.overlay) */
 
 / {
     conditional_layers {
@@ -82,7 +83,7 @@
             display-name = "Mouse";
             bindings = <
 &trans     &trans    &trans    &trans    &trans    &trans                          &trans    &trans    &trans    &trans    &trans     &trans
-&trans     &trans    &trans    &trans    &trans    &trans                          &trans    &trans    &trans    &trans    &mo SCROLL &trans
+&trans     &trans    &trans    &trans    &trans    &trans                          &trans    &trans    &trans    &trans    &mo GESTURE &trans
 &trans     &trans    &trans    &trans    &trans    &trans    &trans      &trans    &trans    &trans    &trans    &mkp LCLK &mkp MCLK  &mkp RCLK
 &trans     &trans    &trans    &trans    &trans    &trans    &trans      &trans    &trans    &trans    &trans    &trans    &mo SCROLL &trans
                      &trans    &trans    &trans    &trans                          &trans    &trans
@@ -91,6 +92,17 @@
 
         scroll_layer {
             display-name = "Scroll";
+            bindings = <
+&trans     &trans    &trans    &trans    &trans    &trans                          &trans    &trans    &trans    &trans    &trans     &trans
+&trans     &trans    &trans    &trans    &trans    &trans                          &trans    &trans    &trans    &trans    &trans     &trans
+&trans     &trans    &trans    &trans    &trans    &trans    &trans      &trans    &trans    &trans    &trans    &trans    &trans     &trans
+&trans     &trans    &trans    &trans    &trans    &trans    &trans      &trans    &trans    &trans    &trans    &trans    &trans     &trans
+                     &trans    &trans    &trans    &trans                          &trans    &trans
+            >;
+        };
+
+        gesture_layer {
+            display-name = "Gesture";
             bindings = <
 &trans     &trans    &trans    &trans    &trans    &trans                          &trans    &trans    &trans    &trans    &trans     &trans
 &trans     &trans    &trans    &trans    &trans    &trans                          &trans    &trans    &trans    &trans    &trans     &trans

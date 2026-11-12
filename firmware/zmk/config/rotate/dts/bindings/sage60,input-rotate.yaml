@@ -27,3 +27,7 @@ properties:
     type: int
     default: 200
     description: Stillness after which wake-threshold applies again.
+  scroll-div:
+    type: int
+    default: 12
+    description: Ball counts per scroll step, used by sage60,scroll-scaler.

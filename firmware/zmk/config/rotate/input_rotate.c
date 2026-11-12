@@ -10,6 +10,9 @@
  * adds up to wake-threshold counts, so keystroke vibration doesn't move the
  * cursor (or wake the auto mouse layer).
  *
+ * A sage60,scroll-scaler input processor divides scroll-layer motion by the
+ * scroll divisor kept here, so scroll speed is tunable too.
+ *
  * The tunables can be changed at runtime over a USB serial port
  * (case/site/tune.html uses it via Web Serial) and are kept in settings.
  * Only one instance is supported.
@@ -18,12 +21,14 @@
 #define DT_DRV_COMPAT sage60_input_rotate
 
 #include <math.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <zephyr/device.h>
 #include <zephyr/kernel.h>
 #include <zephyr/input/input.h>
 #include <zephyr/settings/settings.h>
+#include <drivers/input_processor.h>
 
 /* Storage format: little-endian int16 fields. */
 struct rotate_params {
@@ -31,6 +36,7 @@ struct rotate_params {
     int16_t angle_y;        /* degrees, up/down rolls */
     int16_t wake_threshold; /* counts */
     int16_t scale_pct;      /* 100 = 1x */
+    int16_t scroll_div;     /* ball counts per scroll step; added later, may be absent */
 } __packed;
 
 struct rotate_config {
@@ -66,7 +72,7 @@ static void apply(struct rotate_data *d) {
 static bool valid(const struct rotate_params *p) {
     return p->angle >= -180 && p->angle <= 180 && p->angle_y >= -180 && p->angle_y <= 180 &&
            p->wake_threshold >= 0 && p->wake_threshold <= 200 && p->scale_pct >= 10 &&
-           p->scale_pct <= 1000;
+           p->scale_pct <= 1000 && p->scroll_div >= 1 && p->scroll_div <= 100;
 }
 
 static void rotate_cb(struct input_event *evt, void *user_data) {
@@ -115,13 +121,40 @@ static void rotate_cb(struct input_event *evt, void *user_data) {
     }
 }
 
+/* ---- scroll speed ---- */
+
+#if DT_HAS_COMPAT_STATUS_OKAY(sage60_scroll_scaler)
+static int scroll_handle(const struct device *dev, struct input_event *evt, uint32_t p1,
+                         uint32_t p2, struct zmk_input_processor_state *state) {
+    static int16_t rem[2]; /* REL_X, REL_Y */
+
+    if (!inst || evt->type != INPUT_EV_REL || evt->code > INPUT_REL_Y) {
+        return ZMK_INPUT_PROC_CONTINUE;
+    }
+    int32_t v = evt->value + rem[evt->code];
+    evt->value = v / inst->p.scroll_div;
+    rem[evt->code] = v % inst->p.scroll_div;
+    return ZMK_INPUT_PROC_CONTINUE;
+}
+
+static struct zmk_input_processor_driver_api scroll_api = {.handle_event = scroll_handle};
+
+DEVICE_DT_DEFINE(DT_COMPAT_GET_ANY_STATUS_OKAY(sage60_scroll_scaler), NULL, NULL, NULL, NULL,
+                 POST_KERNEL, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT, &scroll_api);
+#endif
+
 /* ---- persistence ---- */
 
 #if IS_ENABLED(CONFIG_SETTINGS)
 static int rot_settings_set(const char *name, size_t len, settings_read_cb read_cb, void *cb_arg) {
-    struct rotate_params p;
+    if (!inst) {
+        return 0;
+    }
+    /* Older saves lack scroll_div; it keeps the devicetree default. */
+    struct rotate_params p = inst->p;
+    size_t old = offsetof(struct rotate_params, scroll_div);
 
-    if (!inst || len != sizeof(p) || read_cb(cb_arg, &p, sizeof(p)) != sizeof(p) || !valid(&p)) {
+    if ((len != sizeof(p) && len != old) || read_cb(cb_arg, &p, len) != len || !valid(&p)) {
         return 0; /* keep devicetree defaults */
     }
     inst->p = p;
@@ -137,8 +170,8 @@ SETTINGS_STATIC_HANDLER_DEFINE(sage60_rot, "sage60/rot", NULL, rot_settings_set,
  * sage60,uart-tap device sits in front of the real port (zmk,studio-rpc-uart
  * points at the tap): bytes inside Studio frames (SOF 0xAB .. EOF 0xAD, ESC
  * 0xAC) pass through to Studio, plain text lines outside frames are ours:
- *   "get"          -> "rot <angle> <angle_y> <wake_threshold> <scale_pct>"
- *   "set a b c d"  -> same reply after applying and saving, or "err"
+ *   "get"            -> "rot <angle> <angle_y> <wake_threshold> <scale_pct> <scroll_div>"
+ *   "set a b c d e"  -> same reply after applying and saving, or "err"
  * A stray 0xAD outside a frame is dropped, so a client can send one first to
  * resync if Studio left a frame half-sent. case/site/tune.html uses this. */
 
@@ -168,16 +201,16 @@ static void tune_puts(const char *s) {
 
 static void tune_work_fn(struct k_work *work) {
     struct rotate_params p;
-    int a, b, c, d;
+    int a, b, c, d, e;
     char out[48];
 
     if (!inst) {
         return;
     }
-    if (sscanf(cmd, "set %d %d %d %d", &a, &b, &c, &d) == 4) {
-        p = (struct rotate_params){a, b, c, d};
+    if (sscanf(cmd, "set %d %d %d %d %d", &a, &b, &c, &d, &e) == 5) {
+        p = (struct rotate_params){a, b, c, d, e};
         if (a != p.angle || b != p.angle_y || c != p.wake_threshold || d != p.scale_pct ||
-            !valid(&p)) {
+            e != p.scroll_div || !valid(&p)) {
             tune_puts("err\n");
             return;
         }
@@ -190,8 +223,8 @@ static void tune_work_fn(struct k_work *work) {
         tune_puts("err\n");
         return;
     }
-    snprintf(out, sizeof(out), "rot %d %d %d %d\n", inst->p.angle, inst->p.angle_y,
-             inst->p.wake_threshold, inst->p.scale_pct);
+    snprintf(out, sizeof(out), "rot %d %d %d %d %d\n", inst->p.angle, inst->p.angle_y,
+             inst->p.wake_threshold, inst->p.scale_pct, inst->p.scroll_div);
     tune_puts(out);
 }
 
@@ -323,6 +356,7 @@ static int rotate_init(const struct device *dev) {
                 .angle_y = DT_INST_PROP_OR(n, angle_y, DT_INST_PROP(n, angle)),                    \
                 .wake_threshold = DT_INST_PROP(n, wake_threshold),                                 \
                 .scale_pct = DT_INST_PROP(n, scale_pct),                                           \
+                .scroll_div = DT_INST_PROP(n, scroll_div),                                         \
             },                                                                                     \
         .idle_ms = DT_INST_PROP(n, idle_ms),                                                       \
     };                                                                                             \

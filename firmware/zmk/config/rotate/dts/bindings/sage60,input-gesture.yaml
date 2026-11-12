@@ -1,0 +1,21 @@
+description: |
+  Swallows ball motion and taps the first binding on a roll up, the second
+  on a roll down (see rotate/gesture.c). Put it in a listener layer override.
+
+compatible: "sage60,input-gesture"
+
+include: ip_zero_param.yaml
+
+properties:
+  bindings:
+    type: phandle-array
+    required: true
+    description: <up>, <down>
+  threshold:
+    type: int
+    default: 50
+    description: Counts of up/down roll that trigger a binding.
+  rearm-ms:
+    type: int
+    default: 300
+    description: Stillness after which the next roll can trigger again.

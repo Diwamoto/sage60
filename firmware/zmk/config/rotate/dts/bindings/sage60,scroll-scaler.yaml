@@ -1,0 +1,7 @@
+description: |
+  Divides REL_X/REL_Y by the scroll divisor that case/site/tune.html sets
+  (see rotate/input_rotate.c). Put it before zip_xy_to_scroll_mapper.
+
+compatible: "sage60,scroll-scaler"
+
+include: ip_zero_param.yaml
