@@ -18,6 +18,7 @@ from tb_socket_cut import MAG_D, MAG_H, MAG_BOSS_R, LID
 from make_right import TB_SCREWS
 
 BALL_R = 17.0
+SEG = int(os.environ.get('TB_SEG', 512))   # sphere segments; the site's model uses fewer (TB_SEG=96, see main)
 REST = np.array([-0.27, 0.21, 8.24])        # resting ball centre (cup fit + rest on the three supports)
 # Inside: the old cup's sphere, measured from REST (the old case takes the ball and turns): 0.2 off the ball below, 0.8 at the
 # equator, 1.3 above.  (Rev. 1 had 0.05 all round: the ball didn't go in, the one that did didn't turn.)
@@ -105,14 +106,19 @@ def label(text, depth=0.4, size=5.0):
     return mf.Manifold.extrude(cs, depth + 1).translate((0, 0, zv - depth))
 
 def build(narrow, off=(0, 0, 0)):
-    cupsph = mf.Manifold.sphere(CUP_R, 512).translate((0, 0, CUP_DZ)) ^ mf.Manifold.sphere(BALL_R + G_UP, 512)
+    cupsph = mf.Manifold.sphere(CUP_R, SEG).translate((0, 0, CUP_DZ)) ^ mf.Manifold.sphere(BALL_R + G_UP, SEG)
     ztop = 0.0 if narrow is None else np.sqrt((BALL_R + G_UP) ** 2 - (BALL_R - narrow / 2) ** 2)
     el = np.degrees(np.arcsin(ztop / BALL_R))
-    cup = mf.Manifold.revolve(mf.CrossSection([profile(ztop)]), 360)
+    cup = mf.Manifold.revolve(mf.CrossSection([profile(ztop)]), SEG * 360 // 512)
     zv = VISOR_Z - REST[2]
     # visor: the hood's box carried on toward the ball to x = VISOR_X, rounded by the cup's outer sphere, above the frame
-    visor = (hood(VISOR_X + TBX + REST[0]) ^ mf.Manifold.sphere(RO, 512)).trim_by_plane((0, 0, 1), Z_FRAME - REST[2])
-    cup = cup + visor
+    visor = (hood(VISOR_X + TBX + REST[0]) ^ mf.Manifold.sphere(RO, SEG)).trim_by_plane((0, 0, 1), Z_FRAME - REST[2])
+    # back wall (2026-11-17): the far half (y > 0, nobody touches it) goes on up to a straight line, seen from the front, from
+    # the rim at the left (x = -RO) to the hood's top at VISOR_X
+    k = (zv - ztop) / (VISOR_X + RO); nb = np.array([k, 0, -1]) / np.hypot(k, 1)
+    back = (mf.Manifold.sphere(RO, SEG) - cupsph).trim_by_plane((0, 1, 0), 0).trim_by_plane((0, 0, 1), ztop - 2).trim_by_plane((0, 0, -1), -zv)
+    back = back.trim_by_plane(tuple(nb), float(nb @ [-RO, 0, ztop]))
+    cup = cup + visor + back
     parts = case_part('sage60_right_top') + case_part('sage60_right_bottom')
     grow = lambda p, c: [p.translate(d) for d in [(0, 0, 0)] + [tuple(c * np.eye(3)[i] * k) for i in range(3) for k in (1, -1)]]
     # the cases, 0.3 all round; the bottom case only 0.1: its pocket still has a tab (thumb side, z -4) where the old case was
@@ -129,7 +135,7 @@ def build(narrow, off=(0, 0, 0)):
     for a in SUP_AZ:
         u = unit(-SUP_EL, a)
         m = m - along(mf.Manifold.cylinder(BALL_R + 2.0 - 15.0, 1.0 / np.cos(np.pi / 6), 1.0 / np.cos(np.pi / 6), 6), u, u * 15.0 + off)
-    m = m - cupsph.translate(off) - mf.Manifold.sphere(BALL_R + HOOD_CLR, 256).translate(off)
+    m = m - cupsph.translate(off) - mf.Manifold.sphere(BALL_R + HOOD_CLR, SEG // 2).translate(off)
     m = m - mf.Manifold.batch_boolean([fbox(lo, hi) for lo, hi in HOOD_VOIDS], mf.OpType.Add)
     return m, el, ztop
 
@@ -154,12 +160,20 @@ def plate(meshes, path):
         z.writestr('_rels/.rels', '<?xml version="1.0" encoding="UTF-8"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Target="/3D/3dmodel.model" Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/></Relationships>')
         z.writestr('3D/3dmodel.model', '<?xml version="1.0" encoding="utf-8"?>\n<model xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" unit="millimeter"><resources>%s</resources><build>%s</build></model>' % (''.join(objs), ''.join(items)))
 
+def site():
+    """TB_SEG=96 tb_collar.py: D3, coarse, as the site's model (base64 float32 triangles, Fusion coordinates)"""
+    import base64
+    mesh = build(*VARIANTS['D3'])[0].translate(tuple(REST + [TBX, TBY, 0])).to_mesh()
+    tri = np.array(mesh.vert_properties)[:, :3][np.array(mesh.tri_verts)]
+    open(os.path.join(HERE, '../site/models/mx_right_tb.txt'), 'wb').write(base64.b64encode(tri.astype('<f4').tobytes()))
+    print('site model: %d triangles' % len(tri))
+
 def main():
+    if 'TB_SEG' in os.environ: return site()
     top, bot = case_part('sage60_right_top'), case_part('sage60_right_bottom')
     out = {}
     for name, (narrow, off) in VARIANTS.items():
         m, el, zl = build(narrow, off)
-        m = m - label(name)
         print('%-4s opening -%.1f (rim %5.1f deg, %4.1f from the top case top) | case overlap %.3f mm3 | ball overlap %.3f | max z %.1f'
               % (name, narrow or 0, el, REST[2] + zl - 7.0, (m ^ top).volume() + (m ^ bot).volume(),
                  (m ^ mf.Manifold.sphere(BALL_R, 256).translate(off)).volume(), m.bounding_box()[5] + REST[2]))

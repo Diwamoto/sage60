@@ -121,8 +121,7 @@ for vk, c in V.items():
             open(OUT + f, 'wb').write(base64.b64encode(np.asarray(t, dtype='<f4').tobytes())); info['parts'][k] = f
         if side == 'right' and vk == 'mx':     # (2026-11-16) cup drawn from scratch (trackball/tb_collar.py, D3), no GPL mesh
             from tb import TBX, TBY
-            t = tris_3mf(P + 'case_print/trackballcase_collar_D3.3mf') + [TBX, TBY, -9.0]
-            f = 'mx_right_tb.txt'; open(OUT + f, 'wb').write(base64.b64encode(np.asarray(t, dtype='<f4').tobytes())); info['parts']['tb'] = f
+            info['parts']['tb'] = 'mx_right_tb.txt'      # written coarse by TB_SEG=96 trackball/tb_collar.py
             info['ball'] = [round(TBX, 2), round(TBY, 2), 7.96, BALL_R]
         elif side == 'right':
             from tb import TBX, TBY
